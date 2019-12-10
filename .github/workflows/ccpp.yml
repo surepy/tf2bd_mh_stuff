@@ -15,7 +15,7 @@ jobs:
     #   run: ./configure
     - name: make runtests (clang)
       working-directory: ./test
-      run: make runtests CXX=clang++-8
+      run: make runtests CXX=clang++
     - name: clean
       working-directory: ./test
       run: make clean
