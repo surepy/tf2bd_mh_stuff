@@ -9,10 +9,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
+    - name: Checkout submodules
+      uses: textbook/git-checkout-submodule-action@2.0.0
     # - name: configure
     #   run: ./configure
     - name: make runtests
-      working-directory: test
+      working-directory: ./test
       run: make runtests
     # - name: make check
     #   run: make check
