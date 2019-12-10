@@ -1,5 +1,5 @@
 CXX:=clang++
-CXXOPT:=-g -std=c++2a
+CXXOPT:=-g -std=c++2a -fPIC
 
 CATCH2_SINGLE_INCLUDE_FOLDER:=catch2/repo/single_include/catch2/
 STUFF_FILES:=$(shell find ../cpp/ -type f -name '*.hpp' -o -name '*.h' -o -name '*.cpp')
@@ -13,9 +13,9 @@ testprog.exe : testprog.obj catch2/catch2.obj
 
 testprog.obj : *.cpp $(STUFF_FILES) $(CATCH2_HEADER_FILES) Makefile
 	$(CXX) $(CXXOPT) -c test.cpp -o $@
-catch2/catch2.obj : catch2/*.cpp $(CATCH2_HEADER_FILES)
+catch2/catch2.obj : catch2/*.cpp $(CATCH2_HEADER_FILES) Makefile
 	$(CXX) $(CXXOPT) -c catch2/*.cpp -o catch2/catch2.obj
 
 clean :
-	rm *.obj *.exe catch2/*.obj *.pdb *.ilk
+	rm -rf *.obj *.exe catch2/*.obj *.pdb *.ilk
 
