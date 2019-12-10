@@ -1,4 +1,4 @@
-CXX:=clang++
+# CXX:=clang++
 CXXOPT:=-g -std=c++2a -fPIC
 
 CATCH2_SINGLE_INCLUDE_FOLDER:=catch2/repo/single_include/catch2/
