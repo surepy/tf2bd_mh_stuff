@@ -1,6 +1,8 @@
 #pragma once
 
+#ifdef __cpp_impl_three_way_comparison
 #include <compare>
+#endif
 #include <utility>
 
 namespace mh
@@ -54,8 +56,10 @@ namespace mh
 
 		~unique_object() { m_Traits.delete_obj(m_Object); }
 
+#ifdef __cpp_impl_three_way_comparison
 		auto operator<=>(const unique_object& other) const = default;
 		auto operator<=>(const T& other) const { return m_Object <=> other; }
+#endif
 
 		T release() { return m_Traits.release_obj(m_Object); }
 
@@ -77,7 +81,9 @@ namespace mh
 	};
 }
 
+#ifdef __cpp_impl_three_way_comparison
 template<typename T, typename Traits> auto operator<=>(const T& lhs, const mh::unique_object<T, Traits>& rhs)
 {
 	return lhs <=> rhs.value();
 }
+#endif
