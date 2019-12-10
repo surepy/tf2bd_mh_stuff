@@ -9,12 +9,15 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        compiler: [g++, clang++]
+        compiler: [g++-8, clang++-8]
 
     steps:
     - uses: actions/checkout@v1
     - name: Checkout submodules
       uses: textbook/git-checkout-submodule-action@2.0.0
+
+    - name: Install compiler
+      run: sudo apt install ${{ matrix.compiler }} -y
 
     - name: make runtests
       working-directory: ./test
