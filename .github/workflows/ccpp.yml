@@ -3,26 +3,25 @@ name: C/C++ CI
 on: [push]
 
 jobs:
-  build:
-
-    runs-on: ubuntu-latest
+  ci:
+    name: ${{ matrix.compiler }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        compiler: [g++-8, g++-9, clang++-8]
 
     steps:
     - uses: actions/checkout@v1
     - name: Checkout submodules
       uses: textbook/git-checkout-submodule-action@2.0.0
-    # - name: configure
-    #   run: ./configure
-    - name: make runtests (clang)
+
+    - name: Install compiler
+      run: sudo apt install ${{ matrix.compiler }} -y
+
+    - name: make runtests
       working-directory: ./test
-      run: make runtests CXX=clang++
-    - name: clean
-      working-directory: ./test
-      run: make clean
-    - name: make runtests (g++)
-      working-directory: ./test
-      run: make runtests CXX=g++-8
-    # - name: make check
-    #   run: make check
-    # - name: make distcheck
-    #   run: make distcheck
+      env:
+        CXX: ${{ matrix.compiler }}
+      run: make runtests
