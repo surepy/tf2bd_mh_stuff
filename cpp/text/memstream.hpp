@@ -27,7 +27,8 @@ namespace mh
 			this->setg(buf, buf, buf + existingSize);
 		}
 
-		auto view() const { return std::basic_string_view<CharT, Traits>(gbeg(), gend() - gbeg()); }
+		auto view() const { return std::basic_string_view<CharT, Traits>(gcur(), gend() - gcur()); }
+		auto view_full() const { return std::basic_string_view<CharT, Traits>(gbeg(), gend() - gbeg()); }
 
 	protected:
 		base_streambuf_type* setbuf(CharT* s, std::streamsize n) override
@@ -66,7 +67,10 @@ namespace mh
 				if ((which & both) == both)
 				{
 					if (gcur() != pcur())
+					{
+						assert(false);
 						throw std::runtime_error("Cannot seek relative to current position if both in and out are at different offsets!");
+					}
 
 					return seekpos((gcur() - gbeg()) + off, both);
 				}
@@ -75,10 +79,16 @@ namespace mh
 				else if (which & std::ios_base::out)
 					return seekpos((pcur() - pbeg()) + off, std::ios_base::out);
 				else
+				{
+					assert(false);
 					throw std::invalid_argument("Unexpected value for \"which\"");
+				}
 			}
 			else
+			{
+				assert(false);
 				throw std::invalid_argument("Unknown seekdir");
+			}
 		}
 
 		std::streamsize xsputn(const CharT* s, std::streamsize count) override
@@ -135,7 +145,10 @@ namespace mh
 			auto getAreaSize = gend() - gbeg();
 			auto minPutAreaSize = pcur() - pbeg();
 			//if (getAreaSize < minPutAreaSize)
-				this->setg(gbeg(), gcur(), gbeg() + minPutAreaSize);
+			{
+				const auto newEnd = gbeg() + minPutAreaSize;
+				this->setg(gbeg(), std::min(gcur(), newEnd), newEnd);
+			}
 		}
 	};
 
