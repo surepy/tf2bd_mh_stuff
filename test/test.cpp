@@ -3,13 +3,25 @@
 #endif
 
 #include "../cpp/memory/unique_object.hpp"
-#include "../cpp/text/string_insertion.hpp"
+#ifdef __cpp_lib_to_chars
+#include "../cpp/text/charconv_helper.hpp"
+#endif
 #include "../cpp/text/memstream.hpp"
+#include "../cpp/text/string_insertion.hpp"
 
 #include "catch2/repo/single_include/catch2/catch.hpp"
 
 #include <iostream>
 #include <string.h>
+
+#ifdef __cpp_lib_to_chars
+TEST_CASE("charconv helpers", "[text][charconv_helper]")
+{
+	std::string test;
+	test << "Hello" << " world" << " !";
+	REQUIRE(test == "Hello world !");
+}
+#endif
 
 TEST_CASE("string insertion op", "[text][string_insertion]")
 {

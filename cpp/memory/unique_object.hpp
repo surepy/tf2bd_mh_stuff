@@ -77,7 +77,11 @@ namespace mh
 
 	private:
 		T m_Object;
-		[[no_unique_address]] Traits m_Traits;
+
+		#if __has_cpp_attribute(no_unique_address)
+		[[no_unique_address]]
+		#endif
+		Traits m_Traits;
 	};
 }
 
