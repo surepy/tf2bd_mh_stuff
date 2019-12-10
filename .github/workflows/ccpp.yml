@@ -9,7 +9,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        compiler: [g++-8, clang++-8]
+        compiler: [g++-8, g++-9, clang++-8, clang++-9]
 
     steps:
     - uses: actions/checkout@v1
