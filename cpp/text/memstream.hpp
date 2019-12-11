@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cassert>
+#include <istream>
 #include <ostream>
 #include <string>
 #include <string.h>

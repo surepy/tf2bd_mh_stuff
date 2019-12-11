@@ -8,11 +8,14 @@ CATCH2_HEADER_FILES:=$(shell find $(CATCH2_SINGLE_INCLUDE_FOLDER) -type f -name 
 runtests : testprog.exe
 	./testprog.exe
 
-testprog.exe : testprog.obj catch2/catch2.obj
+TEST_CPP_FILES=$(shell find . -maxdepth 1 -type f -name '*.cpp')
+TEST_CPP_OBJ_FILES = $(TEST_CPP_FILES:cpp=obj)
+
+testprog.exe : $(TEST_CPP_OBJ_FILES) catch2/catch2.obj
 	$(CXX) $(CXXOPT) $^ -o $@
 
-testprog.obj : *.cpp $(STUFF_FILES) $(CATCH2_HEADER_FILES) Makefile
-	$(CXX) $(CXXOPT) -c test.cpp -o $@
+%.obj : %.cpp $(STUFF_FILES) $(CATCH2_HEADER_FILES) Makefile
+	$(CXX) $(CXXOPT) -c $< -o $@
 catch2/catch2.obj : catch2/*.cpp $(CATCH2_HEADER_FILES) Makefile
 	$(CXX) $(CXXOPT) -c catch2/*.cpp -o catch2/catch2.obj
 
