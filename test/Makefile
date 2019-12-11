@@ -17,5 +17,5 @@ catch2/catch2.obj : catch2/*.cpp $(CATCH2_HEADER_FILES) Makefile
 	$(CXX) $(CXXOPT) -c catch2/*.cpp -o catch2/catch2.obj
 
 clean :
-	rm -rf *.obj *.exe catch2/*.obj *.pdb *.ilk
+	rm -rf *.obj *.exe catch2/*.obj *.pdb *.ilk *.gcno
 
