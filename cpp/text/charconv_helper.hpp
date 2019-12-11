@@ -1,6 +1,8 @@
+#pragma once
+
 #include <charconv>
-#include <string_view>
 #include <optional>
+#include <string_view>
 
 namespace mh
 {
