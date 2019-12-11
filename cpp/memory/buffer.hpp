@@ -3,6 +3,7 @@
 #ifdef __cpp_impl_three_way_comparison
 #include <compare>
 #endif
+#include <cstddef>
 #include <cstdlib>
 #include <cstring>
 #include <memory>
