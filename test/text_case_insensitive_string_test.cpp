@@ -1,4 +1,4 @@
-#include "../cpp/text/case_insensitive_string.hpp"
+#include <mh/text/case_insensitive_string.hpp>
 #include "catch2/repo/single_include/catch2/catch.hpp"
 
 template<typename CharT = char, typename Traits = std::char_traits<CharT>>

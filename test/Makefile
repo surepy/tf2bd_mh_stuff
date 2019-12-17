@@ -1,5 +1,5 @@
 # CXX:=clang++
-CXXOPT:=-g -std=c++2a -fPIC -Wfatal-errors -Werror
+CXXOPT:=-g -std=c++2a -fPIC -Wfatal-errors -Werror -I../cpp/include/
 
 CATCH2_SINGLE_INCLUDE_FOLDER:=catch2/repo/single_include/catch2/
 STUFF_FILES:=$(shell find ../cpp/ -type f -name '*.hpp' -o -name '*.h' -o -name '*.cpp')

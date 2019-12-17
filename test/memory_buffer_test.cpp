@@ -1,4 +1,4 @@
-#include "../cpp/memory/buffer.hpp"
+#include <mh/memory/buffer.hpp>
 #include "catch2/repo/single_include/catch2/catch.hpp"
 
 TEST_CASE("buffer - common", "[memory][buffer]")
