@@ -33,10 +33,32 @@ namespace mh
 		template<typename T>
 		constexpr T bits_to_mask(T bits) { return (T(1) << bits) - 1; }
 
+		constexpr unsigned HLF_MNT_BITS = 10;
+		constexpr unsigned HLF_EXP_BITS = 5;
 		constexpr unsigned DBL_MNT_BITS = std::numeric_limits<double>::digits - 1;
 		constexpr unsigned DBL_EXP_BITS = 11;
 		constexpr unsigned FLT_MNT_BITS = std::numeric_limits<float>::digits - 1;
 		constexpr unsigned FLT_EXP_BITS = 8;
+
+		constexpr bool is_constant_evaluated() noexcept
+		{
+#if __cpp_lib_is_constant_evaluated >= 201811
+			return std::is_constant_evaluated();
+#else
+			return true;
+#endif
+		}
+
+		template<typename To, typename From>
+		constexpr To bit_cast(const From& from)
+		{
+#if __cpp_lib_bit_cast >= 201806
+			return std::bit_cast<To>(from);
+#else
+			static_assert(sizeof(To) == sizeof(From));
+			return *reinterpret_cast<const To*>(&from);
+#endif
+		}
 	}
 
 	template<unsigned bits>
@@ -174,18 +196,6 @@ namespace mh
 		static constexpr unsigned SIGN_OFFSET = MantissaBits + ExponentBits;
 		static constexpr unsigned TOTAL_BITS = MantissaBits + ExponentBits + (SignBit ? 1 : 0);
 
-	private:
-		template<typename To, typename From>
-		static constexpr To bit_cast(const From& from)
-		{
-#if __cpp_lib_bit_cast >= 201806
-			return std::bit_cast<To>(from);
-#else
-			static_assert(sizeof(To) == sizeof(From));
-			return *reinterpret_cast<const To*>(&from);
-#endif
-		}
-
 	public:
 		enum class bits_t : detail::uint_for_bits_t<TOTAL_BITS>;
 		using mantissa_t = mh::mantissa_t<MantissaBits>;
@@ -245,40 +255,47 @@ namespace mh
 		template<typename new_bit_float>
 		static constexpr auto bits_to_bits(bits_t bits)
 		{
-			using new_bits_t = typename new_bit_float::bits_t;
-
-			bool sign = false;
-			if constexpr (SignBit) // Do we have a sign bit?
+			if constexpr (std::is_same_v<typename new_bit_float::bits_t, bits_t>)
 			{
-				sign = bits_to_sign(bits);
-				if constexpr (!new_bit_float::SignBit)
+				return bits;
+			}
+			else
+			{
+				using new_bits_t = typename new_bit_float::bits_t;
+
+				bool sign = false;
+				if constexpr (SignBit) // Do we have a sign bit?
 				{
-					if (sign)
+					sign = bits_to_sign(bits);
+					if constexpr (!new_bit_float::SignBit)
 					{
-						// We are negative, and the new bits don't have a sign bit.
-						// Clamp to 0.
-						return new_bits_t{};
+						if (sign)
+						{
+							// We are negative, and the new bits don't have a sign bit.
+							// Clamp to 0.
+							return new_bits_t{};
+						}
 					}
 				}
+
+				const auto old_exponent = bits_to_exponent(bits);
+				const auto new_exponent = old_exponent.template convert<new_bit_float::ExponentBits>();
+
+				// Can we overflow to infinity from this conversion?
+				constexpr bool needsOverflowCheck = new_bit_float::ExponentBits < ExponentBits;
+
+				typename new_bit_float::mantissa_t new_mantissa{};
+				if (!needsOverflowCheck ||
+					new_exponent.value != new_exponent.MASK ||
+					old_exponent.value == old_exponent.MASK)
+				{
+					// If the old exponent was full, copy the most significant mantissa bits (either NaN or inf)
+					// If the new exponent was not full, this is is not a NaN or inf, and we're safe
+					new_mantissa = bits_to_mantissa(bits).template convert<new_bit_float::MantissaBits>();
+				}
+
+				return new_bit_float::components_to_bits(new_mantissa, new_exponent, sign);
 			}
-
-			const auto old_exponent = bits_to_exponent(bits);
-			const auto new_exponent = old_exponent.template convert<new_bit_float::ExponentBits>();
-
-			// Can we overflow to infinity from this conversion?
-			constexpr bool needsOverflowCheck = new_bit_float::ExponentBits < ExponentBits;
-
-			typename new_bit_float::mantissa_t new_mantissa{};
-			if (!needsOverflowCheck ||
-				new_exponent.value != new_exponent.MASK ||
-				old_exponent.value == old_exponent.MASK)
-			{
-				// If the old exponent was full, copy the most significant mantissa bits (either NaN or inf)
-				// If the new exponent was not full, this is is not a NaN or inf, and we're safe
-				new_mantissa = bits_to_mantissa(bits).template convert<new_bit_float::MantissaBits>();
-			}
-
-			return new_bit_float::components_to_bits(new_mantissa, new_exponent, sign);
 		}
 
 		template<unsigned newMantissaBits, unsigned newExponentBits, bool newSignBit>
@@ -290,17 +307,17 @@ namespace mh
 		static constexpr native_t bits_to_native(bits_t bits)
 		{
 			static_assert(std::numeric_limits<native_t>::is_iec559);
-			return bit_cast<native_t>(bits_to_bits<native_bitfloat_t>(bits));
+			return detail::bit_cast<native_t>(bits_to_bits<native_bitfloat_t>(bits));
 		}
 
 		static constexpr bits_t native_to_bits(native_t native)
 		{
 			static_assert(std::numeric_limits<native_t>::is_iec559);
-			return native_bitfloat_t::template bits_to_bits<this_t>(bit_cast<typename native_bitfloat_t::bits_t>(native));
+			return native_bitfloat_t::template bits_to_bits<this_t>(detail::bit_cast<typename native_bitfloat_t::bits_t>(native));
 		}
 	};
 
-	using half_float = mh::bit_float<10, 5, true>;
+	using half_float = mh::bit_float<detail::HLF_MNT_BITS, detail::HLF_EXP_BITS, true>;
 	using native_float = mh::bit_float<detail::FLT_MNT_BITS, detail::FLT_EXP_BITS, true>;
 	using native_double = mh::bit_float<detail::DBL_MNT_BITS, detail::DBL_EXP_BITS, true>;
 }
