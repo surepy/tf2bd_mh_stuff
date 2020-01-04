@@ -60,18 +60,33 @@ TEST_CASE("bit_float - half")
 	REQUIRE(half_float::native_to_bits(294.25) == half_float::bits_t(0b0101110010011001));
 }
 
-TEST_CASE("bit_float - gl11")
+template<typename bf>
+static void BasicBFTest()
 {
-	REQUIRE(gl_float11::bits_to_native(gl_float11::bits_t(0)) == 0);
-	REQUIRE(gl_float11::native_to_bits(0) == gl_float11::bits_t(0));
-	REQUIRE(gl_float11::native_to_bits(-1) == gl_float11::bits_t(0));
+	CAPTURE(typeid(bf).name());
+	using bits_t = typename bf::bits_t;
 
+	REQUIRE(bf::bits_to_native(bits_t(0)) == 0);
+	REQUIRE(bf::native_to_bits(0) == bits_t(0));
+	REQUIRE(bf::native_to_bits(-1) == bits_t(0));
+
+	const auto TestRoundTrip = [](float value, float epsilon = 0.001)
 	{
-		const double value = 0.1;
-		const auto bits = half_float::native_to_bits(value);
-		const auto rt_value = half_float::bits_to_native(bits);
-		REQUIRE(rt_value == Approx(value).epsilon(0.001));
-	}
+		const auto bits = bf::native_to_bits(value);
+		const auto rt_value = bf::bits_to_native(bits);
+		REQUIRE(rt_value == Approx(value).epsilon(epsilon));
+	};
+
+	TestRoundTrip(0.1, 0.01);
+	TestRoundTrip(0.4, 0.01);
+	TestRoundTrip(0.5, 0.01);
+	TestRoundTrip(1, 0);
+}
+
+TEST_CASE("bit_float - gl")
+{
+	BasicBFTest<gl_float11>();
+	BasicBFTest<gl_float10>();
 }
 
 TEST_CASE("bit_float - overflow to infinity")

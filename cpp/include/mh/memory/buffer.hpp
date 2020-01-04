@@ -57,10 +57,10 @@ namespace mh
 			return false;
 		}
 
-#ifdef __cpp_impl_three_way_comparison
+#if __cpp_impl_three_way_comparison >= 201907
 		std::strong_ordering operator<=>(const buffer& other) const
 		{
-			if (auto result = std::is_neq(m_Size <=> other))
+			if (auto result = m_Size <=> other.m_Size; std::is_neq(result))
 				return result;
 
 			const auto result = memcmp(data(), other.data(), size());
