@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
@@ -16,7 +17,7 @@ namespace mh
 		fast,
 	};
 
-	namespace detail{ namespace bits_hpp
+	namespace detail { namespace bits_hpp
 	{
 		static constexpr unsigned BITS_PER_BYTE = std::numeric_limits<std::underlying_type_t<std::byte>>::digits;
 
@@ -70,6 +71,9 @@ namespace mh
 		template<typename T> constexpr T min(T a, T b, T c) { return min(min(a, b), c); }
 		template<typename T> constexpr T min(T a, T b, T c, T d) { return min(min(a, b), min(c, d)); }
 
+		template<typename T> constexpr auto intprint(T value) { return +value; }
+		constexpr auto intprint(std::byte value) { return unsigned(value); }
+
 		template<typename TFunc> constexpr void debug(const TFunc& f)
 		{
 #if (__cpp_lib_is_constant_evaluated > 201811)
@@ -79,13 +83,21 @@ namespace mh
 		}
 	} }
 
-	template<typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-	inline constexpr T bits_to_mask(T bits)
+	template<typename T> constexpr std::array<T, std::numeric_limits<std::make_unsigned_t<T>>::digits + 1> BIT_MASKS = []
 	{
-		constexpr auto maxBits = sizeof(uintmax_t) * std::numeric_limits<unsigned char>::digits;
-		constexpr auto mask = std::numeric_limits<uintmax_t>::max();
-		return T(bits ? (mask >> (maxBits - bits)) : 0);
-	}
+		using unsigned_t = std::make_unsigned_t<T>;
+		constexpr unsigned_t digits = std::numeric_limits<unsigned_t>::digits;
+		std::array<T, digits + 1> retVal{};
+
+		for (unsigned_t i = 1; i <= digits; i++)
+		{
+			constexpr auto maxBits = sizeof(uintmax_t) * std::numeric_limits<unsigned char>::digits;
+			constexpr auto mask = std::numeric_limits<uintmax_t>::max();
+			retVal[i] = mask >> (maxBits - i);
+		}
+
+		return retVal;
+	}();
 
 	template<unsigned bits, int_for_bits_mode mode = int_for_bits_mode::exact> using uint_for_bits_t =
 		decltype(detail::bits_hpp::uint_for_bits_helper<bits, mode>());
@@ -94,83 +106,14 @@ namespace mh
 	template<bool signed_, unsigned bits, int_for_bits_mode mode = int_for_bits_mode::exact> using int_for_bits_t =
 		std::conditional_t<signed_, sint_for_bits_t<bits, mode>, uint_for_bits_t<bits, mode>>;
 
-	template<typename TOut, size_t bits_to_read = sizeof(TOut) * detail::bits_hpp::BITS_PER_BYTE,
-		unsigned src_offset = 0, typename TIn = void>
-	constexpr TOut bit_read(const TIn* src)
-	{
-		using namespace detail::bits_hpp;
-
-		static_assert(src_offset < BITS_PER_BYTE);
-		static_assert(std::is_same_v<TIn, std::byte> || std::is_unsigned_v<TIn>);
-		static_assert(std::is_same_v<TOut, std::byte> || std::is_unsigned_v<TOut>);
-
-		constexpr size_t bits_per_src = sizeof(TIn) * BITS_PER_BYTE;
-		constexpr size_t bits_per_dst = sizeof(TOut) * BITS_PER_BYTE;
-		static_assert(bits_to_read <= bits_per_dst);
-
-		TOut retVal{};
-		size_t bits_copied = 0;
-		size_t bits_remaining = bits_to_read;
-
-		const TIn* in_buffer_ptr = src;
-		TIn in_buffer = *in_buffer_ptr;
-		size_t in_buffer_bits = bits_per_src - src_offset;
-		in_buffer >>= src_offset;
-
-		const auto copy_to_output = [&]
-		{
-			// gcc bug
-			constexpr size_t bits_per_src2 = sizeof(TIn) * BITS_PER_BYTE;
-			constexpr size_t bits_per_dst2 = sizeof(TOut) * BITS_PER_BYTE;
-
-			size_t bits_this_loop{};
-			if constexpr (bits_per_src2 >= bits_per_dst2)
-				bits_this_loop = min(in_buffer_bits, bits_per_dst, bits_remaining);
-			else // bits_per_src < bits_per_dst
-				bits_this_loop = min(in_buffer_bits, bits_per_src, bits_remaining);
-
-			const TOut mask = bits_to_mask<TOut>(bits_this_loop);
-
-			const TOut value = TOut(in_buffer & mask) << bits_copied;
-			//debug([&]{ std::cerr << "writing " << value << '\n'; });
-			retVal |= value;
-
-			in_buffer >>= bits_this_loop;
-			bits_copied += bits_this_loop;
-			bits_remaining -= bits_this_loop;
-			in_buffer_bits -= bits_this_loop;
-		};
-
-		copy_to_output();
-
-		//debug([&] { std::cerr << "initial in_buffer: " << std::hex << +in_buffer << '\n'; });
-
-		if constexpr ((bits_to_read + src_offset) > bits_per_src)
-		{
-			while (bits_remaining)
-			{
-				if (in_buffer_bits <= 0)
-				{
-					in_buffer_ptr++;
-					in_buffer = *in_buffer_ptr;
-					in_buffer_bits = bits_per_src;
-					//debug([&] { std::cerr << "in_buffer empty, refilling: " << std::hex << +in_buffer
-					//	<< " (" << in_buffer_bits << " bits)\n"; });
-				}
-
-				copy_to_output();
-			}
-		}
-
-		return retVal;
-	}
-
 	enum class bit_clear_mode
 	{
 		// Doesn't clear anything. Only OR's stuff into dst. Fastest.
 		none,
-		// Clears the whole byte when writing into it. Faster in some circumstances.
+
+		// Clears the whole byte when writing into it. Faster in some circumstances vs clear_bits.
 		clear_bytes,
+
 		// Clears only the bits being written, leaving others untouched.
 		clear_bits,
 	};
@@ -184,11 +127,15 @@ namespace mh
 		using namespace detail::bits_hpp;
 
 		static_assert(src_offset < BITS_PER_BYTE);
+		static_assert(dst_offset < BITS_PER_BYTE);
 		static_assert(std::is_same_v<TSrc, std::byte> || std::is_unsigned_v<TSrc>);
 		static_assert(std::is_same_v<TDst, std::byte> || std::is_unsigned_v<TDst>);
 
-		constexpr size_t bits_per_src = sizeof(TSrc) * BITS_PER_BYTE;
-		constexpr size_t bits_per_dst = sizeof(TDst) * BITS_PER_BYTE;
+		using TSrcR = std::conditional_t<std::is_same_v<TSrc, std::byte>, std::underlying_type_t<std::byte>, TSrc>;
+		using TDstR = std::conditional_t<std::is_same_v<TDst, std::byte>, std::underlying_type_t<std::byte>, TDst>;
+
+		constexpr size_t bits_per_src = sizeof(TSrcR) * BITS_PER_BYTE;
+		constexpr size_t bits_per_dst = sizeof(TDstR) * BITS_PER_BYTE;
 		static_assert(bits_to_copy <= bits_per_dst);
 
 		size_t bits_remaining = bits_to_copy;
@@ -204,8 +151,8 @@ namespace mh
 		const auto copy_to_output = [&]
 		{
 			// gcc bug with constexpr and lambda capture by reference
-			constexpr size_t bits_per_src2 = sizeof(TSrc) * BITS_PER_BYTE;
-			constexpr size_t bits_per_dst2 = sizeof(TDst) * BITS_PER_BYTE;
+			constexpr size_t bits_per_src2 = sizeof(TSrcR) * BITS_PER_BYTE;
+			constexpr size_t bits_per_dst2 = sizeof(TDstR) * BITS_PER_BYTE;
 
 			size_t bits_this_loop{};
 			if constexpr (bits_per_src2 >= bits_per_dst2)
@@ -213,21 +160,21 @@ namespace mh
 			else // bits_per_src < bits_per_dst
 				bits_this_loop = min(in_buffer_bits, out_buffer_bits, bits_per_src, bits_remaining);
 
-			const TDst mask = bits_to_mask<TDst>(bits_this_loop);
+			const TDstR mask = BIT_MASKS<TDstR>[bits_this_loop];
 
-			const auto src_value = (*in_buffer) >> (bits_per_src - in_buffer_bits);
+			const auto src_value = TSrcR(*in_buffer) >> (bits_per_src - in_buffer_bits);
 			const auto cur_dst_offset = bits_per_dst - out_buffer_bits;
-			const TDst dst_value = TDst(src_value & mask) << cur_dst_offset;
+			const TDstR dst_value = TDstR(src_value & mask) << cur_dst_offset;
 
 			if constexpr (clear_mode == bit_clear_mode::clear_bits)
 			{
-				const TDst clear_mask = TDst(~(mask << cur_dst_offset));
+				const TDstR clear_mask = TDstR(~(mask << cur_dst_offset));
 				debug([&]{ std::cerr << "clearing via & with " << +clear_mask << '\n'; });
 				(*out_buffer) &= clear_mask;
 			}
 
 			debug([&]{ std::cerr << "writing " << +dst_value << '\n'; });
-			(*out_buffer) |= dst_value;
+			(*out_buffer) = TDst(TDstR(*out_buffer) | TDstR(dst_value));
 
 			in_buffer_bits -= bits_this_loop;
 			out_buffer_bits -= bits_this_loop;
@@ -236,7 +183,7 @@ namespace mh
 
 		copy_to_output();
 
-		debug([&] { std::cerr << "initial in_buffer: " << std::hex << +(*in_buffer) << '\n'; });
+		debug([&] { std::cerr << "initial in_buffer: " << std::hex << intprint(*in_buffer) << '\n'; });
 
 		constexpr bool multi_src = (bits_to_copy + src_offset) > bits_per_src;
 		constexpr bool multi_dst = (bits_to_copy + dst_offset) > bits_per_dst;
@@ -251,7 +198,7 @@ namespace mh
 					{
 						in_buffer++;
 						in_buffer_bits = bits_per_src;
-						debug([&] { std::cerr << "in_buffer empty, refilling: " << std::hex << +(*in_buffer)
+						debug([&] { std::cerr << "in_buffer empty, refilling: " << std::hex << intprint(*in_buffer)
 							<< " (" << in_buffer_bits << " bits)\n"; });
 					}
 				}
@@ -270,5 +217,14 @@ namespace mh
 				copy_to_output();
 			}
 		}
+	}
+
+	template<typename TOut, size_t bits_to_read = sizeof(TOut) * detail::bits_hpp::BITS_PER_BYTE,
+		unsigned src_offset = 0, typename TIn = void>
+	constexpr TOut bit_read(const TIn* src)
+	{
+		TOut retVal{};
+		bit_copy<bits_to_read, src_offset, 0, bit_clear_mode::none>(src, &retVal);
+		return retVal;
 	}
 }

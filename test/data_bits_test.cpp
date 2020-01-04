@@ -9,7 +9,7 @@ static void test_bit_functions(const TSrc* src, const TDst expected)
 	const auto read = +mh::bit_read<TDst, bits_to_copy, src_offset>(src);
 
 	constexpr TDst dst_max = std::numeric_limits<TDst>::max();
-	constexpr TDst dst_mask = mh::bits_to_mask<TDst>(bits_to_copy);
+	constexpr TDst dst_mask = mh::BIT_MASKS<TDst>[bits_to_copy];
 	CAPTURE(dst_mask);
 
 	TDst copied = dst_max;
@@ -50,7 +50,8 @@ TEST_CASE("bit_read")
 
 	SECTION("uint8_t source")
 	{
-		constexpr uint8_t src_value[] = { 0x10, 0x32, 0x54, 0x76, 0x98, 0xba, 0xdc, 0xfe };
+		constexpr uint8_t src_value_raw[] = { 0x10, 0x32, 0x54, 0x76, 0x98, 0xba, 0xdc, 0xfe };
+		const std::byte* src_value = reinterpret_cast<const std::byte*>(src_value_raw);
 
 		test_bit_functions<16, 0>(src_value, 0x3210U);
 		test_bit_functions<16, 1>(src_value, 0x1908U);
