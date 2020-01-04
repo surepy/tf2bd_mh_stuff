@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef __cpp_impl_three_way_comparison
+#if (__cpp_lib_three_way_comparison >= 201907) && (__cpp_impl_three_way_comparison >= 201907)
 #include <compare>
 #endif
 #include <cstddef>
@@ -57,7 +57,7 @@ namespace mh
 			return false;
 		}
 
-#if __cpp_impl_three_way_comparison >= 201907
+#if (__cpp_lib_three_way_comparison >= 201907) && (__cpp_impl_three_way_comparison >= 201907)
 		std::strong_ordering operator<=>(const buffer& other) const
 		{
 			if (auto result = m_Size <=> other.m_Size; std::is_neq(result))

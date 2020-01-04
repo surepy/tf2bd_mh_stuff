@@ -1,4 +1,4 @@
-#include <mh/data/bit_float.hpp>
+#include "mh/data/bit_float.hpp"
 #include "catch2/repo/single_include/catch2/catch.hpp"
 
 using half_float = mh::half_float;

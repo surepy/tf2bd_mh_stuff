@@ -1,5 +1,11 @@
+# Automatically clean and rebuild on makefile changes https://stackoverflow.com/a/5901262/871842
+-include .makefile_date
+.makefile_date : Makefile*
+	@touch $@
+	+$(MAKE) --no-print-directory clean
+
 # CXX:=clang++
-CXXOPT:=-g -std=c++2a -fPIC -Wfatal-errors -Werror -I../cpp/include/
+CXXOPT:=-g -std=c++2a -fPIC -Wfatal-errors -Werror -I"../cpp/include/"
 
 CATCH2_SINGLE_INCLUDE_FOLDER:=catch2/repo/single_include/catch2/
 STUFF_FILES:=$(shell find ../cpp/ -type f -name '*.hpp' -o -name '*.h' -o -name '*.cpp')
@@ -8,17 +14,23 @@ CATCH2_HEADER_FILES:=$(shell find $(CATCH2_SINGLE_INCLUDE_FOLDER) -type f -name 
 runtests : testprog.exe
 	./testprog.exe
 
-TEST_CPP_FILES=$(shell find . -maxdepth 1 -type f -name '*.cpp')
-TEST_CPP_OBJ_FILES = $(TEST_CPP_FILES:cpp=obj)
+TEST_CPP_FILES = $(wildcard *.cpp)
 
-testprog.exe : $(TEST_CPP_OBJ_FILES) catch2/catch2.obj
+ALL_OBJS = $(addprefix out/, $(TEST_CPP_FILES:cpp=obj)) out/catch2/catch2.obj
+
+testprog.exe : $(ALL_OBJS)
 	$(CXX) $(CXXOPT) $^ -o $@
 
-%.obj : %.cpp $(STUFF_FILES) $(CATCH2_HEADER_FILES) Makefile
+out/%.obj : %.cpp
+	@mkdir -p $(dir $@)
 	$(CXX) $(CXXOPT) -c $< -o $@
-catch2/catch2.obj : catch2/*.cpp $(CATCH2_HEADER_FILES) Makefile
-	$(CXX) $(CXXOPT) -c catch2/*.cpp -o catch2/catch2.obj
 
 clean :
-	rm -rf *.obj *.exe catch2/*.obj *.pdb *.ilk *.gcno
+	rm -rf out *.exe
 
+# automatic dependencies
+out/%.d : %.cpp
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXOPT) -MM -MF $@ -MT $(@:.d=.obj) -E $<
+
+-include $(ALL_OBJS:%.obj=%.d)

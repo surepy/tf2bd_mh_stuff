@@ -1,4 +1,4 @@
-#include <mh/math/interpolation.hpp>
+#include "mh/math/interpolation.hpp"
 #include "catch2/repo/single_include/catch2/catch.hpp"
 
 TEST_CASE("lerp", "[math][interpolation]")
