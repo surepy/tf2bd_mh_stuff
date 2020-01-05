@@ -71,14 +71,17 @@ namespace mh
 		template<typename T> constexpr T min(T a, T b, T c) { return min(min(a, b), c); }
 		template<typename T> constexpr T min(T a, T b, T c, T d) { return min(min(a, b), min(c, d)); }
 
+		template<typename T> constexpr T max(T a, T b) { return a > b ? a : b; }
+		template<typename T> constexpr T max(T a, T b, T c) { return max(max(a, b), c); }
+
 		template<typename T> constexpr auto intprint(T value) { return +value; }
 		constexpr auto intprint(std::byte value) { return unsigned(value); }
 
 		template<typename TFunc> constexpr void debug(const TFunc& f)
 		{
-#if (__cpp_lib_is_constant_evaluated > 201811)
-			//if (!std::is_constant_evaluated())
-			//	f();
+#if (__cpp_lib_is_constant_evaluated >= 201811)
+			if (!std::is_constant_evaluated())
+				f();
 #endif
 		}
 	} }
@@ -111,11 +114,11 @@ namespace mh
 		// Doesn't clear anything. Only OR's stuff into dst. Fastest.
 		none,
 
-		// Clears the whole byte when writing into it. Faster in some circumstances vs clear_bits.
-		clear_bytes,
-
 		// Clears only the bits being written, leaving others untouched.
 		clear_bits,
+
+		// Clears all touched TDst objects. Likely slower, requires additional branching
+		clear_objects,
 	};
 
 	template<size_t bits_to_copy,
@@ -136,7 +139,60 @@ namespace mh
 
 		constexpr size_t bits_per_src = sizeof(TSrcR) * BITS_PER_BYTE;
 		constexpr size_t bits_per_dst = sizeof(TDstR) * BITS_PER_BYTE;
-		static_assert(bits_to_copy <= bits_per_dst);
+
+		for (size_t b = 0; b < bits_to_copy; )
+		{
+			const size_t dst_byte = (b + dst_offset) / bits_per_dst;
+			const size_t dst_bit = (b + dst_offset) % bits_per_dst;
+			const size_t max_dst_writebits = bits_per_dst - dst_bit;
+
+			const size_t src_byte = (b + src_offset) / bits_per_src;
+			const size_t src_bit = (b + src_offset) % bits_per_src;
+			const size_t max_src_readbits = bits_per_src - src_bit;
+
+			const size_t loop_bits = min(max_dst_writebits, max_src_readbits, bits_to_copy - b);
+			//debug([&]{ std::cerr << "loop_bits: " << loop_bits << '\n'; });
+
+			TDstR dst_value = TDstR(dst[dst_byte]);
+			TSrcR src_value = (TSrcR(src[src_byte]) >> src_bit) & BIT_MASKS<TSrcR>[loop_bits];
+
+			if constexpr (clear_mode == bit_clear_mode::clear_objects)
+			{
+				if (dst_bit == 0)
+					dst_value = {};
+			}
+			else if constexpr (clear_mode == bit_clear_mode::clear_bits)
+			{
+				dst_value &= ~(BIT_MASKS<TDstR>[loop_bits] << dst_bit);
+			}
+
+			dst_value |= TDstR(src_value) << dst_bit;
+
+			dst[dst_byte] = TDst(dst_value);
+
+			b += loop_bits;
+		}
+	}
+
+#if false
+	template<size_t bits_to_copy,
+		unsigned src_offset = 0, unsigned dst_offset = 0,
+		bit_clear_mode clear_mode = bit_clear_mode::none,
+		typename TSrc = void, typename TDst = void>
+	constexpr void bit_copy(const TSrc* src, TDst* dst)
+	{
+		using namespace detail::bits_hpp;
+
+		static_assert(src_offset < BITS_PER_BYTE);
+		static_assert(dst_offset < BITS_PER_BYTE);
+		static_assert(std::is_same_v<TSrc, std::byte> || std::is_unsigned_v<TSrc>);
+		static_assert(std::is_same_v<TDst, std::byte> || std::is_unsigned_v<TDst>);
+
+		using TSrcR = std::conditional_t<std::is_same_v<TSrc, std::byte>, std::underlying_type_t<std::byte>, TSrc>;
+		using TDstR = std::conditional_t<std::is_same_v<TDst, std::byte>, std::underlying_type_t<std::byte>, TDst>;
+
+		constexpr size_t bits_per_src = sizeof(TSrcR) * BITS_PER_BYTE;
+		constexpr size_t bits_per_dst = sizeof(TDstR) * BITS_PER_BYTE;
 
 		size_t bits_remaining = bits_to_copy;
 
@@ -218,6 +274,7 @@ namespace mh
 			}
 		}
 	}
+#endif
 
 	template<typename TOut, size_t bits_to_read = sizeof(TOut) * detail::bits_hpp::BITS_PER_BYTE,
 		unsigned src_offset = 0, typename TIn = void>

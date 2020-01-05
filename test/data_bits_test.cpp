@@ -21,7 +21,7 @@ static void test_bit_functions(const TSrc* src, const TDst expected)
 	REQUIRE((copied & ~dst_mask) == ~dst_mask);
 
 	copied = dst_max;
-	mh::bit_copy<bits_to_copy, src_offset, 0, mh::bit_clear_mode::clear_bytes>(src, &copied);
+	mh::bit_copy<bits_to_copy, src_offset, 0, mh::bit_clear_mode::clear_objects>(src, &copied);
 	REQUIRE(copied == read);
 	REQUIRE(read == expected);
 	REQUIRE(copied == expected);
@@ -62,5 +62,14 @@ TEST_CASE("bit_read")
 		test_bit_functions<16, 6>(src_value, 0x50C8U);
 		test_bit_functions<16, 7>(src_value, 0xA864U);
 		test_bit_functions<13, 7>(src_value, 0x0864U);
+	}
+
+	SECTION("uint8_t source/dest")
+	{
+		uint8_t src[] = { 0x10, 0x32, 0x54, 0x76, 0x98, 0xba, 0xdc, 0xfe };
+		uint8_t dst[32];
+
+		mh::bit_copy<17, 2, 1, mh::bit_clear_mode::clear_bits>(src, dst);
+		REQUIRE(dst[0] == )
 	}
 }
