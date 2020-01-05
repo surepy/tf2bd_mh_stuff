@@ -13,21 +13,21 @@ static void test_bit_functions(const TSrc* src, const TDst expected)
 	CAPTURE(dst_mask);
 
 	TDst copied = dst_max;
-	mh::bit_copy<bits_to_copy, src_offset, 0, mh::bit_clear_mode::none>(src, &copied);
+	mh::bit_copy<bits_to_copy, src_offset, 0, mh::bit_clear_mode::none>(&copied, src);
 	REQUIRE(copied == dst_max);
 
-	mh::bit_copy<bits_to_copy, src_offset, 0, mh::bit_clear_mode::clear_bits>(src, &copied);
+	mh::bit_copy<bits_to_copy, src_offset, 0, mh::bit_clear_mode::clear_bits>(&copied, src);
 	REQUIRE((copied & dst_mask) == expected);
 	REQUIRE((copied & ~dst_mask) == ~dst_mask);
 
 	copied = dst_max;
-	mh::bit_copy<bits_to_copy, src_offset, 0, mh::bit_clear_mode::clear_objects>(src, &copied);
+	mh::bit_copy<bits_to_copy, src_offset, 0, mh::bit_clear_mode::clear_objects>(&copied, src);
 	REQUIRE(copied == read);
 	REQUIRE(read == expected);
 	REQUIRE(copied == expected);
 
 	copied = {};
-	mh::bit_copy<bits_to_copy, src_offset, 0, mh::bit_clear_mode::none>(src, &copied);
+	mh::bit_copy<bits_to_copy, src_offset, 0, mh::bit_clear_mode::none>(&copied, src);
 	REQUIRE(copied == expected);
 }
 
@@ -70,6 +70,6 @@ TEST_CASE("bit_read")
 		uint8_t dst[32];
 
 		mh::bit_copy<17, 2, 1, mh::bit_clear_mode::clear_bits>(src, dst);
-		REQUIRE(dst[0] == )
+		//REQUIRE(dst[0] == )
 	}
 }
