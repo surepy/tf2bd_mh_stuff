@@ -3,10 +3,10 @@
 
 TEST_CASE("lerp", "[math][interpolation]")
 {
-	REQUIRE(mh::lerp(0, 0, 0) == 0);
-	REQUIRE(mh::lerp(0, 0, 1) == 0);
-	REQUIRE(mh::lerp(0, 1, 1) == 1);
-	REQUIRE(mh::lerp(1, 1, 1) == 1);
+	REQUIRE(mh::lerp(0.0f, 0, 0) == 0);
+	REQUIRE(mh::lerp(0.0f, 0, 1) == 0);
+	REQUIRE(mh::lerp(0.0f, 1, 1) == 1);
+	REQUIRE(mh::lerp(1.0f, 1, 1) == 1);
 	REQUIRE(mh::lerp(0.5f, 1, 1) == 1);
 	REQUIRE(mh::lerp(0.5f, -49, 1) == Approx(-24));
 
@@ -37,7 +37,8 @@ TEST_CASE("lerp_slow", "[math][interpolation]")
 		const auto max = i;
 		CAPTURE(t, min, max);
 
-		REQUIRE(mh::lerp(t, min, max) == Approx(mh::lerp_slow(t, min, max)));
+		REQUIRE(mh::lerp(t, min, max) ==
+			Approx(mh::lerp_slow(t, min, max)).epsilon(0.0005));
 		REQUIRE(mh::lerp_clamped(t, min, max) == Approx(mh::lerp_slow_clamped(t, min, max)));
 	}
 }
