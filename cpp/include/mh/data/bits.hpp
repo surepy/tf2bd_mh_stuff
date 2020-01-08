@@ -124,16 +124,16 @@ namespace mh
 
 	enum class bit_clear_mode
 	{
-		// Doesn't clear anything. Only OR's stuff into dst. Fastest.
+		// Doesn't clear anything. Only OR's stuff into dst.
 		none,
 
 		// Clears only the bits being written, leaving others untouched.
 		clear_bits,
 
-		// Clears all touched TDst objects. Likely slower, requires additional branching
+		// Clears all touched TDst objects.
 		clear_objects,
 
-		// Objects are pre-zeroed. Use the fastest code path for writing into dst.
+		// Assume objects are pre-zeroed. Use the fastest code path for writing into dst.
 		contents_zero,
 	};
 
@@ -254,56 +254,62 @@ namespace mh
 		}
 	}
 
-    template<typename TSrc>
-    [[nodiscard]] constexpr uint_fast16_t u16_read(const TSrc* src, size_t byte_index)
-    {
+	template<typename TSrc>
+	[[nodiscard]] constexpr uint_fast16_t u16_read(const TSrc* src, size_t byte_index)
+	{
 		using namespace detail::bits_hpp;
 
+		uint_fast16_t retVal{};
 #if MH_BITS_ENABLE_UNALIGNED_INTEGERS && (__cpp_lib_is_constant_evaluated >= 201811)
-        if (!std::is_constant_evaluated())
-        {
-            auto u8 = reinterpret_cast<const uint8_t*>(src);
-            return *reinterpret_cast<const uint16_t*>(&u8[byte_index]);
-        }
-        else
+		if (!std::is_constant_evaluated())
+		{
+			auto u8 = reinterpret_cast<const uint8_t*>(src);
+			retVal = *reinterpret_cast<const uint16_t*>(&u8[byte_index]);
+		}
+		else
 #endif
-        if constexpr (sizeof(TSrc) == sizeof(uint16_t))
-        {
-            if ((byte_index % sizeof(TSrc)) == 0)
-                return uint_fast16_t(src[byte_index / sizeof(TSrc)]);
-        }
+		if (sizeof(TSrc) == sizeof(uint16_t) && (byte_index % sizeof(TSrc)) == 0)
+		{
+			retVal = uint_fast16_t(src[byte_index / sizeof(TSrc)]);
+		}
+		else
+		{
+			retVal = byte_read<uint_fast16_t>(src, byte_index);
+			retVal |= byte_read<uint_fast16_t>(src, byte_index + 1) << BITS_PER_BYTE;
+		}
 
-        uint_fast16_t retVal = byte_read<uint_fast16_t>(src, byte_index);
-        retVal |= byte_read<uint_fast16_t>(src, byte_index + 1) << BITS_PER_BYTE;
-        return retVal;
-    }
+		debug([&]{ std::cerr << "u16_read " << std::hex << retVal << " @ " << byte_index << '\n'; });
+		return retVal;
+	}
 
-    template<typename TDst>
-    constexpr void u16_write(TDst* dst, size_t byte_index, uint_fast16_t value)
-    {
-        using namespace detail::bits_hpp;
+	template<typename TDst>
+	constexpr void u16_write(TDst* dst, size_t byte_index, uint_fast16_t value)
+	{
+		using namespace detail::bits_hpp;
+
+		debug([&]{ std::cerr << "u16_write " << std::hex << value << " @ " << byte_index << '\n'; });
 
 #if MH_BITS_ENABLE_UNALIGNED_INTEGERS && (__cpp_lib_is_constant_evaluated >= 201811)
-        if (!std::is_constant_evaluated())
-        {
-            auto u8 = reinterpret_cast<uint8_t*>(dst);
-            *reinterpret_cast<uint16_t*>(&u8[byte_index]) = value;
-            return;
-        }
-        else
+		if (!std::is_constant_evaluated())
+		{
+			auto u8 = reinterpret_cast<uint8_t*>(dst);
+			*reinterpret_cast<uint16_t*>(&u8[byte_index]) = value;
+			return;
+		}
+		else
 #endif
-        if constexpr (sizeof(TDst) == sizeof(uint16_t))
-        {
-            if ((byte_index % sizeof(TDst)) == 0)
-            {
-                dst[byte_index / sizeof(TDst)] = TDst(value);
-                return;
-            }
-        }
+		if constexpr (sizeof(TDst) == sizeof(uint16_t))
+		{
+			if ((byte_index % sizeof(TDst)) == 0)
+			{
+				dst[byte_index / sizeof(TDst)] = TDst(value);
+				return;
+			}
+		}
 
-        byte_write(dst, byte_index, std::byte(value));
-        byte_write(dst, byte_index + 1, std::byte(value >> BITS_PER_BYTE));
-    }
+		byte_write(dst, byte_index, std::byte(value));
+		byte_write(dst, byte_index + 1, std::byte(value >> BITS_PER_BYTE));
+	}
 
 	template<size_t src_offset, size_t dst_offset,
 		bool src_multibyte, bool dst_multibyte, bit_clear_mode clear_mode, uint_fast16_t mask,
@@ -317,37 +323,37 @@ namespace mh
 		constexpr size_t dst_offset_bits = dst_offset % BITS_PER_BYTE;
 		constexpr size_t dst_offset_bytes = dst_offset / BITS_PER_BYTE;
 
-        uint_fast16_t src_buf{};
-        if constexpr (src_multibyte)
-            src_buf = u16_read(src, src_offset_bytes + index);
-        else
-            src_buf = byte_read<uint_fast16_t>(src, src_offset_bytes + index);
+		uint_fast16_t src_buf{};
+		if constexpr (src_multibyte)
+			src_buf = u16_read(src, src_offset_bytes + index);
+		else
+			src_buf = byte_read<uint_fast16_t>(src, src_offset_bytes + index);
 
 		src_buf = shift_both<dst_offset_bits, src_offset_bits>(src_buf);
 		src_buf &= mask;
 
 		uint_fast16_t dst_buf{};
-        if constexpr (dst_multibyte)
-            dst_buf = u16_read(dst, dst_offset_bytes + index);
-        else
-            dst_buf = byte_read<uint_fast16_t>(dst, dst_offset_bytes + index);
+		if constexpr (dst_multibyte)
+			dst_buf = u16_read(dst, dst_offset_bytes + index);
+		else
+			dst_buf = byte_read<uint_fast16_t>(dst, dst_offset_bytes + index);
 
 		if constexpr (clear_mode == bit_clear_mode::clear_bits)
 			dst_buf &= ~mask;
 
 		dst_buf |= src_buf;
 
-        if constexpr (dst_multibyte)
-            u16_write(dst, dst_offset_bytes + index, dst_buf);
-        else
-            byte_write(dst, dst_offset_bytes + index, std::byte(dst_buf));
+		if constexpr (dst_multibyte)
+			u16_write(dst, dst_offset_bytes + index, dst_buf);
+		else
+			byte_write(dst, dst_offset_bytes + index, std::byte(dst_buf));
 
 		debug([&]{ std::cerr << "bit_copy byte " << index << " (mask " << std::hex << mask << ")\n"; });
 	}
 
 	template<size_t bits_to_copy,
 		size_t src_offset = 0, size_t dst_offset = 0,
-		bit_clear_mode clear_mode = bit_clear_mode::none,
+		bit_clear_mode clear_mode = bit_clear_mode::clear_bits,
 		typename TSrc = void, typename TDst = void>
 	constexpr void bit_copy(TDst* MH_RESTRICT dst, const TSrc* MH_RESTRICT src)
 	{
@@ -365,6 +371,7 @@ namespace mh
 
 		constexpr size_t src_offset_bits = src_offset % bits_per_src;
 		constexpr size_t src_offset_bytes = src_offset / BITS_PER_BYTE;
+		constexpr size_t src_offset_obj = src_offset / bits_per_src;
 		constexpr size_t dst_offset_bits = dst_offset % bits_per_dst;
 		constexpr size_t dst_offset_bytes = dst_offset / BITS_PER_BYTE;
 		constexpr size_t dst_offset_obj = dst_offset / bits_per_dst;
@@ -374,23 +381,24 @@ namespace mh
 
 		if constexpr (clear_mode == bit_clear_mode::clear_objects)
 		{
-			constexpr size_t dst_count_count =
+			constexpr size_t dst_count_obj =
 				(dst_offset_bits + bits_to_copy + (bits_per_dst - 1)) / bits_per_dst;
-			for (size_t i = 0; i < dst_count_count; i++)
-				dst[dst_offset_obj] = {};
+			for (size_t i = 0; i < dst_count_obj; i++)
+				dst[dst_offset_obj + i] = {};
 		}
 
-// Known working speedups
-#if false
-		constexpr size_t src_offset_obj = src_offset / bits_per_src;
-
+		// Optimization: if everything is byte-aligned, just memcpy.
 		if constexpr (src_offset_bits == 0 && dst_offset_bits == 0 &&
-			(bits_to_copy % BITS_PER_BYTE) == 0)
+			(bits_to_copy % BITS_PER_BYTE) == 0 &&
+			(clear_mode == bit_clear_mode::clear_bits || clear_mode == bit_clear_mode::contents_zero ||
+			(clear_mode == bit_clear_mode::clear_objects && !(bits_to_copy % bits_per_dst))))
 		{
 			byte_copy<bits_to_copy / BITS_PER_BYTE>(&dst[dst_offset_obj], &src[src_offset_obj]);
 			return;
 		}
 
+// Known working speedups
+#if false
 		if constexpr (dst_touched_bits <= bits_per_dst && src_touched_bits <= bits_per_src)
 		{
 			const auto value = bit_read<TDstR, bits_to_copy, src_offset_bits, dst_offset_bits>(TSrcR(src[src_offset_obj]));
@@ -414,42 +422,53 @@ namespace mh
 #endif
 
 		debug([]{ std::cerr << "\nslow path\n"; });
-		constexpr size_t whole_bytes = (bits_to_copy + dst_offset_bits) / BITS_PER_BYTE;
+		constexpr size_t loop_bytes = (bits_to_copy + dst_offset_bits + (BITS_PER_BYTE - 1)) / BITS_PER_BYTE;
 
 		debug([&]{ std::cerr
 			<< "src_offset_bytes: " << src_offset_bytes << '\n'
 			<< "src_offset_bits: " << src_offset_bits << '\n'
 			<< "dst_offset_bytes: " << dst_offset_bytes << '\n'
 			<< "dst_offset_bits: " << dst_offset_bits << '\n'
-			<< "whole_bytes: " << whole_bytes << '\n'
+			<< "loop_bytes: " << loop_bytes << '\n'
 			; });
 
 		if constexpr (bits_to_copy > 0)
 		{
-			constexpr bool src_multibyte = ((src_offset_bits + bits_to_copy) > BITS_PER_BYTE);
+			debug([]{ std::cerr << "pre-loop\n"; });
+			constexpr bool src_multibyte = ((bits_to_copy + src_offset_bits) > BITS_PER_BYTE);
 			constexpr bool dst_multibyte = ((bits_to_copy + dst_offset_bits) > BITS_PER_BYTE);
 			constexpr uint_fast16_t mask = BIT_MASKS<uint_fast16_t>[min<size_t>(bits_to_copy, BITS_PER_BYTE)]
 				<< dst_offset_bits;
 			bit_copy_helper<src_offset, dst_offset, src_multibyte, dst_multibyte, clear_mode, mask>(dst, src, 0);
 		}
 
-		for (size_t b = 1; b < whole_bytes; b++)
+		if constexpr (loop_bytes > 0)
 		{
-			constexpr bool src_multibyte = src_offset_bits > 0;
-			constexpr bool dst_multibyte = dst_offset_bits > 0;
-			constexpr uint_fast16_t mask = BIT_MASKS<uint_fast16_t>[BITS_PER_BYTE] << dst_offset_bits;
-			bit_copy_helper<src_offset, dst_offset, src_multibyte, dst_multibyte, clear_mode, mask>(dst, src, b);
+			debug([]{ std::cerr << "loop\n"; });
+			for (size_t b = 1; b < loop_bytes - 1; b++)
+			{
+				constexpr bool src_multibyte = src_offset_bits > 0;
+				constexpr bool dst_multibyte = dst_offset_bits > 0;
+				constexpr uint_fast16_t mask = BIT_MASKS<uint_fast16_t>[BITS_PER_BYTE] << dst_offset_bits;
+				bit_copy_helper<src_offset, dst_offset, src_multibyte, dst_multibyte, clear_mode, mask>(dst, src, b);
+			}
 		}
 
-		if constexpr (constexpr bool dst_multibyte = ((dst_offset_bits + bits_to_copy) % BITS_PER_BYTE))
+#if 1
+		if constexpr (loop_bytes > 1)
 		{
-			constexpr bool src_multibyte = ((src_offset_bits + bits_to_copy) % BITS_PER_BYTE);
-			constexpr uint_fast16_t mask =  BIT_MASKS<uint_fast16_t>[min<size_t>(bits_to_copy, BITS_PER_BYTE)]
-				>> (BITS_PER_BYTE - ((dst_offset_bits + bits_to_copy) % BITS_PER_BYTE));
+			debug([]{ std::cerr << "post-loop\n"; });
+			constexpr bool dst_multibyte = (dst_offset_bits + bits_to_copy) % BITS_PER_BYTE;
+			constexpr bool src_multibyte = (src_offset_bits + bits_to_copy) % BITS_PER_BYTE;
+
+			constexpr size_t remaining_bits = (dst_offset_bits + bits_to_copy) - ((loop_bytes - 1) * BITS_PER_BYTE);
+			constexpr uint_fast16_t mask = BIT_MASKS<uint_fast16_t>[remaining_bits]
+				<< dst_offset_bits;
 
 			bit_copy_helper<src_offset, dst_offset, src_multibyte, dst_multibyte, clear_mode, mask>(
-				dst, src, whole_bytes);
+				dst, src, loop_bytes - 1);
 		}
+#endif
 	}
 
 	template<typename TOut,

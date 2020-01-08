@@ -39,6 +39,17 @@ static void test_bit_functions(const TSrc* src, const TDst expected)
 
 TEST_CASE("bit_read")
 {
+	SECTION("uint8_t source/dest")
+	{
+		//uint8_t src[] = { 0x10, 0x32, 0x54, 0x76, 0x98, 0xba, 0xdc, 0xfe };
+		const uint16_t src = 8;
+		uint8_t dst[32]{};
+
+		mh::bit_copy<6, 0, 5, mh::bit_clear_mode::clear_bits>(dst, &src);
+		REQUIRE(dst[0] == 0);
+		REQUIRE(dst[1] == 1);
+	}
+
 	SECTION("uint64_t source")
 	{
 		constexpr uint64_t src_value = 0xFEDCBA9876543210;
@@ -52,6 +63,10 @@ TEST_CASE("bit_read")
 		test_bit_functions<16, 6>(&src_value, 0x50C8U);
 		test_bit_functions<16, 7>(&src_value, 0xA864U);
 		test_bit_functions<13, 7>(&src_value, 0x0864U);
+
+		test_bit_functions<4, 47>(&src_value, 0x9U);
+		test_bit_functions<3, 48>(&src_value, 0x4U);
+		test_bit_functions<4, 48>(&src_value, 0xCU);
 	}
 
 	SECTION("uint8_t source")
@@ -68,14 +83,9 @@ TEST_CASE("bit_read")
 		test_bit_functions<16, 6>(src_value, 0x50C8U);
 		test_bit_functions<16, 7>(src_value, 0xA864U);
 		test_bit_functions<13, 7>(src_value, 0x0864U);
-	}
 
-	SECTION("uint8_t source/dest")
-	{
-		uint8_t src[] = { 0x10, 0x32, 0x54, 0x76, 0x98, 0xba, 0xdc, 0xfe };
-		uint8_t dst[32];
-
-		mh::bit_copy<17, 2, 1, mh::bit_clear_mode::clear_bits>(src, dst);
-		//REQUIRE(dst[0] == )
+		test_bit_functions<4, 47>(src_value, 0x9U);
+		test_bit_functions<3, 48>(src_value, 0x4U);
+		test_bit_functions<4, 48>(src_value, 0xCU);
 	}
 }
