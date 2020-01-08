@@ -135,7 +135,7 @@ namespace mh
 				return *this;
 			else
 			{
-				constexpr int bits_exp_offset = OFFSET;
+				//constexpr int bits_exp_offset = OFFSET;
 				constexpr int native_exp_offset = ((1 << newBits) / 2) - 1;
 
 				if (value == 0)

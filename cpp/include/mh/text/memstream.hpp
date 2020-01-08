@@ -143,7 +143,7 @@ namespace mh
 
 		void update_get_area_size()
 		{
-			auto getAreaSize = gend() - gbeg();
+			//auto getAreaSize = gend() - gbeg();
 			auto minPutAreaSize = pcur() - pbeg();
 			//if (getAreaSize < minPutAreaSize)
 			{

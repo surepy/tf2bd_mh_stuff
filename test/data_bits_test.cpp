@@ -16,9 +16,15 @@ static void test_bit_functions(const TSrc* src, const TDst expected)
 	mh::bit_copy<bits_to_copy, src_offset, 0, mh::bit_clear_mode::none>(&copied, src);
 	REQUIRE(copied == dst_max);
 
-	mh::bit_copy<bits_to_copy, src_offset, 0, mh::bit_clear_mode::clear_bits>(&copied, src);
-	REQUIRE((copied & dst_mask) == expected);
-	REQUIRE((copied & ~dst_mask) == ~dst_mask);
+	{
+		constexpr auto clear_mode = mh::bit_clear_mode::clear_bits;
+		CAPTURE(clear_mode);
+		copied = dst_max;
+		mh::bit_copy<bits_to_copy, src_offset, 0, clear_mode>(&copied, src);
+		CAPTURE(copied);
+		REQUIRE((copied & dst_mask) == expected);
+		REQUIRE((copied & ~dst_mask) == ~dst_mask);
+	}
 
 	copied = dst_max;
 	mh::bit_copy<bits_to_copy, src_offset, 0, mh::bit_clear_mode::clear_objects>(&copied, src);

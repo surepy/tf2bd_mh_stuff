@@ -5,14 +5,14 @@
 	+$(MAKE) --no-print-directory clean
 
 # CXX:=clang++
-CXXOPT:=-g -std=c++2a -fPIC -Wfatal-errors -Werror -I"../cpp/include/"
+CXXOPT:=-g -std=c++2a -fPIC -Wall -Wno-unused-variable -Wno-unused-but-set-variable -Wfatal-errors -Werror -I"../cpp/include/"
 
 CATCH2_SINGLE_INCLUDE_FOLDER:=catch2/repo/single_include/catch2/
 STUFF_FILES:=$(shell find ../cpp/ -type f -name '*.hpp' -o -name '*.h' -o -name '*.cpp')
 CATCH2_HEADER_FILES:=$(shell find $(CATCH2_SINGLE_INCLUDE_FOLDER) -type f -name '*.hpp' -o -name '*.h')
 
 runtests : testprog.exe
-	./testprog.exe
+	./testprog.exe --abort
 
 TEST_CPP_FILES = $(wildcard *.cpp)
 
