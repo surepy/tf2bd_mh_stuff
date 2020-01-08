@@ -21,7 +21,7 @@ namespace mh
 #endif
 #endif
 
-#define MH_BITS_ENABLE_UNALIGNED_INTEGERS 1
+//#define MH_BITS_ENABLE_UNALIGNED_INTEGERS 1
 
 	enum class int_for_bits_mode
 	{
@@ -397,8 +397,7 @@ namespace mh
 			return;
 		}
 
-// Known working speedups
-#if false
+		// Optimization: if evertying can be processed in a single read/write, do that.
 		if constexpr (dst_touched_bits <= bits_per_dst && src_touched_bits <= bits_per_src)
 		{
 			const auto value = bit_read<TDstR, bits_to_copy, src_offset_bits, dst_offset_bits>(TSrcR(src[src_offset_obj]));
@@ -419,7 +418,6 @@ namespace mh
 					return;
 			}
 		}
-#endif
 
 		debug([]{ std::cerr << "\nslow path\n"; });
 		constexpr size_t loop_bytes = (bits_to_copy + dst_offset_bits + (BITS_PER_BYTE - 1)) / BITS_PER_BYTE;
