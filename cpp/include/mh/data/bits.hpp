@@ -252,20 +252,6 @@ namespace mh
 		}
 	}
 
-#if false
-	template<size_t bits_to_copy>
-	constexpr uint_fast16_t bit_copy_mask_helper()
-	{
-		using namespace detail::bits_hpp;
-
-		constexpr auto mask = BIT_MASKS<uint_fast16_t>[min<size_t>(bits_to_copy, BITS_PER_BYTE)]
-				<< dst_offset_bits;
-
-		constexpr auto mask = BIT_MASKS<uint_fast16_t>[min<size_t>(bits_to_copy, BITS_PER_BYTE)]
-			>> (BITS_PER_BYTE - ((dst_offset_bits + bits_to_copy) % BITS_PER_BYTE));
-	}
-#endif
-
 	template<size_t src_offset, size_t dst_offset,
 		bool src_multibyte, bool dst_multibyte, bit_clear_mode clear_mode, uint_fast16_t mask,
 		typename TSrc = void, typename TDst = void>
@@ -284,13 +270,9 @@ namespace mh
 
 		src_buf = shift_both<dst_offset_bits, src_offset_bits>(src_buf);
 
-		//constexpr auto mask = BIT_MASKS<uint_fast16_t>[min<size_t>(bits_to_copy, BITS_PER_BYTE)]
-		//	>> (BITS_PER_BYTE - ((dst_offset_bits + bits_to_copy) % BITS_PER_BYTE));
-
 		src_buf &= mask;
 
 		uint_fast16_t dst_buf = byte_read<uint_fast16_t>(dst, dst_offset_bytes + index);
-		//constexpr bool dst_multibyte = (bits_to_copy + dst_offset_bits) > BITS_PER_BYTE;
 		if constexpr (dst_multibyte)
 		{
 			dst_buf |= byte_read<uint_fast16_t>(dst, dst_offset_bytes + index + 1)
@@ -332,7 +314,6 @@ namespace mh
 
 		constexpr size_t src_offset_bits = src_offset % bits_per_src;
 		constexpr size_t src_offset_bytes = src_offset / BITS_PER_BYTE;
-		//constexpr size_t src_offset_obj = src_offset / bits_per_src;
 		constexpr size_t dst_offset_bits = dst_offset % bits_per_dst;
 		constexpr size_t dst_offset_bytes = dst_offset / BITS_PER_BYTE;
 		constexpr size_t dst_offset_obj = dst_offset / bits_per_dst;
@@ -420,32 +401,14 @@ namespace mh
 #endif
 
 		debug([]{ std::cerr << "\nslow path\n"; });
-		constexpr size_t src_whole_bytes = src_touched_bits / BITS_PER_BYTE;
-		constexpr size_t dst_whole_bytes = dst_touched_bits / BITS_PER_BYTE;
-		constexpr size_t whole_bytes = min(src_whole_bytes, dst_whole_bytes);
+		constexpr size_t whole_bytes = (bits_to_copy + dst_offset_bits) / BITS_PER_BYTE;
 
-		const auto read_uint16 = [&](const auto* ptr, size_t startByte)
-		{
-			const auto value = uint_fast16_t(byte_read(ptr, startByte)) |
-				(uint_fast16_t(byte_read(ptr, startByte + 1)) << BITS_PER_BYTE);
-
-			debug([&]{ std::cerr << "read_uint16: " << std::hex << value << '\n'; });
-			return value;
-		};
-		const auto write_uint16 = [&](auto* ptr, size_t startByte, uint_fast16_t value)
-		{
-			debug([&]{ std::cerr << "write_uint16: " << std::hex << value << '\n'; });
-			byte_write(ptr, startByte, std::byte(value));
-			byte_write(ptr, startByte + 1, std::byte(value >> BITS_PER_BYTE));
-		};
-
-		constexpr size_t dst_bytes_test = (bits_to_copy + dst_offset_bits) / BITS_PER_BYTE;
 		debug([&]{ std::cerr
 			<< "src_offset_bytes: " << src_offset_bytes << '\n'
 			<< "src_offset_bits: " << src_offset_bits << '\n'
 			<< "dst_offset_bytes: " << dst_offset_bytes << '\n'
 			<< "dst_offset_bits: " << dst_offset_bits << '\n'
-			<< "dst_bytes_test: " << dst_bytes_test << '\n'
+			<< "whole_bytes: " << whole_bytes << '\n'
 			; });
 
 		if constexpr (bits_to_copy > 0)
@@ -455,61 +418,14 @@ namespace mh
 			constexpr uint_fast16_t mask = BIT_MASKS<uint_fast16_t>[min<size_t>(bits_to_copy, BITS_PER_BYTE)]
 				<< dst_offset_bits;
 			bit_copy_helper<src_offset, dst_offset, src_multibyte, dst_multibyte, clear_mode, mask>(dst, src, 0);
-#if false
-			uint_fast16_t src_buf = byte_read<uint_fast16_t>(src, src_offset_bytes);
-			if constexpr ((src_offset_bits + bits_to_copy) > BITS_PER_BYTE)
-				src_buf |= byte_read<uint_fast16_t>(src, src_offset_bytes + 1) << BITS_PER_BYTE;
-
-			src_buf = shift_both<dst_offset_bits, src_offset_bits>(src_buf);
-
-			constexpr auto mask = BIT_MASKS<uint_fast16_t>[min<size_t>(bits_to_copy, BITS_PER_BYTE)]
-				<< dst_offset_bits;
-
-			src_buf &= mask;
-
-			uint_fast16_t dst_buf = byte_read<uint_fast16_t>(dst, dst_offset_bytes);
-			constexpr bool dst_multibyte = (bits_to_copy + dst_offset_bits) > BITS_PER_BYTE;
-			if constexpr (dst_multibyte)
-				dst_buf |= byte_read<uint_fast16_t>(dst, dst_offset_bytes + 1) << BITS_PER_BYTE;
-
-			if constexpr (clear_mode == bit_clear_mode::clear_bits)
-				dst_buf &= ~mask;
-
-			dst_buf |= src_buf;
-
-			byte_write(dst, dst_offset_bytes, std::byte(dst_buf));
-			if constexpr (dst_multibyte)
-				byte_write(dst, dst_offset_bytes + 1, std::byte(dst_buf >> BITS_PER_BYTE));
-
-			debug([&]{ std::cerr << "bit_copy byte 0 (mask " << std::hex << mask << ")\n"; });
-#endif
 		}
 
-		//if constexpr (dst_bytes_test > 1)
+		for (size_t b = 1; b < whole_bytes; b++)
 		{
 			constexpr bool src_multibyte = src_offset_bits > 0;
 			constexpr bool dst_multibyte = dst_offset_bits > 0;
 			constexpr uint_fast16_t mask = BIT_MASKS<uint_fast16_t>[BITS_PER_BYTE] << dst_offset_bits;
-			for (size_t b = 1; b < dst_bytes_test; b++)
-			{
-				bit_copy_helper<src_offset, dst_offset, src_multibyte, dst_multibyte, clear_mode, mask>(dst, src, b);
-#if false
-				debug([&]{ std::cerr << "bit_copy loop[" << b << "]\n"; });
-				uint_fast16_t src_buf = read_uint16(src, src_offset_bytes + b);
-				src_buf = shift_both<dst_offset_bits, src_offset_bits>(src_buf);
-
-				constexpr auto mask = BIT_MASKS<uint_fast16_t>[BITS_PER_BYTE] << dst_offset_bits;
-				src_buf &= mask;
-
-				uint_fast16_t dst_buf = read_uint16(dst, dst_offset_bytes + b);
-				if constexpr (clear_mode == bit_clear_mode::clear_bits)
-					dst_buf &= ~mask;
-
-				dst_buf |= src_buf;
-
-				write_uint16(dst, dst_offset_bytes + b, dst_buf);
-#endif
-			}
+			bit_copy_helper<src_offset, dst_offset, src_multibyte, dst_multibyte, clear_mode, mask>(dst, src, b);
 		}
 
 		if constexpr (constexpr bool dst_multibyte = ((dst_offset_bits + bits_to_copy) % BITS_PER_BYTE))
@@ -519,74 +435,8 @@ namespace mh
 				>> (BITS_PER_BYTE - ((dst_offset_bits + bits_to_copy) % BITS_PER_BYTE));
 
 			bit_copy_helper<src_offset, dst_offset, src_multibyte, dst_multibyte, clear_mode, mask>(
-				dst, src, dst_bytes_test);
-#if false
-			uint_fast16_t src_buf = byte_read<uint_fast16_t>(src, src_offset_bytes + dst_bytes_test);
-			if constexpr ((src_offset_bits + bits_to_copy) % BITS_PER_BYTE)
-				src_buf |= byte_read<uint_fast16_t>(src, src_offset_bytes + dst_bytes_test + 1) << BITS_PER_BYTE;
-
-			src_buf = shift_both<dst_offset_bits, src_offset_bits>(src_buf);
-
-			constexpr auto mask = BIT_MASKS<uint_fast16_t>[min<size_t>(bits_to_copy, BITS_PER_BYTE)]
-				>> (BITS_PER_BYTE - ((dst_offset_bits + bits_to_copy) % BITS_PER_BYTE));
-
-			src_buf &= mask;
-
-			uint_fast16_t dst_buf = byte_read<uint_fast16_t>(dst, dst_offset_bytes + dst_bytes_test);
-			if constexpr (dst_multibyte)
-			{
-				dst_buf |= byte_read<uint_fast16_t>(dst, dst_offset_bytes + dst_bytes_test + 1)
-					<< BITS_PER_BYTE;
-			}
-
-			if constexpr (clear_mode == bit_clear_mode::clear_bits)
-				dst_buf &= ~mask;
-
-			dst_buf |= src_buf;
-
-			byte_write(dst, dst_offset_bytes + dst_bytes_test, std::byte(dst_buf));
-			if constexpr (dst_multibyte)
-			{
-				byte_write(dst, dst_offset_bytes + dst_bytes_test + 1,
-					std::byte(dst_buf >> BITS_PER_BYTE));
-			}
-
-			debug([&]{ std::cerr << "bit_copy byte " << dst_bytes_test << " (mask " << std::hex << mask << ")\n"; });
-#endif
+				dst, src, whole_bytes);
 		}
-
-#if false
-		for (size_t b = 0; b < bits_to_copy; )
-		{
-			const size_t dst_byte = (b + dst_offset) / bits_per_dst;
-			const size_t dst_bit = (b + dst_offset) % bits_per_dst;
-			const size_t max_dst_writebits = bits_per_dst - dst_bit;
-
-			const size_t src_byte = (b + src_offset) / bits_per_src;
-			const size_t src_bit = (b + src_offset) % bits_per_src;
-			const size_t max_src_readbits = bits_per_src - src_bit;
-
-			const size_t loop_bits = min(max_dst_writebits, max_src_readbits, bits_to_copy - b);
-			//debug([&]{ std::cerr << "loop_bits: " << loop_bits << '\n'; });
-
-			TDstR existing_dst_value = TDstR(dst[dst_byte]);
-
-			if constexpr (clear_mode == bit_clear_mode::clear_objects)
-			{
-				if (dst_bit == 0)
-					existing_dst_value = {};
-			}
-			else if constexpr (clear_mode == bit_clear_mode::clear_bits)
-			{
-				existing_dst_value &= ~(BIT_MASKS<TDstR>[loop_bits] << dst_bit);
-			}
-
-			const TDstR new_dst_value = bit_read<TDstR>(TSrcR(src[src_byte]), loop_bits, src_bit, dst_bit);
-
-			dst[dst_byte] = TDst(existing_dst_value | new_dst_value);
-			b += loop_bits;
-		}
-#endif
 	}
 
 	template<typename TOut,
