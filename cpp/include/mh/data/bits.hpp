@@ -22,6 +22,7 @@ namespace mh
 #endif
 
 //#define MH_BITS_ENABLE_UNALIGNED_INTEGERS 1
+//#define MH_BITS_ENABLE_SMALL_MEMCPY 1
 
 	enum class int_for_bits_mode
 	{
@@ -218,6 +219,16 @@ namespace mh
 
 		debug([&]{ std::cerr << "byte_write " << std::hex << unsigned(value) << " @ " << index << '\n'; });
 
+#if (__cpp_lib_is_constant_evaluated >= 201811)
+		if (!std::is_constant_evaluated())
+		{
+#if MH_BITS_ENABLE_SMALL_MEMCPY
+			memcpy(reinterpret_cast<std::byte*>(dst) + index, &value, 1);
+			return;
+#endif
+		}
+#endif
+
 		if constexpr (sizeof(TDst) == 1)
 		{
 			dst[index] = TDst(value);
@@ -240,7 +251,7 @@ namespace mh
 
 		if constexpr (byte_count > 0)
 		{
-#if (__cpp_lib_is_constant_evaluated >= 201811)
+#if MH_BITS_ENABLE_SMALL_MEMCPY && (__cpp_lib_is_constant_evaluated >= 201811)
 			if (!std::is_constant_evaluated())
 			{
 				std::memcpy(dst, src, byte_count);
@@ -260,14 +271,20 @@ namespace mh
 		using namespace detail::bits_hpp;
 
 		uint_fast16_t retVal{};
-#if MH_BITS_ENABLE_UNALIGNED_INTEGERS && (__cpp_lib_is_constant_evaluated >= 201811)
+#if (__cpp_lib_is_constant_evaluated >= 201811)
 		if (!std::is_constant_evaluated())
 		{
+#if MH_BITS_ENABLE_UNALIGNED_INTEGERS
 			auto u8 = reinterpret_cast<const uint8_t*>(src);
 			retVal = *reinterpret_cast<const uint16_t*>(&u8[byte_index]);
-		}
-		else
+			return retVal;
+#elif MH_BITS_ENABLE_SMALL_MEMCPY
+			std::memcpy(&retVal, reinterpret_cast<const std::byte*>(src) + byte_index, 2);
+			return retVal;
 #endif
+		}
+#endif
+
 		if (sizeof(TSrc) == sizeof(uint16_t) && (byte_index % sizeof(TSrc)) == 0)
 		{
 			retVal = uint_fast16_t(src[byte_index / sizeof(TSrc)]);
@@ -289,15 +306,20 @@ namespace mh
 
 		debug([&]{ std::cerr << "u16_write " << std::hex << value << " @ " << byte_index << '\n'; });
 
-#if MH_BITS_ENABLE_UNALIGNED_INTEGERS && (__cpp_lib_is_constant_evaluated >= 201811)
+#if (__cpp_lib_is_constant_evaluated >= 201811)
 		if (!std::is_constant_evaluated())
 		{
+#if MH_BITS_ENABLE_UNALIGNED_INTEGERS
 			auto u8 = reinterpret_cast<uint8_t*>(dst);
 			*reinterpret_cast<uint16_t*>(&u8[byte_index]) = value;
 			return;
-		}
-		else
+#elif MH_BITS_ENABLE_SMALL_MEMCPY
+			std::memcpy(reinterpret_cast<std::byte*>(dst) + byte_index, &value, 2);
+			return;
 #endif
+		}
+#endif
+
 		if constexpr (sizeof(TDst) == sizeof(uint16_t))
 		{
 			if ((byte_index % sizeof(TDst)) == 0)
@@ -452,12 +474,11 @@ namespace mh
 			}
 		}
 
-#if 1
 		if constexpr (loop_bytes > 1)
 		{
 			debug([]{ std::cerr << "post-loop\n"; });
-			constexpr bool dst_multibyte = (dst_offset_bits + bits_to_copy) % BITS_PER_BYTE;
-			constexpr bool src_multibyte = (src_offset_bits + bits_to_copy) % BITS_PER_BYTE;
+			constexpr bool dst_multibyte = false;// (dst_offset_bits + bits_to_copy) % BITS_PER_BYTE;
+			constexpr bool src_multibyte = false;//(src_offset_bits + bits_to_copy) % BITS_PER_BYTE;
 
 			constexpr size_t remaining_bits = (dst_offset_bits + bits_to_copy) - ((loop_bytes - 1) * BITS_PER_BYTE);
 			constexpr uint_fast16_t mask = BIT_MASKS<uint_fast16_t>[remaining_bits]
@@ -466,7 +487,6 @@ namespace mh
 			bit_copy_helper<src_offset, dst_offset, src_multibyte, dst_multibyte, clear_mode, mask>(
 				dst, src, loop_bytes - 1);
 		}
-#endif
 	}
 
 	template<typename TOut,
