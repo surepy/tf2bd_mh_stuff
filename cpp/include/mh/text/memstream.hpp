@@ -8,6 +8,11 @@
 
 namespace mh
 {
+	namespace detail::memstream_hpp
+	{
+		template<typename T> const T& min(const T& a, const T& b) { return a < b ? a : b; }
+	}
+
 	template<typename CharT = char, typename Traits = std::char_traits<CharT>>
 	class basic_memstreambuf : public std::basic_streambuf<CharT, Traits>
 	{
@@ -94,7 +99,7 @@ namespace mh
 
 		std::streamsize xsputn(const CharT* s, std::streamsize count) override
 		{
-			count = std::min(count, remaining_p());
+			count = detail::memstream_hpp::min<off_t>(count, remaining_p());
 			auto ptr = pcur();
 			for (std::streamsize i = 0; i < count; i++)
 			{
@@ -148,7 +153,7 @@ namespace mh
 			//if (getAreaSize < minPutAreaSize)
 			{
 				const auto newEnd = gbeg() + minPutAreaSize;
-				this->setg(gbeg(), std::min(gcur(), newEnd), newEnd);
+				this->setg(gbeg(), detail::memstream_hpp::min(gcur(), newEnd), newEnd);
 			}
 		}
 	};

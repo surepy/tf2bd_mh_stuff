@@ -5,7 +5,15 @@
 	+$(MAKE) --no-print-directory clean
 
 # CXX:=clang++
-CXXOPT:=-g -std=c++2a -fPIC -Wall -Wno-unused-variable -Wno-unused-but-set-variable -Wfatal-errors -Werror -I"../cpp/include/"
+CXXOPT:=-g -std=c++2a -fPIC -Wall -Wno-unused-variable -Wfatal-errors -Werror -I"../cpp/include/"
+
+ifneq (,$(findstring clang++, $(CXX)))
+CXXOPT += --stdlib=libc++
+CXXOPT += -I/usr/lib/llvm-10/include/c++/v1
+# LDFLAGS += /usr/lib/llvm-10/lib/libc++.so /usr/lib/llvm-10/lib/libc++abi.so -L/usr/lib/llvm-10/lib
+else ifneq (,$(findstring g++, $(CXX)))
+CXXOPT += -Wno-unused-but-set-variable
+endif
 
 CATCH2_SINGLE_INCLUDE_FOLDER:=catch2/repo/single_include/catch2/
 STUFF_FILES:=$(shell find ../cpp/ -type f -name '*.hpp' -o -name '*.h' -o -name '*.cpp')
@@ -16,12 +24,12 @@ runtests : testprog.exe
 
 TEST_CPP_FILES = $(wildcard *.cpp)
 
-ALL_OBJS = $(addprefix out/, $(TEST_CPP_FILES:cpp=obj)) out/catch2/catch2.obj
+ALL_OBJS = $(addprefix out/$(CXX)/, $(TEST_CPP_FILES:cpp=obj)) out/$(CXX)/catch2/catch2.obj
 
 testprog.exe : $(ALL_OBJS)
 	$(CXX) $(CXXOPT) $^ -o $@
 
-out/%.obj : %.cpp
+out/$(CXX)/%.obj : %.cpp
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXOPT) -c $< -o $@
 
@@ -29,7 +37,7 @@ clean :
 	rm -rf out *.exe
 
 # automatic dependencies
-out/%.d : %.cpp
+out/$(CXX)/%.d : %.cpp
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXOPT) -MM -MF $@ -MT $(@:.d=.obj) -E $<
 
