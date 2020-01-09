@@ -173,8 +173,8 @@ TEST_CASE("bit_float - numeric_limits", "[bit_float]")
 
 TEST_CASE("bit_float - roundtrip inf/nan")
 {
-	constexpr float inf = std::numeric_limits<float>::infinity();
-	constexpr float nan = std::numeric_limits<float>::quiet_NaN();
+	//constexpr float inf = std::numeric_limits<float>::infinity();
+	//constexpr float nan = std::numeric_limits<float>::quiet_NaN();
 
 	// TODO
 	//const auto halfbits_inf = half_float::native_to_bits(inf);

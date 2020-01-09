@@ -5,7 +5,7 @@
 	+$(MAKE) --no-print-directory clean
 
 # CXX:=clang++
-CXXOPT:=-g -std=c++2a -fPIC -Wall -Wno-unused-variable -Wfatal-errors -Werror -I"../cpp/include/"
+CXXOPT:=-g -std=c++2a -fPIC -Wall -Wfatal-errors -Werror -I"../cpp/include/"
 
 ifneq (,$(findstring clang++, $(CXX)))
 CXXOPT += --stdlib=libc++
@@ -20,7 +20,9 @@ STUFF_FILES:=$(shell find ../cpp/ -type f -name '*.hpp' -o -name '*.h' -o -name 
 CATCH2_HEADER_FILES:=$(shell find $(CATCH2_SINGLE_INCLUDE_FOLDER) -type f -name '*.hpp' -o -name '*.h')
 
 runtests : testprog.exe
-	./testprog.exe --abort
+	./$< --abort
+valgrind : testprog.exe
+	valgrind ./$<
 
 TEST_CPP_FILES = $(wildcard *.cpp)
 
