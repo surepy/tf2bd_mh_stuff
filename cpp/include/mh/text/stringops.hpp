@@ -5,7 +5,7 @@
 
 namespace mh
 {
-	namespace detail
+	namespace detail::stringops_hpp
 	{
 		template<typename CharT> inline static constexpr std::initializer_list<CharT> WHITESPACE_CHARS =
 		{
@@ -47,7 +47,7 @@ namespace mh
 	template<typename CharT = char, typename Traits = std::char_traits<CharT>, typename Alloc = std::allocator<CharT>>
 	inline std::basic_string<CharT, Traits, Alloc> trim_start(std::basic_string<CharT, Traits, Alloc>&& str)
 	{
-		return mh::trim_start(std::move(str), mh::detail::WHITESPACE_CHARS<CharT>);
+		return mh::trim_start(std::move(str), mh::detail::stringops_hpp::WHITESPACE_CHARS<CharT>);
 	}
 
 	template<typename CharT = char, typename Traits = std::char_traits<CharT>, typename Alloc = std::allocator<CharT>>
@@ -81,7 +81,7 @@ namespace mh
 	template<typename CharT = char, typename Traits = std::char_traits<CharT>, typename Alloc = std::allocator<CharT>>
 	inline std::basic_string<CharT, Traits, Alloc> trim_end(std::basic_string<CharT, Traits, Alloc>&& str)
 	{
-		return mh::trim_end(std::move(str), mh::detail::WHITESPACE_CHARS<CharT>);
+		return mh::trim_end(std::move(str), mh::detail::stringops_hpp::WHITESPACE_CHARS<CharT>);
 	}
 
 	template<typename CharT = char, typename Traits = std::char_traits<CharT>, typename Alloc = std::allocator<CharT>>
@@ -93,6 +93,6 @@ namespace mh
 	template<typename CharT = char, typename Traits = std::char_traits<CharT>, typename Alloc = std::allocator<CharT>>
 	inline std::basic_string<CharT, Traits, Alloc> trim(std::basic_string<CharT, Traits, Alloc>&& str)
 	{
-		return mh::trim(std::move(str), mh::detail::WHITESPACE_CHARS<CharT>);
+		return mh::trim(std::move(str), mh::detail::stringops_hpp::WHITESPACE_CHARS<CharT>);
 	}
 }

@@ -12,7 +12,7 @@
 
 namespace mh
 {
-	namespace detail
+	namespace detail::bit_float_hpp
 	{
 		template<unsigned bits>
 		static constexpr auto uint_for_bits()
@@ -65,11 +65,11 @@ namespace mh
 	struct mantissa_t
 	{
 		static_assert(bits > 0, "Mantissa bits cannot be 0");
-		static_assert(bits <= detail::DBL_MNT_BITS, "Mantissa bits cannot be greater than those of a double");
+		static_assert(bits <= detail::bit_float_hpp::DBL_MNT_BITS, "Mantissa bits cannot be greater than those of a double");
 
-		using value_t = detail::uint_for_bits_t<bits>;
+		using value_t = detail::bit_float_hpp::uint_for_bits_t<bits>;
 		static constexpr value_t BITS = bits;
-		static constexpr value_t MASK = detail::bits_to_mask<value_t>(bits);
+		static constexpr value_t MASK = detail::bit_float_hpp::bits_to_mask<value_t>(bits);
 		static constexpr mantissa_t<bits> max() { return mantissa_t<bits>(MASK); }
 		static constexpr mantissa_t<bits> min() { return mantissa_t<bits>(0); }
 
@@ -107,11 +107,11 @@ namespace mh
 	struct exponent_t
 	{
 		static_assert(bits > 0, "Exponent bits cannot be 0");
-		static_assert(bits <= detail::DBL_EXP_BITS, "Exponent bits cannot be greater than those of a double");
+		static_assert(bits <= detail::bit_float_hpp::DBL_EXP_BITS, "Exponent bits cannot be greater than those of a double");
 
-		using value_t = detail::uint_for_bits_t<bits>;
+		using value_t = detail::bit_float_hpp::uint_for_bits_t<bits>;
 		static constexpr value_t BITS = bits;
-		static constexpr value_t MASK = detail::bits_to_mask<value_t>(bits);
+		static constexpr value_t MASK = detail::bit_float_hpp::bits_to_mask<value_t>(bits);
 		static constexpr value_t OFFSET = ((1 << bits) / 2) - 1;
 		static constexpr exponent_t<bits> inf_or_nan() { return exponent_t<bits>(MASK); }
 		static constexpr exponent_t<bits> max() { return exponent_t<bits>(MASK - 1); }
@@ -123,7 +123,7 @@ namespace mh
 
 		constexpr auto actual_value() const
 		{
-			using t = detail::int_for_bits_t<bits + 1>;
+			using t = detail::bit_float_hpp::int_for_bits_t<bits + 1>;
 			return t(value) - t(zero().value);
 		}
 
@@ -135,7 +135,7 @@ namespace mh
 				return *this;
 			else
 			{
-				constexpr int bits_exp_offset = OFFSET;
+				//constexpr int bits_exp_offset = OFFSET;
 				constexpr int native_exp_offset = ((1 << newBits) / 2) - 1;
 
 				if (value == 0)
@@ -197,14 +197,20 @@ namespace mh
 		static constexpr unsigned TOTAL_BITS = MantissaBits + ExponentBits + (SignBit ? 1 : 0);
 
 	public:
-		enum class bits_t : detail::uint_for_bits_t<TOTAL_BITS>;
+		enum class bits_t : detail::bit_float_hpp::uint_for_bits_t<TOTAL_BITS>;
 		using mantissa_t = mh::mantissa_t<MantissaBits>;
 		using exponent_t = mh::exponent_t<ExponentBits>;
 		using native_t = std::conditional_t<
-			MantissaBits <= detail::FLT_MNT_BITS && ExponentBits <= detail::FLT_EXP_BITS, float, double>;
+			MantissaBits <= detail::bit_float_hpp::FLT_MNT_BITS && ExponentBits <= detail::bit_float_hpp::FLT_EXP_BITS,
+			float, double>;
+
 		using native_bitfloat_t = bit_float<
-			MantissaBits <= detail::FLT_MNT_BITS ? detail::FLT_MNT_BITS : detail::DBL_MNT_BITS,
-			ExponentBits <= detail::FLT_EXP_BITS ? detail::FLT_EXP_BITS : detail::DBL_EXP_BITS,
+			MantissaBits <= detail::bit_float_hpp::FLT_MNT_BITS
+				? detail::bit_float_hpp::FLT_MNT_BITS
+				: detail::bit_float_hpp::DBL_MNT_BITS,
+			ExponentBits <= detail::bit_float_hpp::FLT_EXP_BITS
+				? detail::bit_float_hpp::FLT_EXP_BITS
+				: detail::bit_float_hpp::DBL_EXP_BITS,
 			true>;
 
 	private:
@@ -307,19 +313,20 @@ namespace mh
 		static constexpr native_t bits_to_native(bits_t bits)
 		{
 			static_assert(std::numeric_limits<native_t>::is_iec559);
-			return detail::bit_cast<native_t>(bits_to_bits<native_bitfloat_t>(bits));
+			return detail::bit_float_hpp::bit_cast<native_t>(bits_to_bits<native_bitfloat_t>(bits));
 		}
 
 		static constexpr bits_t native_to_bits(native_t native)
 		{
 			static_assert(std::numeric_limits<native_t>::is_iec559);
-			return native_bitfloat_t::template bits_to_bits<this_t>(detail::bit_cast<typename native_bitfloat_t::bits_t>(native));
+			return native_bitfloat_t::template bits_to_bits<this_t>(
+				detail::bit_float_hpp::bit_cast<typename native_bitfloat_t::bits_t>(native));
 		}
 	};
 
-	using half_float = mh::bit_float<detail::HLF_MNT_BITS, detail::HLF_EXP_BITS, true>;
-	using native_float = mh::bit_float<detail::FLT_MNT_BITS, detail::FLT_EXP_BITS, true>;
-	using native_double = mh::bit_float<detail::DBL_MNT_BITS, detail::DBL_EXP_BITS, true>;
+	using half_float = mh::bit_float<detail::bit_float_hpp::HLF_MNT_BITS, detail::bit_float_hpp::HLF_EXP_BITS, true>;
+	using native_float = mh::bit_float<detail::bit_float_hpp::FLT_MNT_BITS, detail::bit_float_hpp::FLT_EXP_BITS, true>;
+	using native_double = mh::bit_float<detail::bit_float_hpp::DBL_MNT_BITS, detail::bit_float_hpp::DBL_EXP_BITS, true>;
 }
 
 namespace std

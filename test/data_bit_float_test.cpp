@@ -1,4 +1,4 @@
-#include <mh/data/bit_float.hpp>
+#include "mh/data/bit_float.hpp"
 #include "catch2/repo/single_include/catch2/catch.hpp"
 
 using half_float = mh::half_float;
@@ -176,6 +176,7 @@ TEST_CASE("bit_float - roundtrip inf/nan")
 	constexpr float inf = std::numeric_limits<float>::infinity();
 	constexpr float nan = std::numeric_limits<float>::quiet_NaN();
 
-	const auto halfbits_inf = half_float::native_to_bits(inf);
-	const auto halfbits_nan = half_float::native_to_bits(nan);
+	// TODO
+	//const auto halfbits_inf = half_float::native_to_bits(inf);
+	//const auto halfbits_nan = half_float::native_to_bits(nan);
 }

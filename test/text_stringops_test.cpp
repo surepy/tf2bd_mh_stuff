@@ -1,4 +1,4 @@
-#include <mh/text/stringops.hpp>
+#include "mh/text/stringops.hpp"
 #include "catch2/repo/single_include/catch2/catch.hpp"
 
 TEST_CASE("trim - empty string", "[text][stringops]")

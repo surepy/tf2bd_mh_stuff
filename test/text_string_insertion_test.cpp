@@ -1,4 +1,4 @@
-#include <mh/text/string_insertion.hpp>
+#include "mh/text/string_insertion.hpp"
 #include "catch2/repo/single_include/catch2/catch.hpp"
 
 TEST_CASE("string insertion op", "[text][string_insertion]")
