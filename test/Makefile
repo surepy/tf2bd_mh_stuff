@@ -4,43 +4,32 @@
 	@touch $@
 	+$(MAKE) --no-print-directory clean
 
-# CXX:=clang++
-CXXOPT:=-g -std=c++2a -fPIC -Wall -Wfatal-errors -Werror -I"../cpp/include/"
-
-ifneq (,$(findstring clang++, $(CXX)))
-CXXOPT += --stdlib=libc++
-CXXOPT += -I/usr/lib/llvm-10/include/c++/v1
-# LDFLAGS += /usr/lib/llvm-10/lib/libc++.so /usr/lib/llvm-10/lib/libc++abi.so -L/usr/lib/llvm-10/lib
-else ifneq (,$(findstring g++, $(CXX)))
-CXXOPT += -Wno-unused-but-set-variable
+ifndef BUILD_CONFIGS
+BUILD_CONFIGS=clang++-10 clang++-9 g++-9 clang++-8 g++-8 clang++-7
 endif
 
-CATCH2_SINGLE_INCLUDE_FOLDER:=catch2/repo/single_include/catch2/
-STUFF_FILES:=$(shell find ../cpp/ -type f -name '*.hpp' -o -name '*.h' -o -name '*.cpp')
-CATCH2_HEADER_FILES:=$(shell find $(CATCH2_SINGLE_INCLUDE_FOLDER) -type f -name '*.hpp' -o -name '*.h')
+# https://stackoverflow.com/a/3618308/871842
+export FIX_PATH_STDOUT = | sed -r 's/^.*:[[:digit:]]+:[[:digit:]]+\:/$(notdir $(shell pwd))\/\0/g'
+export FIX_PATH_STDERR = 3>&1 1>&2 2>&3 3>&- $(FIX_PATH_STDOUT)
 
-runtests : testprog.exe
-	./$< --abort
-valgrind : testprog.exe
+CATCH2_FLAGS = --use-colour yes # --benchmark-samples 1000
+
+TARGET_EXES=$(addsuffix _test.exe, $(BUILD_CONFIGS))
+
+runtests : $(addsuffix _test_output.txt, $(BUILD_CONFIGS))
+binaries : $(TARGET_EXES)
+
+%_valgrind : %_test.exe
 	valgrind ./$<
 
-TEST_CPP_FILES = $(wildcard *.cpp)
+%_test_output.txt : %_test.exe
+	stdbuf -o0 ./$< $(CATCH2_FLAGS) | tee $@
 
-ALL_OBJS = $(addprefix out/$(CXX)/, $(TEST_CPP_FILES:cpp=obj)) out/$(CXX)/catch2/catch2.obj
-
-testprog.exe : $(ALL_OBJS)
-	$(CXX) $(CXXOPT) $^ -o $@
-
-out/$(CXX)/%.obj : %.cpp
-	@mkdir -p $(dir $@)
-	$(CXX) $(CXXOPT) -c $< -o $@
+$(TARGET_EXES) : %_test.exe :
+	+$(MAKE) -f Makefile2 --no-print-directory CXX=$*
 
 clean :
-	rm -rf out *.exe
+	rm -rf out *.exe *_test_output.txt
 
-# automatic dependencies
-out/$(CXX)/%.d : %.cpp
-	@mkdir -p $(dir $@)
-	$(CXX) $(CXXOPT) -MM -MF $@ -MT $(@:.d=.obj) -E $<
-
--include $(ALL_OBJS:%.obj=%.d)
+.PHONY : $(TARGET_EXES) clean
+.PRECIOUS: %_test.exe

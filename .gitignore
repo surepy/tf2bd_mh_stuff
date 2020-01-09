@@ -8,3 +8,4 @@
 *.gcno
 test/.makefile_date
 test/out/
+*_test_output.txt
