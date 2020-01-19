@@ -81,14 +81,14 @@ namespace mh
 				return getopt_result;
 		}
 
-		const option* get_longopt(const option* defaultVal = nullptr) const
+		constexpr const option* get_longopt(const option* defaultVal = nullptr) const
 		{
 			if (longopts && longopt_index >= 0)
 				return &longopts[longopt_index];
 
 			return defaultVal;
 		}
-		const option& get_longopt_safe(const option& defaultVal = DEFAULTED_OPTION) const
+		constexpr const option& get_longopt_safe(const option& defaultVal = DEFAULTED_OPTION) const
 		{
 			return *get_longopt(&defaultVal);
 		}
@@ -207,15 +207,11 @@ std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>&
 
 #if !defined(MH_GETOPT_DISABLE_OPTION_COMPARISON)
 #if (__cpp_impl_three_way_comparison >= 201907) && (__cpp_lib_three_way_comparison >= 201907)
-#include <compare>
 inline constexpr std::strong_ordering operator<=>(const option& lhs, const option& rhs)
 {
 	if (lhs.name && rhs.name)
 	{
-		auto result = strcmp(lhs.name, rhs.name);
-		if (result < 0)
-			return std::strong_ordering::
-		if (; std::is_neq(result))
+		if (auto result = std::string_view(lhs.name) <=> std::string_view(rhs.name); std::is_neq(result))
 			return result;
 	}
 	else if (auto result = lhs.name <=> rhs.name; std::is_neq(result))
@@ -235,7 +231,7 @@ inline constexpr bool operator==(const option& lhs, const option& rhs)
 {
 	if (lhs.name && rhs.name)
 	{
-		if (auto result = strcmp(lhs.name, rhs.name); result != 0)
+		if (std::string_view(lhs.name) != std::string_view(rhs.name))
 			return false;
 	}
 	else if (auto result = (lhs.name == rhs.name); !result)
