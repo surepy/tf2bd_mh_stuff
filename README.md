@@ -6,7 +6,7 @@ All code is tested clang-7/8/9/10 and gcc-8/9 in C++2a mode.
 "Dependencies" below refers only to other files *in this repository*.
 
 | File | Description | Dependencies |
-| - | - | - | - |
+| - | - | - |
 | `algorithm/algorithm.hpp` | Helpers for `<algorithm>`. | ✅ None
 | `data/bit_float.hpp` | Conversion to/from floating point formats with <= bits in the native double type. For example, 16 bit "half" floats, or OpenGL 11/10 bit floats. | ✅ None
 | `data/bits.hpp` | Functions to copy arbitrary numbers of bits from source to destination, with arbitrary source and destination *bit* offsets. | ✅ None
