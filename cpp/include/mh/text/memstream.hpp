@@ -159,24 +159,20 @@ namespace mh
 	};
 
 	template<typename CharT = char, typename Traits = std::char_traits<CharT>>
-	class basic_memstream final : public basic_memstreambuf<CharT, Traits>,
-		public std::basic_ostream<CharT, Traits>,
-		public std::basic_istream<CharT, Traits>
+	class basic_memstream final : public basic_memstreambuf<CharT, Traits>, public std::basic_iostream<CharT, Traits>
 	{
-		using ostream_type = std::basic_ostream<CharT, Traits>;
-		using istream_type = std::basic_istream<CharT, Traits>;
+		using iostream_type = std::basic_iostream<CharT, Traits>;
 		using streambuf_type = basic_memstreambuf<CharT, Traits>;
 		using int_type = typename streambuf_type::int_type;
 		using pos_type = typename streambuf_type::pos_type;
 		using off_type = typename streambuf_type::off_type;
 
 	public:
-		basic_memstream() : ostream_type(this) {}
+		basic_memstream() : iostream_type(this) {}
 		template<size_t size> basic_memstream(CharT (&buf)[size]) : basic_memstream(buf, size) {}
 		basic_memstream(CharT* buf, size_t size) :
 			streambuf_type(buf, size),
-			ostream_type(this),
-			istream_type(this)
+			iostream_type(this)
 		{
 			assert(buf);
 		}
