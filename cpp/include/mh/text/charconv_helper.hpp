@@ -41,10 +41,10 @@ namespace mh
 	}
 
 	template<typename T, typename = std::enable_if_t<std::is_floating_point_v<T>>>
-	inline std::optional<T> from_chars(const std::string_view& str, size_t* charsRead = nullptr_t, std::chars_format fmt = std::chars_format::general)
+	inline std::optional<T> from_chars(const std::string_view& str, size_t* charsRead = nullptr, std::chars_format fmt = std::chars_format::general)
 	{
 		T value;
-		const auto result = from_chars(str, value, base);
+		const auto result = from_chars(str, value, fmt);
 
 		if (charsRead)
 			*charsRead = result.ptr - (str.data() + str.size());
@@ -52,7 +52,7 @@ namespace mh
 		return result ? value : std::nullopt;
 	}
 	template<typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-	inline std::optional<T> from_chars(const std::string_view& str, size_t* charsRead = nullptr_t, int base = 10)
+	inline std::optional<T> from_chars(const std::string_view& str, size_t* charsRead = nullptr, int base = 10)
 	{
 		T value;
 		const auto result = from_chars(str, value, base);
@@ -76,6 +76,6 @@ namespace mh
 	template<typename T, size_t size, typename = std::enable_if_t<std::is_integral_v<T>>>
 	inline to_chars_helper_result to_chars(char (&array)[size], T value, int base = 10)
 	{
-		return std::to_chars(array, array + size, value, fmt, precision);
+		return std::to_chars(array, array + size, value, base);
 	}
 }
