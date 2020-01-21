@@ -60,7 +60,7 @@ namespace mh
 		if (charsRead)
 			*charsRead = result.ptr - (str.data() + str.size());
 
-		return result ? value : std::nullopt;
+		return result ? std::optional<T>(value) : std::nullopt;
 	}
 
 	template<typename T, size_t size, typename = std::enable_if_t<std::is_floating_point_v<T>>>
