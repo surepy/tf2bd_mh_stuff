@@ -41,20 +41,35 @@ namespace mh
 	};
 
 	using strwrapperstream = basic_strwrapperstream<>;
+
+	namespace detail
+	{
+		template<typename T>
+		struct make_dependent
+		{
+			using type = T;
+		};
+
+		// Force dependent typename for T, so we can use stream insertion operators declared after ourselves
+		template<typename T, typename CharT, typename Traits, typename Alloc>
+		inline void insertion_op_impl(std::basic_string<CharT, Traits, Alloc>& str, const typename make_dependent<T>::type& value)
+		{
+			mh::basic_strwrapperstream<CharT, Traits, Alloc> stream(str);
+			stream << value;
+		}
+	}
 }
 
 template<typename T, typename CharT = char, typename Traits = std::char_traits<CharT>, typename Alloc = std::allocator<CharT>>
 inline std::string& operator<<(std::basic_string<CharT, Traits, Alloc>& str, const T& value)
 {
-	mh::basic_strwrapperstream<CharT, Traits, Alloc> stream(str);
-	stream << value;
+	mh::detail::insertion_op_impl<T, CharT, Traits, Alloc>(str, value);
 	return str;
 }
 
 template<typename T, typename CharT = char, typename Traits = std::char_traits<CharT>, typename Alloc = std::allocator<CharT>>
 inline std::string operator<<(std::basic_string<CharT, Traits, Alloc>&& str, const T& value)
 {
-	mh::basic_strwrapperstream<CharT, Traits, Alloc> stream(str);
-	stream << value;
+	mh::detail::insertion_op_impl<T, CharT, Traits, Alloc>(str, value);
 	return std::move(str);
 }
