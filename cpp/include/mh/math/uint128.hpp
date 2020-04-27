@@ -39,12 +39,10 @@ namespace mh
 #endif
 	 	}
 
-#if (defined(_WIN64) || defined(__x86_64__)) && (defined(_MSC_VER) || defined(__GNUC__) || defined(__clang__))
+#if (defined(__x86_64__)) && (defined(__GNUC__) || defined(__clang__))
 
 #define MH_UINT128_ENABLE_PLATFORM_UINT128 1
-#ifdef _MSC_VER
-		using platform_uint128_t = unsigned __int128;
-#elif defined(__GNUC__) || defined(__clang__)
+#if defined(__GNUC__) || defined(__clang__)
 		using platform_uint128_t = __uint128_t;
 #endif
 
@@ -476,7 +474,7 @@ inline constexpr mh::uint128 mh::uint128::operator/(uint64_t divisor) const
 
 		const auto print_vars = [&]
 		{
-			debug([&]
+			detail::uint128_hpp::debug([&]
 			{
 				std::cerr
 					<< "\nquotient:     " << print_bin(quotientLow)
@@ -487,7 +485,7 @@ inline constexpr mh::uint128 mh::uint128::operator/(uint64_t divisor) const
 			});
 		};
 
-		debug([]{ std::cerr << "Initial value:\n"; });
+		detail::uint128_hpp::debug([]{ std::cerr << "Initial value:\n"; });
 		print_vars();
 
 		if (divisor & (uint64_t(1) << 63))
@@ -518,7 +516,7 @@ inline constexpr mh::uint128 mh::uint128::operator/(uint64_t divisor) const
 
 				if (remainder64 >= divisor)
 				{
-					debug([&]{ std::cerr << remainder64 << " >= " << divisor << '\n'; });
+					detail::uint128_hpp::debug([&]{ std::cerr << remainder64 << " >= " << divisor << '\n'; });
 					//const auto test = remainder64 >= divisor;
 					remainder64 -= divisor;
 					quotientLow |= uint64_t(1) << count;
