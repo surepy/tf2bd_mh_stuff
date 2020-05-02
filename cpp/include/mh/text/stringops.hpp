@@ -2,6 +2,7 @@
 
 #include <initializer_list>
 #include <string>
+#include <string_view>
 
 namespace mh
 {
@@ -94,5 +95,29 @@ namespace mh
 	inline std::basic_string<CharT, Traits, Alloc> trim(std::basic_string<CharT, Traits, Alloc>&& str)
 	{
 		return mh::trim(std::move(str), mh::detail::stringops_hpp::WHITESPACE_CHARS<CharT>);
+	}
+
+	template<typename CharT, typename Traits, typename Alloc>
+	inline std::basic_string<CharT, Traits, Alloc> find_and_replace(std::basic_string<CharT, Traits, Alloc> str,
+		const std::basic_string_view<CharT, Traits>& find, const std::basic_string_view<CharT, Traits>& replace)
+	{
+		size_t curIndex = 0;
+		while (true)
+		{
+			curIndex = str.find(find, curIndex);
+			if (curIndex == str.npos)
+				break;
+
+			str.replace(curIndex, find.size(), replace);
+			curIndex += replace.size();
+		}
+
+		return std::move(str);
+	}
+
+	inline std::string find_and_replace(std::string str,
+		const std::string_view& find, const std::string_view& replace)
+	{
+		return find_and_replace<std::string::value_type, std::string::traits_type, std::string::allocator_type>(str, find, replace);
 	}
 }
