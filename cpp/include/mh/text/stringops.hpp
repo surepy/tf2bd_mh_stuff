@@ -115,9 +115,10 @@ namespace mh
 		return std::move(str);
 	}
 
-	inline std::string find_and_replace(std::string str,
-		const std::string_view& find, const std::string_view& replace)
+	template<typename CharT, typename Traits, typename Alloc = std::allocator<CharT>>
+	inline std::basic_string<CharT, Traits, Alloc> find_and_replace(const std::basic_string_view<CharT, Traits>& str,
+		const std::basic_string_view<CharT, Traits>& find, const std::basic_string_view<CharT, Traits>& replace)
 	{
-		return find_and_replace<std::string::value_type, std::string::traits_type, std::string::allocator_type>(str, find, replace);
+		return find_and_replace<CharT, Traits, Alloc>(std::basic_string<CharT, Traits, Alloc>(str), find, replace);
 	}
 }
