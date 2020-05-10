@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cctype>
+#include <ostream>
 #include <string>
 #include <string_view>
 
@@ -67,17 +69,31 @@ namespace mh
 		}
 	};
 
-	template<typename CharT, typename Traits = std::char_traits<CharT>>
+	template<typename CharT = char, typename TraitsLHS = std::char_traits<CharT>, typename TraitsRHS = std::char_traits<CharT>>
+	bool case_insensitive_compare(
+		const std::basic_string_view<CharT, TraitsLHS>& lhs,
+		const std::basic_string_view<CharT, TraitsRHS>& rhs)
+	{
+		return std::basic_string_view<CharT, case_insensitive_char_traits<TraitsLHS>>(lhs.data(), lhs.size()) ==
+			std::basic_string_view<CharT, case_insensitive_char_traits<TraitsRHS>>(rhs.data(), rhs.size());
+	}
+
+	template<typename CharT, typename Traits>
 	auto case_insensitive_view(const std::basic_string_view<CharT, Traits>& sv)
 	{
 		return std::basic_string_view<CharT, case_insensitive_char_traits<Traits>>(sv.data(), sv.size());
 	}
-	template<typename CharT, typename Traits = std::char_traits<CharT>>
+	template<typename CharT, typename BaseTraits = std::char_traits<CharT>>
 	auto case_insensitive_view(const CharT* str)
 	{
-		return case_insensitive_view(std::basic_string_view<CharT, Traits>(str));
+		return std::basic_string_view<CharT, case_insensitive_char_traits<BaseTraits>>(str);
 	}
-	template<typename CharT, typename Traits = std::char_traits<CharT>, typename Alloc = std::allocator<CharT>>
+	template<typename CharT, typename BaseTraits = std::char_traits<CharT>>
+	auto case_insensitive_view(const CharT* str, size_t length)
+	{
+		return std::basic_string_view<CharT, case_insensitive_char_traits<BaseTraits>>(str, length);
+	}
+	template<typename CharT, typename Traits, typename Alloc>
 	auto case_insensitive_view(const std::basic_string<CharT, Traits, Alloc>& str)
 	{
 		return case_insensitive_view(std::basic_string_view<CharT, Traits>(str));
@@ -97,5 +113,36 @@ namespace mh
 	auto case_insensitive_string(const CharT* str)
 	{
 		return case_insensitive_string<CharT, Traits, Alloc>(std::basic_string_view<CharT, Traits>(str));
+	}
+}
+
+inline namespace test
+{
+	template<typename CharT, typename Traits>
+	std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& os,
+		const std::basic_string_view<CharT, mh::case_insensitive_char_traits<std::char_traits<CharT>>>& str)
+	{
+		return os.write(str.data(), str.size());
+	}
+	template<typename CharT, typename Traits>
+	std::basic_ostream<CharT, Traits>&& operator<<(std::basic_ostream<CharT, Traits>&& os,
+		const std::basic_string_view<CharT, mh::case_insensitive_char_traits<std::char_traits<CharT>>>& str)
+	{
+		os.write(str.data(), str.size());
+		return std::move(os);
+	}
+
+	template<typename CharT, typename Traits, typename Alloc>
+	std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& os,
+		const std::basic_string<CharT, mh::case_insensitive_char_traits<std::char_traits<CharT>>, Alloc>& str)
+	{
+		return os.write(str.data(), str.size());
+	}
+	template<typename CharT, typename Traits, typename Alloc>
+	std::basic_ostream<CharT, Traits>&& operator<<(std::basic_ostream<CharT, Traits>&& os,
+		const std::basic_string<CharT, mh::case_insensitive_char_traits<std::char_traits<CharT>>, Alloc>& str)
+	{
+		os.write(str.data(), str.size());
+		return std::move(os);
 	}
 }
