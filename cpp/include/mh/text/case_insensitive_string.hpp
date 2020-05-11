@@ -25,11 +25,14 @@ namespace mh
 		{
 			while (count--)
 			{
-				if (*s1 == *s2)
-					continue;
-
 				const auto c1 = std::toupper(*s1);
 				const auto c2 = std::toupper(*s2);
+
+				s1++;
+				s2++;
+
+				if (c1 == c2)
+					continue;
 
 				if (c1 < c2)
 					return -1;
