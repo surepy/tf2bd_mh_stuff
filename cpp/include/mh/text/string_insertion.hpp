@@ -42,7 +42,7 @@ namespace mh
 
 	using strwrapperstream = basic_strwrapperstream<>;
 
-	namespace detail
+	namespace detail::string_insertion_hpp
 	{
 		template<typename T>
 		struct make_dependent
@@ -61,15 +61,15 @@ namespace mh
 }
 
 template<typename T, typename CharT = char, typename Traits = std::char_traits<CharT>, typename Alloc = std::allocator<CharT>>
-inline std::string& operator<<(std::basic_string<CharT, Traits, Alloc>& str, const T& value)
+inline std::basic_string<CharT, Traits, Alloc>& operator<<(std::basic_string<CharT, Traits, Alloc>& str, const T& value)
 {
-	mh::detail::insertion_op_impl<T, CharT, Traits, Alloc>(str, value);
+	mh::detail::string_insertion_hpp::insertion_op_impl<T, CharT, Traits, Alloc>(str, value);
 	return str;
 }
 
 template<typename T, typename CharT = char, typename Traits = std::char_traits<CharT>, typename Alloc = std::allocator<CharT>>
-inline std::string operator<<(std::basic_string<CharT, Traits, Alloc>&& str, const T& value)
+inline std::basic_string<CharT, Traits, Alloc> operator<<(std::basic_string<CharT, Traits, Alloc>&& str, const T& value)
 {
-	mh::detail::insertion_op_impl<T, CharT, Traits, Alloc>(str, value);
+	mh::detail::string_insertion_hpp::insertion_op_impl<T, CharT, Traits, Alloc>(str, value);
 	return std::move(str);
 }
