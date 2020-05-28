@@ -69,6 +69,8 @@ namespace mh
 
 				p++;
 			}
+
+			return nullptr;
 		}
 	};
 
