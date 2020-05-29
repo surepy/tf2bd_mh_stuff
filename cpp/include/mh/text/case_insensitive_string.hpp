@@ -83,6 +83,14 @@ namespace mh
 			std::basic_string_view<CharT, case_insensitive_char_traits<TraitsRHS>>(rhs.data(), rhs.size());
 	}
 
+	template<typename T0, typename T1,
+		typename CharT0 = T0::value_type, typename TraitsT0 = T0::traits_type,
+		typename CharT1 = T1::value_type, typename TraitsT1 = T1::traits_type>
+	bool case_insensitive_compare(const T0& lhs, const T1& rhs)
+	{
+		return case_insensitive_compare(std::basic_string_view<CharT0, TraitsT0>(lhs), std::basic_string_view<CharT1, TraitsT1>(rhs));
+	}
+
 	template<typename CharT, typename Traits>
 	auto case_insensitive_view(const std::basic_string_view<CharT, Traits>& sv)
 	{
