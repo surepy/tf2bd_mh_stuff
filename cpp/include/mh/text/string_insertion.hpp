@@ -9,12 +9,13 @@ namespace mh
 	template<typename CharT = char, typename Traits = std::char_traits<CharT>, typename Alloc = std::allocator<CharT>>
 	class basic_strwrapperstream final : std::basic_streambuf<CharT, Traits>, public std::basic_ostream<CharT, Traits>
 	{
+	public:
+		using char_type = CharT;
 		using ostream_type = std::basic_ostream<CharT, Traits>;
 		using string_type = std::basic_string<CharT, Traits, Alloc>;
 		using streambuf_type = std::basic_streambuf<CharT, Traits>;
 		using int_type = typename streambuf_type::int_type;
 
-	public:
 		basic_strwrapperstream(std::basic_string<CharT, Traits, Alloc>& string) :
 			ostream_type(this),
 			m_String(string)
