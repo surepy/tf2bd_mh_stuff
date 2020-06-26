@@ -1,6 +1,6 @@
 #pragma once
 
-#if (__cpp_lib_three_way_comparison >= 201907) && (__cpp_impl_three_way_comparison >= 201907)
+#if __cpp_impl_three_way_comparison >= 201907
 #include <compare>
 #endif
 #include <utility>
@@ -56,9 +56,10 @@ namespace mh
 
 		~unique_object() { m_Traits.delete_obj(m_Object); }
 
-#if (__cpp_lib_three_way_comparison >= 201907) && (__cpp_impl_three_way_comparison >= 201907)
+#if __cpp_impl_three_way_comparison >= 201907
 		auto operator<=>(const unique_object& other) const = default;
 		auto operator<=>(const T& other) const { return m_Object <=> other; }
+		bool operator==(const T& other) const { return m_Object == other; }
 #endif
 
 		T release() { return m_Traits.release_obj(m_Object); }
@@ -85,7 +86,7 @@ namespace mh
 	};
 }
 
-#if (__cpp_lib_three_way_comparison >= 201907) && (__cpp_impl_three_way_comparison >= 201907)
+#if __cpp_impl_three_way_comparison >= 201907
 template<typename T, typename Traits> auto operator<=>(const T& lhs, const mh::unique_object<T, Traits>& rhs)
 {
 	return lhs <=> rhs.value();
