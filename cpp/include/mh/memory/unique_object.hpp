@@ -3,6 +3,7 @@
 #if __cpp_impl_three_way_comparison >= 201907
 #include <compare>
 #endif
+#include <ostream>
 #include <utility>
 
 namespace mh
@@ -84,6 +85,15 @@ namespace mh
 		#endif
 		Traits m_Traits;
 	};
+}
+
+template<typename CharT, typename StreamTraits, typename T, typename ObjTraits>
+std::basic_ostream<CharT, StreamTraits>& operator<<(std::basic_ostream<CharT, StreamTraits>& os, const mh::unique_object<T, ObjTraits>& rhs)
+{
+	if (rhs)
+		return os << rhs.value();
+	else
+		return os << "(empty)";
 }
 
 #if __cpp_impl_three_way_comparison >= 201907
