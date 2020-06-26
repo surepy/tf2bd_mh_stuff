@@ -66,6 +66,8 @@ namespace mh
 		T release() { return m_Traits.release_obj(m_Object); }
 
 		void reset() { m_Traits.delete_obj(m_Object); }
+		void reset(T obj) { *this = this_type(std::move(obj)); }
+
 		T& reset_and_get_ref()
 		{
 			reset();
