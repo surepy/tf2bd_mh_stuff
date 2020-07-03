@@ -10,4 +10,12 @@ namespace mh
 	{
 		return future.valid() && future.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
 	}
+
+	template<typename T>
+	std::future<T> make_ready_future(T value)
+	{
+		std::promise<T> promise;
+		promise.set_value(std::move(value));
+		return promise.get_future();
+	}
 }
