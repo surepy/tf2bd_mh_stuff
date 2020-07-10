@@ -20,7 +20,8 @@ namespace mh
 	}
 
 	template<typename CharT = char, typename Traits = std::char_traits<CharT>, typename Alloc = std::allocator<CharT>>
-	std::basic_string<CharT, Traits, Alloc> trim_start(std::basic_string<CharT, Traits, Alloc>&& str, std::initializer_list<CharT> trimChars)
+	[[nodiscard]] std::basic_string<CharT, Traits, Alloc> trim_start(
+		std::basic_string<CharT, Traits, Alloc>&& str, std::initializer_list<CharT> trimChars)
 	{
 		size_t charsToTrim = 0;
 		for (CharT c : str)
@@ -46,13 +47,14 @@ namespace mh
 	}
 
 	template<typename CharT = char, typename Traits = std::char_traits<CharT>, typename Alloc = std::allocator<CharT>>
-	inline std::basic_string<CharT, Traits, Alloc> trim_start(std::basic_string<CharT, Traits, Alloc>&& str)
+	[[nodiscard]] inline std::basic_string<CharT, Traits, Alloc> trim_start(std::basic_string<CharT, Traits, Alloc>&& str)
 	{
 		return mh::trim_start(std::move(str), mh::detail::stringops_hpp::WHITESPACE_CHARS<CharT>);
 	}
 
 	template<typename CharT = char, typename Traits = std::char_traits<CharT>, typename Alloc = std::allocator<CharT>>
-	std::basic_string<CharT, Traits, Alloc> trim_end(std::basic_string<CharT, Traits, Alloc>&& str, std::initializer_list<CharT> trimChars)
+	[[nodiscard]] std::basic_string<CharT, Traits, Alloc> trim_end(
+		std::basic_string<CharT, Traits, Alloc>&& str, std::initializer_list<CharT> trimChars)
 	{
 		size_t charsToTrim = 0;
 		for (size_t i = str.size(); i--; )
@@ -80,26 +82,27 @@ namespace mh
 	}
 
 	template<typename CharT = char, typename Traits = std::char_traits<CharT>, typename Alloc = std::allocator<CharT>>
-	inline std::basic_string<CharT, Traits, Alloc> trim_end(std::basic_string<CharT, Traits, Alloc>&& str)
+	[[nodiscard]] inline std::basic_string<CharT, Traits, Alloc> trim_end(std::basic_string<CharT, Traits, Alloc>&& str)
 	{
 		return mh::trim_end(std::move(str), mh::detail::stringops_hpp::WHITESPACE_CHARS<CharT>);
 	}
 
 	template<typename CharT = char, typename Traits = std::char_traits<CharT>, typename Alloc = std::allocator<CharT>>
-	inline std::basic_string<CharT, Traits, Alloc> trim(std::basic_string<CharT, Traits, Alloc>&& str, std::initializer_list<CharT> trimChars)
+	[[nodiscard]] inline std::basic_string<CharT, Traits, Alloc> trim(std::basic_string<CharT, Traits, Alloc>&& str, std::initializer_list<CharT> trimChars)
 	{
 		return mh::trim_start(mh::trim_end(std::move(str), trimChars), trimChars);
 	}
 
 	template<typename CharT = char, typename Traits = std::char_traits<CharT>, typename Alloc = std::allocator<CharT>>
-	inline std::basic_string<CharT, Traits, Alloc> trim(std::basic_string<CharT, Traits, Alloc>&& str)
+	[[nodiscard]] inline std::basic_string<CharT, Traits, Alloc> trim(std::basic_string<CharT, Traits, Alloc>&& str)
 	{
 		return mh::trim(std::move(str), mh::detail::stringops_hpp::WHITESPACE_CHARS<CharT>);
 	}
 
 	template<typename CharT, typename Traits, typename Alloc>
-	inline std::basic_string<CharT, Traits, Alloc> find_and_replace(std::basic_string<CharT, Traits, Alloc> str,
-		const std::basic_string_view<CharT, Traits>& find, const std::basic_string_view<CharT, Traits>& replace)
+	[[nodiscard]] inline std::basic_string<CharT, Traits, Alloc> find_and_replace(
+		std::basic_string<CharT, Traits, Alloc> str, const std::basic_string_view<CharT, Traits>& find,
+		const std::basic_string_view<CharT, Traits>& replace)
 	{
 		size_t curIndex = 0;
 		while (true)
@@ -116,8 +119,9 @@ namespace mh
 	}
 
 	template<typename CharT, typename Traits, typename Alloc = std::allocator<CharT>>
-	inline std::basic_string<CharT, Traits, Alloc> find_and_replace(const std::basic_string_view<CharT, Traits>& str,
-		const std::basic_string_view<CharT, Traits>& find, const std::basic_string_view<CharT, Traits>& replace)
+	[[nodiscard]] inline std::basic_string<CharT, Traits, Alloc> find_and_replace(
+		const std::basic_string_view<CharT, Traits>& str, const std::basic_string_view<CharT, Traits>& find,
+		const std::basic_string_view<CharT, Traits>& replace)
 	{
 		return find_and_replace<CharT, Traits, Alloc>(std::basic_string<CharT, Traits, Alloc>(str), find, replace);
 	}
