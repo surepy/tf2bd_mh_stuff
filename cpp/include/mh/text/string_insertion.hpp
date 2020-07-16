@@ -56,6 +56,10 @@ namespace mh
 		inline void insertion_op_impl(std::basic_string<CharT, Traits, Alloc>& str, const typename make_dependent<T>::type& value)
 		{
 			mh::basic_strwrapperstream<CharT, Traits, Alloc> stream(str);
+
+			if constexpr (std::is_same_v<bool, std::decay_t<T>>)
+				stream << std::boolalpha;
+
 			stream << value;
 		}
 	}
