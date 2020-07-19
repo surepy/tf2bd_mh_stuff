@@ -84,8 +84,8 @@ namespace mh
 	}
 
 	template<typename T0, typename T1,
-		typename CharT0 = T0::value_type, typename TraitsT0 = T0::traits_type,
-		typename CharT1 = T1::value_type, typename TraitsT1 = T1::traits_type>
+		typename CharT0 = typename T0::value_type, typename TraitsT0 = typename T0::traits_type,
+		typename CharT1 = typename T1::value_type, typename TraitsT1 = typename T1::traits_type>
 	bool case_insensitive_compare(const T0& lhs, const T1& rhs)
 	{
 		return case_insensitive_compare(std::basic_string_view<CharT0, TraitsT0>(lhs), std::basic_string_view<CharT1, TraitsT1>(rhs));
@@ -129,6 +129,7 @@ namespace mh
 	}
 }
 
+#if 0
 inline namespace test
 {
 	template<typename CharT, typename Traits>
@@ -159,3 +160,4 @@ inline namespace test
 		return std::move(os);
 	}
 }
+#endif
