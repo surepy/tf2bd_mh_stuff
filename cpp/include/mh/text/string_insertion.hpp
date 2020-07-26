@@ -66,14 +66,16 @@ namespace mh
 }
 
 template<typename T, typename CharT = char, typename Traits = std::char_traits<CharT>, typename Alloc = std::allocator<CharT>>
-inline std::basic_string<CharT, Traits, Alloc>& operator<<(std::basic_string<CharT, Traits, Alloc>& str, const T& value)
+inline auto operator<<(std::basic_string<CharT, Traits, Alloc>& str, const T& value) ->
+	decltype(std::declval<std::basic_ostream<CharT, Traits>>() << value, str)
 {
 	mh::detail::string_insertion_hpp::insertion_op_impl<T, CharT, Traits, Alloc>(str, value);
 	return str;
 }
 
 template<typename T, typename CharT = char, typename Traits = std::char_traits<CharT>, typename Alloc = std::allocator<CharT>>
-inline std::basic_string<CharT, Traits, Alloc> operator<<(std::basic_string<CharT, Traits, Alloc>&& str, const T& value)
+inline auto operator<<(std::basic_string<CharT, Traits, Alloc>&& str, const T& value) ->
+	decltype(std::declval<std::basic_ostream<CharT, Traits>>() << value, str)
 {
 	mh::detail::string_insertion_hpp::insertion_op_impl<T, CharT, Traits, Alloc>(str, value);
 	return std::move(str);
