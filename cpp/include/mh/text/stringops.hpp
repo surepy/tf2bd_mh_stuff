@@ -3,6 +3,8 @@
 #include <initializer_list>
 #include <string>
 #include <string_view>
+#include <type_traits>
+#include <utility>
 
 namespace mh
 {
@@ -17,6 +19,23 @@ namespace mh
 			CharT('\v'),
 			CharT('\f'),
 		};
+
+		template<typename TString> constexpr typename TString::value_type value_type_helper() {}
+		template<typename TString> constexpr std::decay_t<decltype(std::declval<TString>()[0])> value_type_helper(int = 0) {}
+		template<typename TString> using value_type_t = decltype(value_type_helper<TString>());
+
+		template<typename TString> constexpr typename TString::traits_type traits_type_helper() {}
+		template<typename TString> constexpr std::char_traits<value_type_t<TString>> traits_type_helper(int = 0) {}
+		template<typename TString> using traits_type_t = decltype(traits_type_helper<TString>());
+
+		template<typename TString> constexpr typename TString::allocator_type allocator_type_helper() {}
+		template<typename TString> constexpr std::allocator<value_type_t<TString>> allocator_type_helper(int = 0) {}
+		template<typename TString> using allocator_type_t = decltype(allocator_type_helper<TString>());
+
+		template<typename TString> using string_type_t = std::basic_string<value_type_t<TString>, traits_type_t<TString>, allocator_type_t<TString>>;
+		template<typename TString> using string_view_type_t = std::basic_string_view<value_type_t<TString>, traits_type_t<TString>>;
+		//template<typename TString> using allocator_type_t =
+		//template<typename TString> using string_type = std::basic_string<value_type<TString>, traits_type<TString>,
 	}
 
 	template<typename CharT = char, typename Traits = std::char_traits<CharT>, typename Alloc = std::allocator<CharT>>
@@ -125,4 +144,52 @@ namespace mh
 	{
 		return find_and_replace<CharT, Traits, Alloc>(std::basic_string<CharT, Traits, Alloc>(str), find, replace);
 	}
+
+	template<typename TString, typename TRet = detail::stringops_hpp::string_type_t<TString>>
+	[[nodiscard]] inline TRet toupper(TString&& str)
+	{
+		TRet retVal(std::forward<TString>(str));
+
+		for (auto& c : retVal)
+			c = std::toupper(c);
+
+		return retVal;
+	}
+
+	template<typename TString, typename TRet = detail::stringops_hpp::string_type_t<TString>>
+	[[nodiscard]] inline TRet tolower(TString&& str)
+	{
+		TRet retVal(std::forward<TString>(str));
+
+		for (auto& c : retVal)
+			c = std::tolower(c);
+
+		return retVal;
+	}
 }
+
+#if __has_include(<cppcoro/generator.hpp>)
+#include <cppcoro/generator.hpp>
+namespace mh
+{
+	template<typename CharT, typename Traits>
+	[[nodiscard]] cppcoro::generator<std::basic_string_view<CharT, Traits>> split_string(
+		const std::basic_string_view<CharT, Traits>& string, const std::basic_string_view<CharT, Traits>& splitChars)
+	{
+		size_t lastEnd = 0;
+		while (lastEnd != string.npos)
+		{
+			const size_t found = string.find_first_of(splitChars, lastEnd);
+			co_yield string.substr(lastEnd, found - lastEnd);
+			lastEnd = found;
+		}
+	}
+
+	template<typename TStr1, typename TStr2>
+	[[nodiscard]] auto split_string(const TStr1& string, const TStr2& splitChars)
+	{
+		using sv = std::basic_string_view<typename TStr1::value_type, typename TStr1::traits_type>;
+		return split_string(sv(string), sv(splitChars));
+	}
+}
+#endif
