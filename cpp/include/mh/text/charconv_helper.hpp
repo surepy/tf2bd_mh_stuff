@@ -39,6 +39,22 @@ namespace mh
 	{
 		return std::from_chars(str.data(), str.data() + str.size(), value, base);
 	}
+	[[nodiscard]] inline from_chars_helper_result from_chars(const std::string_view& str, bool& value)
+	{
+		uint8_t intValue;
+		from_chars_helper_result result = from_chars(str, intValue);
+		if (!result)
+			return result;
+
+		if (intValue > 1)
+		{
+			result.ec = std::errc::result_out_of_range;
+			return result;
+		}
+
+		value = (intValue != 0);
+		return result;
+	}
 
 	template<typename T, typename = std::enable_if_t<std::is_floating_point_v<T>>>
 	[[nodiscard]] inline std::optional<T> from_chars(const std::string_view& str, size_t* charsRead = nullptr, std::chars_format fmt = std::chars_format::general)
