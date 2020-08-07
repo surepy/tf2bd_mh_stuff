@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+	<Type Name="mh::base_format_string&lt;*,*,*&gt;">
+		<Intrinsic Name="c_str" Expression="m_String._Elems"/>
+		<DisplayString>{c_str()}</DisplayString>
+		<StringView>c_str()</StringView>
+		<Expand>
+			<Item Name="[size]">m_Length</Item>
+			<Item Name="[capacity]">$T1</Item>
+			<Item Name="[value]">c_str()</Item>
+		</Expand>
+	</Type>
+</AutoVisualizer>
