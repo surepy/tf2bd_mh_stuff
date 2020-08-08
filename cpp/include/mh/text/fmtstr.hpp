@@ -81,6 +81,12 @@ namespace mh
 		constexpr const array_type& array() const { return m_String; }
 		constexpr view_type view() const { return view_type(m_String.data(), m_Length); }
 
+		template<typename TAlloc = std::allocator<value_type>>
+		std::basic_string<value_type, traits_type, TAlloc> str() const
+		{
+			return std::basic_string<value_type, traits_type, TAlloc>(view());
+		}
+
 		constexpr operator view_type() const { return view(); }
 
 	protected:
