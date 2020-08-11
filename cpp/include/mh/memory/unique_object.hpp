@@ -13,8 +13,8 @@ namespace mh
 	concept UniqueObjectTraits = requires(Traits t, Object o)
 	{
 		{ t.delete_obj(o) };
-		{ t.release_obj(o) } -> Object;
-		{ t.is_obj_valid(o) } -> bool;
+		{ t.release_obj(o) } -> std::same_as<Object>;
+		{ t.is_obj_valid(o) } -> std::same_as<bool>;
 	};
 #endif
 
