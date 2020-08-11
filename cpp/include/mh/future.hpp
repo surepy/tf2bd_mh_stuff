@@ -12,7 +12,7 @@ namespace mh
 	}
 
 	template<typename T>
-	std::future<T> make_ready_future(T value)
+	std::future<T> make_ready_future(T&& value)
 	{
 		std::promise<T> promise;
 		promise.set_value(std::move(value));
