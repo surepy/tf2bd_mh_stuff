@@ -18,6 +18,7 @@ namespace mh
 	class base_format_string
 	{
 	public:
+		using this_type = base_format_string;
 		using value_type = CharT;
 		using traits_type = Traits;
 		using array_type = std::array<value_type, N>;
@@ -27,6 +28,7 @@ namespace mh
 		{
 			m_String[0] = value_type(0);
 		}
+		constexpr this_type& operator=(const this_type&) = default;
 
 		constexpr size_t size() const { return m_Length; }
 		static constexpr size_t max_size() { return N - 1; }
@@ -77,6 +79,12 @@ namespace mh
 		}
 #endif
 
+		constexpr this_type& operator=(const view_type& rhs)
+		{
+			puts(rhs);
+			return *this;
+		}
+
 		constexpr const value_type* c_str() const { return m_String.data(); }
 		constexpr const array_type& array() const { return m_String; }
 		constexpr view_type view() const { return view_type(m_String.data(), m_Length); }
@@ -99,6 +107,7 @@ namespace mh
 	{
 	public:
 		using base_type = base_format_string;
+		using this_type = printf_string;
 		using value_type = base_type::value_type;
 		using traits_type = base_type::traits_type;
 
@@ -110,6 +119,12 @@ namespace mh
 			vsprintf(fmtStr, args);
 			va_end(args);
 		}
+
+		constexpr this_type& operator=(const view_type& rhs)
+		{
+			puts(rhs);
+			return *this;
+		}
 	};
 	template<size_t N, typename CharT = char, typename Traits = std::char_traits<CharT>>
 	using pfstr = printf_string<N, CharT, Traits>;
@@ -119,6 +134,7 @@ namespace mh
 	{
 	public:
 		using base_type = base_format_string;
+		using this_type = format_string;
 		using value_type = base_type::value_type;
 		using traits_type = base_type::traits_type;
 		using view_type = base_type::view_type;
@@ -129,6 +145,12 @@ namespace mh
 		format_string(const view_type& fmtStr, TArgs&&... args)
 		{
 			fmt(fmtStr, std::forward<TArgs>(args)...);
+		}
+
+		constexpr this_type& operator=(const view_type& rhs)
+		{
+			puts(rhs);
+			return *this;
 		}
 	};
 	template<size_t N, typename CharT = char, typename Traits = std::char_traits<CharT>>
