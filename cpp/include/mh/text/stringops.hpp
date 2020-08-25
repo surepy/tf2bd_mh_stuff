@@ -20,17 +20,17 @@ namespace mh
 			CharT('\f'),
 		};
 
-		template<typename TString> constexpr typename TString::value_type value_type_helper() {}
-		template<typename TString> constexpr std::decay_t<decltype(std::declval<TString>()[0])> value_type_helper(int = 0) {}
-		template<typename TString> using value_type_t = decltype(value_type_helper<TString>());
+		template<typename TString> constexpr typename TString::value_type value_type_helper(int) {}
+		template<typename TString> constexpr std::decay_t<decltype(std::declval<TString>()[0])> value_type_helper(void*) {}
+		template<typename TString> using value_type_t = decltype(value_type_helper<TString>(0));
 
-		template<typename TString> constexpr typename TString::traits_type traits_type_helper() {}
-		template<typename TString> constexpr std::char_traits<value_type_t<TString>> traits_type_helper(int = 0) {}
-		template<typename TString> using traits_type_t = decltype(traits_type_helper<TString>());
+		template<typename TString> constexpr typename TString::traits_type traits_type_helper(int) {}
+		template<typename TString> constexpr std::char_traits<value_type_t<TString>> traits_type_helper(void*) {}
+		template<typename TString> using traits_type_t = decltype(traits_type_helper<TString>(0));
 
-		template<typename TString> constexpr typename TString::allocator_type allocator_type_helper() {}
-		template<typename TString> constexpr std::allocator<value_type_t<TString>> allocator_type_helper(int = 0) {}
-		template<typename TString> using allocator_type_t = decltype(allocator_type_helper<TString>());
+		template<typename TString> constexpr typename TString::allocator_type allocator_type_helper(int) {}
+		template<typename TString> constexpr std::allocator<value_type_t<TString>> allocator_type_helper(void*) {}
+		template<typename TString> using allocator_type_t = decltype(allocator_type_helper<TString>(0));
 
 		template<typename TString> using string_type_t = std::basic_string<value_type_t<TString>, traits_type_t<TString>, allocator_type_t<TString>>;
 		template<typename TString> using string_view_type_t = std::basic_string_view<value_type_t<TString>, traits_type_t<TString>>;
