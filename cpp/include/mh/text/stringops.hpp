@@ -150,8 +150,9 @@ namespace mh
 	{
 		TRet retVal(std::forward<TString>(str));
 
+		const auto& loc = std::locale::classic();
 		for (auto& c : retVal)
-			c = std::toupper(c);
+			c = std::toupper(c, loc);
 
 		return retVal;
 	}
@@ -161,8 +162,9 @@ namespace mh
 	{
 		TRet retVal(std::forward<TString>(str));
 
+		const auto& loc = std::locale::classic();
 		for (auto& c : retVal)
-			c = std::tolower(c);
+			c = std::tolower(c, loc);
 
 		return retVal;
 	}
