@@ -8,10 +8,9 @@
 
 #include <format>
 #define MH_FORMATTER MH_FORMATTER_STL
-namespace mh
+namespace mh::detail::format_hpp
 {
-	using std::format;
-	using std::format_to_n;
+	namespace fmtns = ::std;
 }
 
 #elif __has_include(<fmt/format.h>)
@@ -19,10 +18,9 @@ namespace mh
 #include <fmt/format.h>
 #include <fmt/ostream.h>
 #define MH_FORMATTER MH_FORMATTER_FMTLIB
-namespace mh
+namespace mh::detail::format_hpp
 {
-	using fmt::format;
-	using fmt::format_to_n;
+	namespace fmtns = ::fmt;
 }
 
 #else
@@ -34,6 +32,16 @@ namespace mh
 
 namespace mh
 {
+	using detail::format_hpp::fmtns::format;
+	using detail::format_hpp::fmtns::format_to_n;
+	using detail::format_hpp::fmtns::formatter;
+	using detail::format_hpp::fmtns::basic_format_parse_context;
+	using detail::format_hpp::fmtns::basic_format_context;
+	using detail::format_hpp::fmtns::format_parse_context;
+	using detail::format_hpp::fmtns::wformat_parse_context;
+	using detail::format_hpp::fmtns::format_context;
+	using detail::format_hpp::fmtns::wformat_context;
+
 	template<typename CharT, size_t size, typename Traits = std::char_traits<CharT>, typename... TArgs>
 	inline constexpr std::basic_string_view<CharT, Traits> format_to(CharT(&dest)[size], TArgs&&... args)
 	{
