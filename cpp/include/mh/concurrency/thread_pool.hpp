@@ -93,7 +93,15 @@ namespace mh
 
 					try
 					{
-						task.m_Promise.set_value(task.m_Function());
+						if constexpr (std::is_same_v<T, void>)
+						{
+							task.m_Function();
+							task.m_Promise.set_value();
+						}
+						else
+						{
+							task.m_Promise.set_value(task.m_Function());
+						}
 					}
 					catch (const std::exception& e)
 					{
