@@ -1,9 +1,14 @@
 #pragma once
 
+#include <codecvt>
 #include <cstdint>
+#include <optional>
 #include <stdexcept>
 #include <string_view>
 #include <type_traits>
+
+#undef max
+#undef min
 
 namespace mh
 {
@@ -15,6 +20,8 @@ namespace mh
 		class enum_type_base
 		{
 		public:
+			using underlying_type = std::underlying_type_t<type>;
+
 			static constexpr std::string_view type_name()
 			{
 				auto typeName = TSelf::type_name_full();
@@ -25,7 +32,7 @@ namespace mh
 				return typeName.substr(last + 2);
 			}
 
-			static constexpr std::string_view find_value_name(type value)
+			static constexpr std::string_view try_find_name(type value)
 			{
 				for (size_t i = 0; i < std::size(TSelf::VALUES); i++)
 				{
@@ -34,6 +41,41 @@ namespace mh
 				}
 
 				return std::string_view{};
+			}
+
+			static constexpr std::string_view find_name(type value)
+			{
+				auto found = try_find_name(value);
+				if (found.empty())
+				{
+					throw std::invalid_argument(mh::format("Unable to find name for {} ({})",
+						+underlying_type(value), typeid(type).name()));
+				}
+
+				return found;
+			}
+
+			static constexpr std::optional<type> try_find_value(const std::string_view& name)
+			{
+				for (size_t i = 0; i < std::size(TSelf::VALUES); i++)
+				{
+					if (TSelf::VALUES[i].value_name() == name)
+						return TSelf::VALUES[i].value();
+				}
+
+				return std::nullopt;
+			}
+
+			static constexpr type find_value(const std::string_view& name)
+			{
+				auto found = try_find_value(name);
+				if (!found)
+				{
+					throw std::invalid_argument(mh::format("Unable to find value of type {} for name \"{}\"",
+						typeid(type).name(), name));
+				}
+
+				return *found;
 			}
 		};
 	}
@@ -71,7 +113,6 @@ namespace mh
 	{ \
 	public: \
 		using type = enumType; \
-		using underlying_type = std::underlying_type_t<type>; \
 		\
 		static constexpr std::string_view type_name_full() { return #enumType; } \
 		\
@@ -87,12 +128,12 @@ namespace mh
 #if __has_include(<mh/text/format.hpp>)
 #include <mh/text/format.hpp>
 
-template<typename T>
-struct mh::formatter<::mh::detail::reflection::enum_hpp::all_defined<T, typename ::mh::enum_type<T>::type>>
+template<typename T, typename CharT>
+struct mh::formatter<::mh::detail::reflection::enum_hpp::all_defined<T, typename ::mh::enum_type<T>::type>, CharT>
 {
-	static constexpr char PRES_TYPE_LONG = 'T';
-	static constexpr char PRES_TYPE_SHORT = 't';
-	static constexpr char PRES_VALUE = 'v';
+	static constexpr CharT PRES_TYPE_LONG = 'T';
+	static constexpr CharT PRES_TYPE_SHORT = 't';
+	static constexpr CharT PRES_VALUE = 'v';
 
 	enum class TypePresentation
 	{
@@ -104,7 +145,7 @@ struct mh::formatter<::mh::detail::reflection::enum_hpp::all_defined<T, typename
 	TypePresentation m_Type = TypePresentation::Short;
 	bool m_Value = true;
 
-	constexpr auto parse(format_parse_context& ctx)
+	constexpr auto parse(basic_format_parse_context<CharT>& ctx)
 	{
 		auto it = ctx.begin();
 		const auto end = ctx.end();
@@ -143,8 +184,53 @@ struct mh::formatter<::mh::detail::reflection::enum_hpp::all_defined<T, typename
 	template<typename FormatContext>
 	auto format(const T& rc, FormatContext& ctx)
 	{
-		const auto valueName = ::mh::enum_type<T>::find_value_name(rc);
+		const auto valueName = ::mh::enum_type<T>::try_find_name(rc);
 
+		CharT fmtStr[64];
+		size_t fmtStrPos = 0;
+
+		if (m_Type == TypePresentation::Short)
+		{
+			fmtStr[fmtStrPos++] = '{';
+			fmtStr[fmtStrPos++] = '0';
+			fmtStr[fmtStrPos++] = '}';
+		}
+		else if (m_Type == TypePresentation::Long)
+		{
+			fmtStr[fmtStrPos++] = '{';
+			fmtStr[fmtStrPos++] = '1';
+			fmtStr[fmtStrPos++] = '}';
+		}
+
+		const bool needsSpacer = fmtStrPos != 0;
+
+		if (m_Value && !valueName.empty())
+		{
+			if (needsSpacer)
+			{
+				fmtStr[fmtStrPos++] = ':';
+				fmtStr[fmtStrPos++] = ':';
+			}
+			fmtStr[fmtStrPos++] = '{';
+			fmtStr[fmtStrPos++] = '2';
+			fmtStr[fmtStrPos++] = '}';
+		}
+		else
+		{
+			if (needsSpacer)
+				fmtStr[fmtStrPos++] = '(';
+
+			fmtStr[fmtStrPos++] = '{';
+			fmtStr[fmtStrPos++] = '3';
+			fmtStr[fmtStrPos++] = '}';
+
+			if (needsSpacer)
+				fmtStr[fmtStrPos++] = ')';
+		}
+
+		fmtStr[fmtStrPos] = '\0';
+
+#if 0
 		const auto get_format_string = [&]
 		{
 			using namespace std::string_view_literals;
@@ -159,10 +245,40 @@ struct mh::formatter<::mh::detail::reflection::enum_hpp::all_defined<T, typename
 			else
 				throw format_error("Invalid TypePresentation value");
 		};
+#endif
 
-		return format_to(ctx.out(), get_format_string(),
-			::mh::enum_type<T>::type_name(), ::mh::enum_type<T>::type_name_full(),
-			valueName, +std::underlying_type_t<T>(rc));
+		if constexpr (std::is_same_v<CharT, char>)
+		{
+			return format_to(ctx.out(), fmtStr,
+				::mh::enum_type<T>::type_name(), ::mh::enum_type<T>::type_name_full(),
+				valueName, +std::underlying_type_t<T>(rc));
+		}
+		else
+		{
+			const auto convert_string = [](const std::string_view& input)
+			{
+				struct design_by_committee : std::codecvt<CharT, char, std::mbstate_t> {} cvt;
+				std::basic_string<CharT> converted;
+				std::mbstate_t state{};
+
+				converted.resize(cvt.length(state, input.data(), input.data() + input.size(),
+					std::numeric_limits<size_t>::max()));
+
+				state = {};
+
+				const char* fromNext;
+				CharT* toNext;
+				cvt.in(state,
+					input.data(), input.data() + input.size(), fromNext,
+					converted.data(), converted.data() + converted.size(), toNext);
+
+				return converted;
+			};
+
+			return format_to(ctx.out(), fmtStr,
+				convert_string(::mh::enum_type<T>::type_name()), convert_string(::mh::enum_type<T>::type_name_full()),
+				convert_string(valueName), +std::underlying_type_t<T>(rc));
+		}
 	}
 };
 
