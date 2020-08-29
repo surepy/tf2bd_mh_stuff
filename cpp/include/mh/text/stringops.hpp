@@ -1,6 +1,7 @@
 #pragma once
 
 #include <initializer_list>
+#include <locale>
 #include <string>
 #include <string_view>
 #include <type_traits>
