@@ -116,7 +116,7 @@ struct mh::formatter<::mh::detail::reflection::enum_hpp::all_defined<T, typename
 				m_Value = false;
 			}
 
-			for (it = ctx.begin(); it != end; ++it)
+			for (; it != end; ++it)
 			{
 				if (*it == PRES_TYPE_SHORT || *it == PRES_TYPE_LONG)
 				{
