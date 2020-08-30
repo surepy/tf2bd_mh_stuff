@@ -128,6 +128,9 @@ namespace mh
 #if __has_include(<mh/text/format.hpp>)
 #include <mh/text/format.hpp>
 
+#undef max
+#undef min
+
 template<typename T, typename CharT>
 struct mh::formatter<::mh::detail::reflection::enum_hpp::all_defined<T, typename ::mh::enum_type<T>::type>, CharT>
 {
