@@ -170,6 +170,8 @@ struct mh::formatter<mh::source_location, CharT>
 			fmtStrBuf[fmtStrPos++] = '}';
 		}
 
+		fmtStrBuf[fmtStrPos] = '\0';
+
 		return format_to(ctx.out(), fmtStrBuf, path, loc.line(), loc.function_name());
 	}
 };
