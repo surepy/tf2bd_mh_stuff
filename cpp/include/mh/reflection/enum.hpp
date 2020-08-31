@@ -161,6 +161,19 @@ namespace mh
 
 		return false;
 	}
+
+	template<typename T, typename = typename enum_type<T>::value_type>
+	struct enum_fmt_t final
+	{
+		using value_type = T;
+		T m_Value{};
+	};
+
+	template<typename T, typename TWrapper = enum_fmt_t<T>>
+	constexpr auto enum_fmt(T val)
+	{
+		return TWrapper{ .m_Value = val };
+	}
 }
 
 #if __has_include(<mh/text/format.hpp>)
@@ -170,7 +183,7 @@ namespace mh
 #undef min
 
 template<typename T, typename CharT>
-struct mh::formatter<::mh::detail::reflection::enum_hpp::all_defined<T, typename ::mh::enum_type<T>::type>, CharT>
+struct mh::formatter<::mh::enum_fmt_t<T>, CharT>
 {
 	static constexpr CharT PRES_TYPE_LONG = 'T';
 	static constexpr CharT PRES_TYPE_SHORT = 't';
@@ -223,9 +236,9 @@ struct mh::formatter<::mh::detail::reflection::enum_hpp::all_defined<T, typename
 	}
 
 	template<typename FormatContext>
-	auto format(const T& rc, FormatContext& ctx)
+	auto format(const ::mh::enum_fmt_t<T>& rc, FormatContext& ctx)
 	{
-		const auto valueName = ::mh::enum_type<T>::try_find_name(rc);
+		const auto valueName = ::mh::enum_type<T>::try_find_name(rc.m_Value);
 
 		CharT fmtStr[64];
 		size_t fmtStrPos = 0;
@@ -292,7 +305,7 @@ struct mh::formatter<::mh::detail::reflection::enum_hpp::all_defined<T, typename
 		{
 			return format_to(ctx.out(), fmtStr,
 				::mh::enum_type<T>::type_name(), ::mh::enum_type<T>::type_name_full(),
-				valueName, +std::underlying_type_t<T>(rc));
+				valueName, +std::underlying_type_t<T>(rc.m_Value));
 		}
 		else
 		{
@@ -318,7 +331,7 @@ struct mh::formatter<::mh::detail::reflection::enum_hpp::all_defined<T, typename
 
 			return format_to(ctx.out(), fmtStr,
 				convert_string(::mh::enum_type<T>::type_name()), convert_string(::mh::enum_type<T>::type_name_full()),
-				convert_string(valueName), +std::underlying_type_t<T>(rc));
+				convert_string(valueName), +std::underlying_type_t<T>(rc.m_Value));
 		}
 	}
 };
