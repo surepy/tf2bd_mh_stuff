@@ -51,7 +51,7 @@ namespace mh
 				if (found.empty())
 				{
 					throw std::invalid_argument(mh::format("Unable to find name for {} ({})",
-						+underlying_type(value), typeid(type).name()));
+						+underlying_type(value), typeid(value_type).name()));
 				}
 
 				return found;
@@ -138,13 +138,12 @@ namespace mh
 	template<typename T, typename TReflect = enum_type<std::decay_t<T>>::this_type>
 	inline constexpr T find_enum_value(const std::string_view& name)
 	{
-		return TReflect::find_value(val);
+		return TReflect::find_value(name);
 	}
 	template<typename T, typename TReflect = enum_type<std::decay_t<T>>::this_type>
 	inline constexpr void find_enum_value(const std::string_view& name, T& value)
 	{
 		value = find_enum_value<T>(name);
-		return value;
 	}
 	template<typename T, typename TReflect = enum_type<std::decay_t<T>>::this_type>
 	inline constexpr std::optional<T> try_find_enum_value(const std::string_view& name)
