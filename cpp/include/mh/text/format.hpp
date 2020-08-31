@@ -34,6 +34,7 @@ namespace mh
 {
 	using detail::format_hpp::fmtns::format;
 	using detail::format_hpp::fmtns::format_to_n;
+	using detail::format_hpp::fmtns::format_error;
 	using detail::format_hpp::fmtns::formatter;
 	using detail::format_hpp::fmtns::basic_format_parse_context;
 	using detail::format_hpp::fmtns::basic_format_context;
@@ -41,6 +42,17 @@ namespace mh
 	using detail::format_hpp::fmtns::wformat_parse_context;
 	using detail::format_hpp::fmtns::format_context;
 	using detail::format_hpp::fmtns::wformat_context;
+
+	template<typename TFmtStr, typename... TArgs>
+	inline auto try_format(TFmtStr&& fmtStr, TArgs&&... args) try
+	{
+		return format(std::forward<TFmtStr>(fmtStr), std::forward<TArgs>(args)...);
+	}
+	catch (const format_error& e)
+	{
+		return format("FORMATTING ERROR @ {}: Unable to construct string with fmtstr {}: {}",
+			__FUNCSIG__, std::quoted(fmtStr), e.what());
+	}
 
 	template<typename CharT, size_t size, typename Traits = std::char_traits<CharT>, typename... TArgs>
 	inline constexpr std::basic_string_view<CharT, Traits> format_to(CharT(&dest)[size], TArgs&&... args)
