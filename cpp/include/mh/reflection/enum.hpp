@@ -16,11 +16,13 @@ namespace mh
 	{
 		template<typename T, typename... TArgs> using all_defined = T;
 
-		template<typename TSelf, typename type>
+		template<typename TSelf, typename TValue>
 		class enum_type_base
 		{
 		public:
-			using underlying_type = std::underlying_type_t<type>;
+			using this_type = TSelf;
+			using value_type = TValue;
+			using underlying_type = std::underlying_type_t<value_type>;
 
 			static constexpr std::string_view type_name()
 			{
@@ -32,7 +34,7 @@ namespace mh
 				return typeName.substr(last + 2);
 			}
 
-			static constexpr std::string_view try_find_name(type value)
+			static constexpr std::string_view try_find_name(value_type value)
 			{
 				for (size_t i = 0; i < std::size(TSelf::VALUES); i++)
 				{
@@ -43,7 +45,7 @@ namespace mh
 				return std::string_view{};
 			}
 
-			static constexpr std::string_view find_name(type value)
+			static constexpr std::string_view find_name(value_type value)
 			{
 				auto found = try_find_name(value);
 				if (found.empty())
@@ -55,7 +57,7 @@ namespace mh
 				return found;
 			}
 
-			static constexpr std::optional<type> try_find_value(const std::string_view& name)
+			static constexpr std::optional<value_type> try_find_value(const std::string_view& name)
 			{
 				for (size_t i = 0; i < std::size(TSelf::VALUES); i++)
 				{
@@ -66,13 +68,13 @@ namespace mh
 				return std::nullopt;
 			}
 
-			static constexpr type find_value(const std::string_view& name)
+			static constexpr value_type find_value(const std::string_view& name)
 			{
 				auto found = try_find_value(name);
 				if (!found)
 				{
 					throw std::invalid_argument(mh::format("Unable to find value of type {} for name \"{}\"",
-						typeid(type).name(), name));
+						typeid(value_type).name(), name));
 				}
 
 				return *found;
@@ -112,17 +114,54 @@ namespace mh
 		public ::mh::detail::reflection::enum_hpp::enum_type_base<::mh::enum_type<enumType>, enumType> \
 	{ \
 	public: \
-		using type = enumType; \
-		\
 		static constexpr std::string_view type_name_full() { return #enumType; } \
 		\
-		static constexpr ::mh::enum_value<type> VALUES[] = {
+		static constexpr ::mh::enum_value<value_type> VALUES[] = {
 
-#define MH_ENUM_REFLECT_VALUE(value) ::mh::enum_value{ type::value, #value },
+#define MH_ENUM_REFLECT_VALUE(value) ::mh::enum_value{ value_type::value, #value },
 
 #define MH_ENUM_REFLECT_END() \
 		}; \
 	};
+
+	template<typename T, typename TReflect = enum_type<std::decay_t<T>>::this_type>
+	inline constexpr std::string_view find_enum_value_name(T val)
+	{
+		return TReflect::find_name(val);
+	}
+	template<typename T, typename TReflect = enum_type<std::decay_t<T>>::this_type>
+	inline constexpr std::string_view try_find_enum_value_name(T val)
+	{
+		return TReflect::try_find_name(val);
+	}
+
+	template<typename T, typename TReflect = enum_type<std::decay_t<T>>::this_type>
+	inline constexpr T find_enum_value(const std::string_view& name)
+	{
+		return TReflect::find_value(val);
+	}
+	template<typename T, typename TReflect = enum_type<std::decay_t<T>>::this_type>
+	inline constexpr void find_enum_value(const std::string_view& name, T& value)
+	{
+		value = find_enum_value<T>(name);
+		return value;
+	}
+	template<typename T, typename TReflect = enum_type<std::decay_t<T>>::this_type>
+	inline constexpr std::optional<T> try_find_enum_value(const std::string_view& name)
+	{
+		return TReflect::try_find_value(name);
+	}
+	template<typename T, typename TReflect = enum_type<std::decay_t<T>>::this_type>
+	inline constexpr bool try_find_enum_value(const std::string_view& name, T& value)
+	{
+		if (auto found = try_find_enum_value<T>(name))
+		{
+			value = *found;
+			return true;
+		}
+
+		return false;
+	}
 }
 
 #if __has_include(<mh/text/format.hpp>)
