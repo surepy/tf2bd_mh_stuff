@@ -29,8 +29,8 @@ namespace mh
 	template<typename To, typename From, typename FromTraits = std::char_traits<From>>
 	std::basic_string<To> change_encoding(const std::basic_string_view<From, FromTraits>& input)
 	{
-		using intern_type = detail::codecvt_hpp::intern_type_t<To, From>;
-		using extern_type = detail::codecvt_hpp::extern_type_t<To, From>;
+		using intern_type = To;// detail::codecvt_hpp::intern_type_t<To, From>;
+		using extern_type = From;// detail::codecvt_hpp::extern_type_t<To, From>;
 
 		struct design_by_committee : std::codecvt<intern_type, extern_type, std::mbstate_t> {} cvt;
 
