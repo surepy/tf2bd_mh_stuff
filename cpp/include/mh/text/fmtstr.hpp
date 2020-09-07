@@ -70,7 +70,8 @@ namespace mh
 
 #if __has_include(<mh/text/format.hpp>)
 		template<typename... TArgs>
-		size_t fmt(const view_type& fmtStr, const TArgs&... args)
+		auto fmt(const view_type& fmtStr, const TArgs&... args) ->
+			decltype(mh::format_to_n((CharT*)nullptr, max_size(), fmtStr, args...), size_t{})
 		{
 			const auto result = mh::format_to_n(m_String.data(), max_size(), fmtStr, args...);
 			m_Length = result.out - m_String.data();
@@ -141,7 +142,7 @@ namespace mh
 		using array_type = base_type::array_type;
 
 		constexpr format_string() = default;
-		template<typename... TArgs>
+		template<typename... TArgs, typename = decltype(mh::format(std::declval<view_type>(), std::declval<TArgs>()...))>
 		format_string(const view_type& fmtStr, TArgs&&... args)
 		{
 			fmt(fmtStr, std::forward<TArgs>(args)...);
