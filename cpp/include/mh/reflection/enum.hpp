@@ -27,12 +27,12 @@ namespace mh
 
 			static constexpr std::string_view type_name()
 			{
-				auto typeName = TSelf::type_name_full();
-				auto last = typeName.rfind("::");
-				if (last == typeName.npos)
-					throw std::invalid_argument("Invalid type name");
+				auto typeNameFull = TSelf::type_name_full();
 
-				return typeName.substr(last + 2);
+				if (auto last = typeNameFull.rfind("::"); last != typeNameFull.npos)
+					return typeNameFull.substr(last + 2); // In a namespace
+
+				return typeNameFull;
 			}
 
 			static constexpr std::string_view try_find_name(value_type value)
