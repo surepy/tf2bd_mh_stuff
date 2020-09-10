@@ -20,6 +20,9 @@ namespace mh
 			{
 				auto operator<=>(const value_type&) const = default;
 
+				const status_obj_type* operator->() const { return &m_Status; }
+				status_obj_type* operator->() { return &m_Status; }
+
 				status_obj_type m_Status{};
 				std::string m_Message;
 			};
@@ -28,7 +31,7 @@ namespace mh
 
 		protected:
 			// Returns true if changed
-			bool set(status_obj_type status, const std::string_view& msg)
+			bool set(status_obj_type status, const std::string_view& msg = "")
 			{
 				std::lock_guard lock(m_SharedData->m_Mutex);
 

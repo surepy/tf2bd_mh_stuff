@@ -20,6 +20,7 @@ namespace mh
 			ostream_type(this),
 			m_String(string)
 		{
+			exceptions(std::ios::badbit | std::ios::failbit);
 		}
 
 	protected:
