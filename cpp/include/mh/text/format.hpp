@@ -10,6 +10,7 @@
 #define MH_FORMATTER MH_FORMATTER_STL
 namespace mh::detail::format_hpp
 {
+#define MH_FMT_STRING(...) __VA_ARGS__
 	namespace fmtns = ::std;
 }
 
@@ -20,6 +21,7 @@ namespace mh::detail::format_hpp
 #define MH_FORMATTER MH_FORMATTER_FMTLIB
 namespace mh::detail::format_hpp
 {
+#define MH_FMT_STRING(...) FMT_STRING(__VA_ARGS__)
 	namespace fmtns = ::fmt;
 }
 
@@ -35,26 +37,36 @@ namespace mh
 	namespace detail::format_hpp
 	{
 		template<typename T>
-		inline constexpr bool enum_class_check_single()
+		inline constexpr bool enum_class_check()
 		{
 			constexpr bool is_enum_class = std::is_enum_v<T> && !std::is_convertible_v<T, int>;
 			static_assert(!is_enum_class, "enum class formatting requires mh::enum_fmt");
 			return !is_enum_class;
 		}
 
-		template<typename T>
-		inline constexpr auto implicit_bool_check_single(T*) -> decltype(std::declval<T>().operator bool())
+		// Intellisense dies if you SFINAE on an explicit operator call
+#ifndef __INTELLISENSE__
+		template<typename T, typename TTo, typename = std::enable_if_t<std::is_convertible_v<T, TTo>>>
+		inline constexpr auto implicit_conversion_check(T* t, TTo*) -> decltype(t->operator TTo())
 		{
 			static_assert(false, "Formatting this type will result in it being formatted as one of its implicit converted types");
 			return false;
 		}
+#endif
 
-		inline constexpr bool implicit_bool_check_single(void*) { return true; }
+		inline constexpr bool implicit_conversion_check(void*, void*) { return true; }
+
+		template<typename T>
+		inline constexpr bool check_type_single()
+		{
+			return enum_class_check<T>() &&
+				implicit_conversion_check((T*)nullptr, (bool*)nullptr);
+		}
 
 		template<typename... T>
 		inline constexpr bool check_type()
 		{
-			return ((enum_class_check_single<T>() && implicit_bool_check_single((T*)nullptr)) && ...);
+			return (check_type_single<T>() && ...);
 		}
 	}
 
@@ -67,9 +79,17 @@ namespace mh
 
 	template<typename TOutputIt, typename TFmtStr, typename... TArgs,
 		typename = std::enable_if_t<detail::format_hpp::check_type<TArgs...>()>>
-	inline auto format_to(TOutputIt&& outputIt, const TFmtStr& fmtStr, const TArgs&... args)
+	inline auto format_to(TOutputIt&& outputIt, const TFmtStr& fmtStr, const TArgs&... args) ->
+		decltype(detail::format_hpp::fmtns::format_to(std::forward<TOutputIt>(outputIt), fmtStr, args...))
 	{
 		return detail::format_hpp::fmtns::format_to(std::forward<TOutputIt>(outputIt), fmtStr, args...);
+	}
+
+	template<typename TContainer, typename TFmtStr, typename... TArgs,
+		typename = std::enable_if_t<detail::format_hpp::check_type<TArgs...>()>>
+	inline auto format_to_container(TContainer& container, const TFmtStr& fmtStr, const TArgs&... args)
+	{
+		return format_to(std::back_inserter(container), fmtStr, args...);
 	}
 
 	template<typename TOutputIt, typename TFmtStr, typename... TArgs,
