@@ -42,29 +42,38 @@ namespace mh
 			return !is_enum_class;
 		}
 
-		template<typename... T>
-		inline constexpr bool enum_class_check()
+		template<typename T>
+		inline constexpr auto implicit_bool_check_single(T*) -> decltype(std::declval<T>().operator bool())
 		{
-			return (enum_class_check_single<T>() && ...);
+			static_assert(false, "Formatting this type will result in it being formatted as one of its implicit converted types");
+			return false;
+		}
+
+		inline constexpr bool implicit_bool_check_single(void*) { return true; }
+
+		template<typename... T>
+		inline constexpr bool check_type()
+		{
+			return ((enum_class_check_single<T>() && implicit_bool_check_single((T*)nullptr)) && ...);
 		}
 	}
 
 	template<typename TFmtStr, typename... TArgs,
-		typename = std::enable_if_t<detail::format_hpp::enum_class_check<TArgs...>()>>
+		typename = std::enable_if_t<detail::format_hpp::check_type<TArgs...>()>>
 	inline auto format(const TFmtStr& fmtStr, const TArgs&... args)
 	{
 		return detail::format_hpp::fmtns::format(fmtStr, args...);
 	}
 
 	template<typename TOutputIt, typename TFmtStr, typename... TArgs,
-		typename = std::enable_if_t<detail::format_hpp::enum_class_check<TArgs...>()>>
+		typename = std::enable_if_t<detail::format_hpp::check_type<TArgs...>()>>
 	inline auto format_to(TOutputIt&& outputIt, const TFmtStr& fmtStr, const TArgs&... args)
 	{
-		return detail::format_hpp::fmtns::format(std::forward<TOutputIt>(outputIt), fmtStr, args...);
+		return detail::format_hpp::fmtns::format_to(std::forward<TOutputIt>(outputIt), fmtStr, args...);
 	}
 
 	template<typename TOutputIt, typename TFmtStr, typename... TArgs,
-		typename = std::enable_if_t<detail::format_hpp::enum_class_check<TArgs...>()>>
+		typename = std::enable_if_t<detail::format_hpp::check_type<TArgs...>()>>
 	inline auto format_to_n(TOutputIt&& outputIt, size_t n, const TFmtStr& fmtStr, const TArgs&... args)
 	{
 		return detail::format_hpp::fmtns::format_to_n(std::forward<TOutputIt>(outputIt), n, fmtStr, args...);
