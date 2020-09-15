@@ -115,7 +115,7 @@ namespace mh
 	}
 	catch (const format_error& e)
 	{
-		return format("FORMATTING ERROR @ {}: Unable to construct string with fmtstr {}: {}",
+		return format(MH_FMT_STRING("FORMATTING ERROR @ {}: Unable to construct string with fmtstr {}: {}"),
 			__FUNCSIG__, std::quoted(fmtStr), e.what());
 	}
 }
