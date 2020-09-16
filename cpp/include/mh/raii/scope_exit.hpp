@@ -32,67 +32,102 @@ namespace mh
 
 		template<typename EF>
 		concept MoveCopyFunc = MoveFunc<EF> && !MoveForwardFunc<EF>;
+
+		struct scope_traits_all final
+		{
+			constexpr bool operator()() const { return true; }
+		};
+		struct scope_traits_fail final
+		{
+			bool operator()() const { return std::uncaught_exceptions() > 0; }
+		};
+		struct scope_traits_success final
+		{
+			bool operator()() const { return std::uncaught_exceptions() <= 0; }
+		};
+
+		// https://en.cppreference.com/w/cpp/experimental/scope_exit
+		template<typename EF, typename Traits>
+		class [[nodiscard]] scope_exit_base
+		{
+			using self_type = scope_exit_base<EF, Traits>;
+
+		public:
+			template<typename Fn>
+			explicit scope_exit_base(Fn&& fn, bool enabled = true)
+				noexcept(std::is_nothrow_constructible_v<EF, Fn> || std::is_nothrow_constructible_v<EF, Fn&>)
+				requires ConstructibleForwardFunc<EF, Fn, self_type> :
+				m_Func(std::forward<Fn>(fn))
+			{
+			}
+			template<typename Fn>
+			explicit scope_exit_base(Fn&& fn, bool enabled = true)
+				noexcept(std::is_nothrow_move_constructible_v<EF> || std::is_nothrow_copy_constructible_v<EF>)
+				requires ConstructibleCopyFunc<EF, Fn, self_type> :
+				m_Func(fn)
+			{
+			}
+
+			scope_exit_base(self_type&& other)
+				noexcept(std::is_nothrow_move_constructible_v<EF> || std::is_nothrow_copy_constructible_v<EF>)
+				requires MoveForwardFunc<EF> :
+				m_Active(other.m_Active),
+				m_Func(std::forward<EF>(other.m_Func))
+			{
+				other.release();
+			}
+			scope_exit_base(self_type&& other)
+				noexcept(std::is_nothrow_move_constructible_v<EF> || std::is_nothrow_copy_constructible_v<EF>)
+				requires MoveCopyFunc<EF> :
+				m_Active(other.m_Active),
+				m_Func(std::forward<EF>(other.m_Func))
+			{
+				other.release();
+			}
+
+			scope_exit_base(const self_type&) = delete;
+
+			~scope_exit_base() noexcept
+			{
+				if (m_Active && m_Traits())
+					m_Func();
+			}
+
+			scope_exit_base& operator=(const self_type&) = delete;
+			scope_exit_base& operator=(self_type&&) = delete;
+
+			operator bool() const { return m_Active; }
+
+			void release() noexcept
+			{
+				m_Active = false;
+			}
+
+		private:
+			bool m_Active = true;
+			[[no_unique_address]] EF m_Func;
+			[[no_unique_address]] Traits m_Traits;
+		};
 	}
 
-	// https://en.cppreference.com/w/cpp/experimental/scope_exit
 	template<typename EF>
-	class scope_exit
+	struct [[nodiscard]] scope_exit : detail::scope_exit_hpp::scope_exit_base<EF, detail::scope_exit_hpp::scope_traits_all>
 	{
-		using self_type = scope_exit<EF>;
-
-	public:
-		template<typename Fn>
-		explicit scope_exit(Fn&& fn)
-			noexcept(std::is_nothrow_constructible_v<EF, Fn> || std::is_nothrow_constructible_v<EF, Fn&>)
-			requires detail::scope_exit_hpp::ConstructibleForwardFunc<EF, Fn, scope_exit> :
-			m_Func(std::forward<Fn>(fn))
-		{
-		}
-		template<typename Fn>
-		explicit scope_exit(Fn&& fn)
-			noexcept(std::is_nothrow_move_constructible_v<EF> || std::is_nothrow_copy_constructible_v<EF>)
-			requires detail::scope_exit_hpp::ConstructibleCopyFunc<EF, Fn, scope_exit> :
-			m_Func(fn)
-		{
-		}
-
-		scope_exit(scope_exit&& other)
-			noexcept(std::is_nothrow_move_constructible_v<EF> || std::is_nothrow_copy_constructible_v<EF>)
-			requires detail::scope_exit_hpp::MoveForwardFunc<EF> :
-			m_Active(other.m_Active),
-			m_Func(std::forward<EF>(other.m_Func))
-		{
-			other.release();
-		}
-		scope_exit(scope_exit&& other)
-			noexcept(std::is_nothrow_move_constructible_v<EF> || std::is_nothrow_copy_constructible_v<EF>)
-			requires detail::scope_exit_hpp::MoveCopyFunc<EF> :
-			m_Active(other.m_Active),
-			m_Func(std::forward<EF>(other.m_Func))
-		{
-			other.release();
-		}
-
-		scope_exit(const scope_exit&) = delete;
-
-		~scope_exit() noexcept
-		{
-			if (m_Active)
-				m_Func();
-		}
-
-		scope_exit& operator=(const scope_exit&) = delete;
-		scope_exit& operator=(scope_exit&&) = delete;
-
-		void release() noexcept
-		{
-			m_Active = false;
-		}
-
-	private:
-		bool m_Active = true;
-		[[no_unique_address]] EF m_Func;
+		using scope_exit_base::scope_exit_base;
 	};
+	template<typename EF> scope_exit(EF) -> scope_exit<EF>;
 
-	template<class EF> scope_exit(EF) -> scope_exit<EF>;
+	template<typename EF>
+	struct [[nodiscard]] scope_fail : detail::scope_exit_hpp::scope_exit_base<EF, detail::scope_exit_hpp::scope_traits_fail>
+	{
+		using scope_exit_base::scope_exit_base;
+	};
+	template<typename EF> scope_fail(EF) -> scope_fail<EF>;
+
+	template<typename EF>
+	struct [[nodiscard]] scope_success : detail::scope_exit_hpp::scope_exit_base<EF, detail::scope_exit_hpp::scope_traits_success>
+	{
+		using scope_exit_base::scope_exit_base;
+	};
+	template<typename EF> scope_success(EF) -> scope_success<EF>;
 }
