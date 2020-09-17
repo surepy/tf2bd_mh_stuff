@@ -57,14 +57,16 @@ namespace mh
 			explicit scope_exit_base(Fn&& fn, bool enabled = true)
 				noexcept(std::is_nothrow_constructible_v<EF, Fn> || std::is_nothrow_constructible_v<EF, Fn&>)
 				requires ConstructibleForwardFunc<EF, Fn, self_type> :
-				m_Func(std::forward<Fn>(fn))
+				m_Func(std::forward<Fn>(fn)),
+				m_Active(enabled)
 			{
 			}
 			template<typename Fn>
 			explicit scope_exit_base(Fn&& fn, bool enabled = true)
 				noexcept(std::is_nothrow_move_constructible_v<EF> || std::is_nothrow_copy_constructible_v<EF>)
 				requires ConstructibleCopyFunc<EF, Fn, self_type> :
-				m_Func(fn)
+				m_Func(fn),
+				m_Active(enabled)
 			{
 			}
 
