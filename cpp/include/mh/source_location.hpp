@@ -26,7 +26,7 @@ namespace mh
 	{
 	public:
 		constexpr source_location() noexcept = default;
-		constexpr source_location(std::uint_least32_t line, const char* fileName, const char* functionName) :
+		constexpr source_location(std::uint_least32_t line, const char* fileName, const char* functionName) noexcept :
 			m_Line(line), m_FileName(fileName), m_FunctionName(functionName)
 		{
 		}
