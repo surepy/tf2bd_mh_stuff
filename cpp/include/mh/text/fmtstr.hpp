@@ -107,23 +107,24 @@ namespace mh
 	class printf_string : public base_format_string<N, CharT, Traits>
 	{
 	public:
-		using base_type = base_format_string;
+		using base_type = base_format_string<N, CharT, Traits>;
 		using this_type = printf_string;
 		using value_type = base_type::value_type;
 		using traits_type = base_type::traits_type;
+		using view_type = base_type::view_type;
 
 		constexpr printf_string() = default;
 		printf_string(const value_type* fmtStr, ...)
 		{
 			va_list args;
 			va_start(args, fmtStr);
-			vsprintf(fmtStr, args);
+			base_type::vsprintf(fmtStr, args);
 			va_end(args);
 		}
 
 		constexpr this_type& operator=(const view_type& rhs)
 		{
-			puts(rhs);
+			base_type::puts(rhs);
 			return *this;
 		}
 	};
@@ -134,7 +135,7 @@ namespace mh
 	class format_string : public base_format_string<N, CharT, Traits>
 	{
 	public:
-		using base_type = base_format_string;
+		using base_type = base_format_string<N, CharT, Traits>;
 		using this_type = format_string;
 		using value_type = base_type::value_type;
 		using traits_type = base_type::traits_type;
@@ -145,12 +146,12 @@ namespace mh
 		template<typename... TArgs, typename = decltype(mh::format(std::declval<view_type>(), std::declval<TArgs>()...))>
 		format_string(const view_type& fmtStr, TArgs&&... args)
 		{
-			fmt(fmtStr, std::forward<TArgs>(args)...);
+			base_type::fmt(fmtStr, std::forward<TArgs>(args)...);
 		}
 
 		constexpr this_type& operator=(const view_type& rhs)
 		{
-			puts(rhs);
+			base_type::puts(rhs);
 			return *this;
 		}
 	};

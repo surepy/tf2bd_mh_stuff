@@ -95,9 +95,9 @@ namespace mh
 	template<typename TStatusObj>
 	class status_source : public detail::status_hpp::status_base<TStatusObj>
 	{
+		using status_base = detail::status_hpp::status_base<TStatusObj>;
 	public:
 		using status_base::status_base;
-
 		using status_base::set;
 
 		auto get_reader() const;
@@ -106,12 +106,13 @@ namespace mh
 	template<typename TStatusObj>
 	class status_reader : public detail::status_hpp::status_base<TStatusObj>
 	{
+		using status_base = detail::status_hpp::status_base<TStatusObj>;
 	public:
 		status_reader()
 		{
 		}
 		status_reader(const status_source<TStatusObj>& source) :
-			detail::status_hpp::status_base<TStatusObj>(source)
+			status_base(source)
 		{
 		}
 

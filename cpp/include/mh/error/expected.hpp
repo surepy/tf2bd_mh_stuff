@@ -11,7 +11,13 @@ namespace mh
 	{
 		struct expect_t {};
 		struct unexpect_t {};
+	}
 
+	static detail::error::expected_hpp::expect_t expect;
+	static detail::error::expected_hpp::unexpect_t unexpect;
+
+	namespace detail::error::expected_hpp
+	{
 		template<typename TExpected, typename TFunc>
 		decltype(auto) map(TExpected&& exp, TFunc&& func)
 		{
@@ -34,9 +40,6 @@ namespace mh
 			}
 		}
 	}
-
-	static detail::error::expected_hpp::expect_t expect;
-	static detail::error::expected_hpp::unexpect_t unexpect;
 
 	template<typename TValue, typename TError>
 	class expected final
@@ -65,6 +68,13 @@ namespace mh
 		constexpr expected(error_type&& error) : expected(unexpect, std::move(error)) {}
 		constexpr expected(const error_type& error) : expected(unexpect, error) {}
 
+		template<typename T>
+		constexpr expected(T&& val)
+			requires std::is_constructible_v<TError, T>
+			: expected(TError(std::forward<T>(val)))
+		{
+		}
+
 		constexpr expected(expect_t&, value_type&& value) : m_State(std::in_place_index_t<VALUE_IDX>{}, std::move(value)) {}
 		constexpr expected(expect_t&, const value_type& value) : m_State(std::in_place_index_t<VALUE_IDX>{}, value) {}
 
@@ -87,6 +97,14 @@ namespace mh
 			return *this;
 		}
 		constexpr this_type& operator=(const error_type& error)
+		{
+			emplace(unexpect, error);
+			return *this;
+		}
+
+		template<typename T>
+		constexpr this_type& operator=(T&& error)
+			requires std::is_constructible_v<TError, T>
 		{
 			emplace(unexpect, error);
 			return *this;

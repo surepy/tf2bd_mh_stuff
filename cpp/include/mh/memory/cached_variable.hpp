@@ -63,16 +63,17 @@ namespace mh
 	class cached_variable final : public detail::cached_variable_hpp::cached_variable_base<T, TUpdateFunc, TClock>
 	{
 		// Non-thread-safe version
+		using cached_variable_base = detail::cached_variable_hpp::cached_variable_base<T, TUpdateFunc, TClock>;
 	public:
 		using cached_variable_base::cached_variable_base;
 
-		T& get_no_update() { return m_Value; }
-		const T& get_no_update() const { return m_Value; }
+		T& get_no_update() { return cached_variable_base::m_Value; }
+		const T& get_no_update() const { return cached_variable_base::m_Value; }
 
 		T& get()
 		{
-			try_update();
-			return m_Value;
+			cached_variable_base::try_update();
+			return cached_variable_base::m_Value;
 		}
 	};
 
@@ -81,20 +82,21 @@ namespace mh
 		public detail::cached_variable_hpp::cached_variable_base<T, TUpdateFunc, TClock>
 	{
 		// Thread-safe version
+		using cached_variable_base = detail::cached_variable_hpp::cached_variable_base<T, TUpdateFunc, TClock>;
 	public:
 		using cached_variable_base::cached_variable_base;
 
 		T get_no_update() const
 		{
 			std::lock_guard lock(m_Mutex);
-			return m_Value;
+			return cached_variable_base::m_Value;
 		}
 
 		T get()
 		{
 			std::lock_guard lock(m_Mutex);
-			try_update();
-			return m_Value;
+			cached_variable_base::try_update();
+			return cached_variable_base::m_Value;
 		}
 
 	private:

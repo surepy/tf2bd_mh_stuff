@@ -43,12 +43,14 @@ namespace mh
 		template<typename T> constexpr bool is_utf_v =
 			std::is_same_v<T, char8_t> || std::is_same_v<T, char16_t> || std::is_same_v<T, char32_t>;
 
+#if __cplusplus >= 202000L
 		template<typename T, typename = std::enable_if_t<std::is_same_v<T, char8_t>>>
 		inline auto convert_to_mb(char* buf, T from, std::mbstate_t& state) ->
 			decltype(std::c8rtomb(buf, from, &state))
 		{
 			return std::c8rtomb(buf, from, &state);
 		}
+#endif
 		inline std::size_t convert_to_mb(char* buf, char16_t from, std::mbstate_t& state)
 		{
 			return std::c16rtomb(buf, from, &state);
@@ -58,12 +60,14 @@ namespace mh
 			return std::c32rtomb(buf, from, &state);
 		}
 
+#if __cplusplus >= 202000L
 		template<typename T, typename = std::enable_if_t<std::is_same_v<T, char8_t>>>
 		inline auto convert_to_utf(T* buf, const char* mb, std::size_t mbmax, std::mbstate_t& state) ->
 			decltype(std::mbrtoc8(buf, mb, mbmax, &state))
 		{
 			return std::mbrtoc8(buf, mb, mbmax, &state);
 		}
+#endif
 		inline std::size_t convert_to_utf(char16_t* buf, const char* mb, std::size_t mbmax, std::mbstate_t& state)
 		{
 			return std::mbrtoc16(buf, mb, mbmax, &state);

@@ -115,6 +115,7 @@ namespace mh
 	template<typename EF>
 	struct [[nodiscard]] scope_exit : detail::scope_exit_hpp::scope_exit_base<EF, detail::scope_exit_hpp::scope_traits_all>
 	{
+		using scope_exit_base = detail::scope_exit_hpp::scope_exit_base<EF, detail::scope_exit_hpp::scope_traits_all>;
 		using scope_exit_base::scope_exit_base;
 	};
 	template<typename EF> scope_exit(EF) -> scope_exit<EF>;
@@ -122,6 +123,7 @@ namespace mh
 	template<typename EF>
 	struct [[nodiscard]] scope_fail : detail::scope_exit_hpp::scope_exit_base<EF, detail::scope_exit_hpp::scope_traits_fail>
 	{
+		using scope_exit_base = detail::scope_exit_hpp::scope_exit_base<EF, detail::scope_exit_hpp::scope_traits_fail>;
 		using scope_exit_base::scope_exit_base;
 	};
 	template<typename EF> scope_fail(EF) -> scope_fail<EF>;
@@ -129,6 +131,7 @@ namespace mh
 	template<typename EF>
 	struct [[nodiscard]] scope_success : detail::scope_exit_hpp::scope_exit_base<EF, detail::scope_exit_hpp::scope_traits_success>
 	{
+		using scope_exit_base = detail::scope_exit_hpp::scope_exit_base<EF, detail::scope_exit_hpp::scope_traits_success>;
 		using scope_exit_base::scope_exit_base;
 	};
 	template<typename EF> scope_success(EF) -> scope_success<EF>;

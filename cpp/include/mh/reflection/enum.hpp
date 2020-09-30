@@ -175,22 +175,22 @@ namespace mh
 	{
 		return TWrapper{ .m_Value = val };
 	}
-}
 
-template<typename CharT, typename Traits, typename TEnum, typename = mh::enum_fmt_t<TEnum>>
-std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& os, TEnum value)
-{
-	using et = ::mh::enum_type<TEnum>;
-	const auto valueName = et::try_find_name(value);
+	template<typename CharT, typename Traits, typename TEnum>
+	std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& os, mh::enum_fmt_t<TEnum> value)
+	{
+		using et = ::mh::enum_type<TEnum>;
+		const auto valueName = et::try_find_name(value.m_Value);
 
-	os << et::type_name();
+		os << et::type_name();
 
-	if (valueName.empty())
-		os << '(' << +std::underlying_type_t<TEnum>(value) << ')';
-	else
-		os << valueName;
+		if (valueName.empty())
+			os << '(' << +std::underlying_type_t<TEnum>(value.m_Value) << ')';
+		else
+			os << valueName;
 
-	return os;
+		return os;
+	}
 }
 
 #if __has_include(<mh/text/format.hpp>)
