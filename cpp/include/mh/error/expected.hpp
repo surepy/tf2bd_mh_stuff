@@ -63,6 +63,12 @@ namespace mh
 		static_assert(!std::is_same_v<error_type, expect_t>, "error type cannot be expect_t");
 		static_assert(!std::is_same_v<error_type, unexpect_t>, "error type cannot be unexpect_t");
 
+		constexpr expected()
+			noexcept(std::is_nothrow_default_constructible_v<TValue>)
+			requires std::is_default_constructible_v<TValue>
+		{
+		}
+
 		constexpr expected(value_type&& value) : expected(expect, std::move(value)) {}
 		constexpr expected(const value_type& value) : expected(expect, value) {}
 		constexpr expected(error_type&& error) : expected(unexpect, std::move(error)) {}
@@ -82,21 +88,25 @@ namespace mh
 		constexpr expected(unexpect_t&, const error_type& value) : m_State(std::in_place_index_t<ERROR_IDX>{}, value) {}
 
 		constexpr this_type& operator=(value_type&& value)
+			noexcept(noexcept(emplace(expect, std::move(error))))
 		{
 			emplace(expect, std::move(value));
 			return *this;
 		}
 		constexpr this_type& operator=(const value_type& value)
+			noexcept(noexcept(emplace(expect, value)))
 		{
 			emplace(expect, value);
 			return *this;
 		}
 		constexpr this_type& operator=(error_type&& error)
+			noexcept(noexcept(emplace(unexpect, std::move(error))))
 		{
 			emplace(unexpect, std::move(error));
 			return *this;
 		}
 		constexpr this_type& operator=(const error_type& error)
+			noexcept(noexcept(emplace(unexpect, value)))
 		{
 			emplace(unexpect, error);
 			return *this;
@@ -104,6 +114,7 @@ namespace mh
 
 		template<typename T>
 		constexpr this_type& operator=(T&& error)
+			noexcept(noexcept(emplace(unexpect, std::forward<T>(error))))
 			requires std::is_constructible_v<TError, T>
 		{
 			emplace(unexpect, error);
