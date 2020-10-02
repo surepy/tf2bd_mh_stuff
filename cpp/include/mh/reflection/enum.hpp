@@ -5,6 +5,7 @@
 #include <optional>
 #include <ostream>
 #include <stdexcept>
+#include <string>
 #include <string_view>
 #include <type_traits>
 
@@ -51,8 +52,9 @@ namespace mh
 				auto found = try_find_name(value);
 				if (found.empty())
 				{
-					throw std::invalid_argument(mh::format("Unable to find name for {} ({})",
-						+underlying_type(value), typeid(value_type).name()));
+					using namespace std::string_literals;
+					throw std::invalid_argument("Unable to find name for "s + std::to_string(+underlying_type(value))
+						+ " (" + typeid(value_type).name() + ")");
 				}
 
 				return found;
@@ -74,8 +76,12 @@ namespace mh
 				auto found = try_find_value(name);
 				if (!found)
 				{
-					throw std::invalid_argument(mh::format("Unable to find value of type {} for name \"{}\"",
-						typeid(value_type).name(), name));
+					using namespace std::string_literals;
+					throw std::invalid_argument("Unable to find value of type "s
+						.append(typeid(value_type).name())
+						.append(" for name \"")
+						.append(name)
+						.append("\""));
 				}
 
 				return *found;
