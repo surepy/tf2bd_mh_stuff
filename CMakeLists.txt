@@ -4,59 +4,65 @@ project(mh_stuff CXX)
 
 option(MH_STUFF_COMPILE_LIBRARY "True to compile some code into to a static library for less overhead" ON)
 
+set(MH_STUFF_SOURCES
+	"cpp/include/mh/algorithm/algorithm.hpp"
+	"cpp/include/mh/algorithm/multi_compare.hpp"
+
+	"cpp/include/mh/concurrency/main_thread.hpp"
+	"cpp/include/mh/concurrency/thread_pool.hpp"
+
+	"cpp/include/mh/data/bit_float.hpp"
+	"cpp/include/mh/data/bits.hpp"
+	"cpp/include/mh/data/variable_pusher.hpp"
+
+	"cpp/include/mh/error/ensure.inl"
+	"cpp/include/mh/error/ensure.hpp"
+	"cpp/include/mh/error/error_code_exception.hpp"
+	"cpp/include/mh/error/expected.hpp"
+	"cpp/include/mh/error/nested_exception.hpp"
+	"cpp/include/mh/error/status.hpp"
+
+	"cpp/include/mh/io/getopt.hpp"
+
+	"cpp/include/mh/math/interpolation.hpp"
+	"cpp/include/mh/math/uint128.hpp"
+
+	"cpp/include/mh/memory/buffer.inl"
+	"cpp/include/mh/memory/buffer.hpp"
+	"cpp/include/mh/memory/cached_variable.hpp"
+	"cpp/include/mh/memory/checked_ptr.hpp"
+	"cpp/include/mh/memory/unique_object.hpp"
+
+	"cpp/include/mh/raii/scope_exit.hpp"
+
+	"cpp/include/mh/reflection/enum.hpp"
+
+	"cpp/include/mh/text/formatters/error_code.hpp"
+	"cpp/include/mh/text/case_insensitive_string.hpp"
+	"cpp/include/mh/text/charconv_helper.hpp"
+	"cpp/include/mh/text/codecvt.hpp"
+	"cpp/include/mh/text/fmtstr.hpp"
+	"cpp/include/mh/text/format.hpp"
+	"cpp/include/mh/text/insertion_conversion.hpp"
+	"cpp/include/mh/text/memstream.hpp"
+	"cpp/include/mh/text/string_insertion.hpp"
+	"cpp/src/text/string_insertion.cpp"
+	"cpp/include/mh/text/stringops.hpp"
+
+	"cpp/include/mh/types/disable_copy_move.hpp"
+
+	"cpp/include/mh/compiler.hpp"
+	"cpp/include/mh/future.hpp"
+	"cpp/include/mh/source_location.hpp"
+	"cpp/include/mh/utility.hpp"
+	"cpp/include/mh/variant.hpp"
+)
+
 if (MH_STUFF_COMPILE_LIBRARY)
 	add_library(mh_stuff STATIC
-		"cpp/include/mh/algorithm/algorithm.hpp"
-		"cpp/include/mh/algorithm/multi_compare.hpp"
-
-		"cpp/include/mh/concurrency/main_thread.hpp"
-		"cpp/include/mh/concurrency/thread_pool.hpp"
-
-		"cpp/include/mh/data/bit_float.hpp"
-		"cpp/include/mh/data/bits.hpp"
-		"cpp/include/mh/data/variable_pusher.hpp"
-
-		"cpp/include/mh/error/ensure.hpp"
-		"cpp/include/mh/error/ensure.inl"
-		"cpp/include/mh/error/error_code_exception.hpp"
-		"cpp/include/mh/error/expected.hpp"
-		"cpp/include/mh/error/nested_exception.hpp"
-		"cpp/include/mh/error/status.hpp"
-
-		"cpp/include/mh/io/getopt.hpp"
-
-		"cpp/include/mh/math/interpolation.hpp"
-		"cpp/include/mh/math/uint128.hpp"
-
-		"cpp/include/mh/memory/buffer.hpp"
-		"cpp/include/mh/memory/buffer.inl"
-		"cpp/include/mh/memory/cached_variable.hpp"
-		"cpp/include/mh/memory/checked_ptr.hpp"
-		"cpp/include/mh/memory/unique_object.hpp"
-
-		"cpp/include/mh/raii/scope_exit.hpp"
-
-		"cpp/include/mh/reflection/enum.hpp"
-
-		"cpp/include/mh/text/formatters/error_code.hpp"
-		"cpp/include/mh/text/case_insensitive_string.hpp"
-		"cpp/include/mh/text/charconv_helper.hpp"
-		"cpp/include/mh/text/codecvt.hpp"
-		"cpp/include/mh/text/fmtstr.hpp"
-		"cpp/include/mh/text/format.hpp"
-		"cpp/include/mh/text/insertion_conversion.hpp"
-		"cpp/include/mh/text/memstream.hpp"
-		"cpp/include/mh/text/string_insertion.hpp"
-		"cpp/include/mh/text/stringops.hpp"
-
-		"cpp/include/mh/types/disable_copy_move.hpp"
-
-		"cpp/include/mh/compiler.hpp"
-		"cpp/include/mh/future.hpp"
-		"cpp/include/mh/source_location.hpp"
-		"cpp/include/mh/utility.hpp"
-		"cpp/include/mh/variant.hpp"
-	)
+		${MH_STUFF_SOURCES}
+		"cpp/src/text/string_insertion.cpp"
+	 "cpp/src/source_location.cpp"  "cpp/src/text/case_insensitive_string.cpp")
 
 	# intellisense doesn't work properly with variables that contain dollar signs
 	if (MSVC)
@@ -84,7 +90,9 @@ if (MH_STUFF_COMPILE_LIBRARY)
 	set_target_properties(mh_stuff PROPERTIES CXX_STANDARD 20)
 
 else()
-	add_library(mh_stuff INTERFACE)
+	add_library(mh_stuff INTERFACE
+		${MH_STUFF_SOURCES}
+	)
 endif()
 
 add_library(mh::stuff ALIAS mh_stuff)

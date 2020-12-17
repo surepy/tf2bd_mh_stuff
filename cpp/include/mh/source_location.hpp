@@ -50,6 +50,7 @@ namespace mh
 #if __has_include(<mh/text/format.hpp>)
 #include <mh/text/format.hpp>
 
+#if MH_FORMATTER != MH_FORMATTER_NONE
 template<typename CharT>
 struct mh::formatter<mh::source_location, CharT>
 {
@@ -176,4 +177,7 @@ struct mh::formatter<mh::source_location, CharT>
 	}
 };
 
+extern template struct mh::formatter<mh::source_location, char>;
+extern template struct mh::formatter<mh::source_location, wchar_t>;
+#endif
 #endif

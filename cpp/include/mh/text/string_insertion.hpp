@@ -42,6 +42,11 @@ namespace mh
 		std::basic_string<CharT, Traits, Alloc>& m_String;
 	};
 
+#ifdef $MH_COMPILE_LIBRARY
+	extern template class basic_strwrapperstream<char>;
+	extern template class basic_strwrapperstream<wchar_t>;
+#endif
+
 	using strwrapperstream = basic_strwrapperstream<>;
 
 	namespace detail::string_insertion_hpp

@@ -74,6 +74,11 @@ namespace mh
 		}
 	};
 
+#ifdef $MH_COMPILE_LIBRARY
+	extern template class case_insensitive_char_traits<std::char_traits<char>>;
+	extern template class case_insensitive_char_traits<std::char_traits<wchar_t>>;
+#endif
+
 	template<typename CharT = char, typename TraitsLHS = std::char_traits<CharT>, typename TraitsRHS = std::char_traits<CharT>>
 	bool case_insensitive_compare(
 		const std::basic_string_view<CharT, TraitsLHS>& lhs,
