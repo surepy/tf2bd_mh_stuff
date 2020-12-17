@@ -29,6 +29,7 @@ if (MH_STUFF_COMPILE_LIBRARY)
 		"cpp/include/mh/math/uint128.hpp"
 
 		"cpp/include/mh/memory/buffer.hpp"
+		"cpp/include/mh/memory/buffer.inl"
 		"cpp/include/mh/memory/cached_variable.hpp"
 		"cpp/include/mh/memory/checked_ptr.hpp"
 		"cpp/include/mh/memory/unique_object.hpp"
@@ -57,8 +58,12 @@ if (MH_STUFF_COMPILE_LIBRARY)
 		"cpp/include/mh/variant.hpp"
 	)
 
-	set(MH_COMPILE_LIBRARY_WORKAROUND "$MH_COMPILE_LIBRARY")
-	target_compile_definitions(mh_stuff PUBLIC ${MH_COMPILE_LIBRARY_WORKAROUND} "${MH_COMPILE_LIBRARY_WORKAROUND}1")
+	# intellisense doesn't work properly with variables that contain dollar signs
+	if (MSVC)
+		set(MH_COMPILE_LIBRARY_WORKAROUND "$MH_COMPILE_LIBRARY")
+		target_compile_definitions(mh_stuff PRIVATE ${MH_COMPILE_LIBRARY_WORKAROUND} "${MH_COMPILE_LIBRARY_WORKAROUND}1")
+	endif()
+
 	target_compile_definitions(mh_stuff PUBLIC
 		"$$MH_COMPILE_LIBRARY"
 		"$$MH_COMPILE_LIBRARY_INLINE=inline"
