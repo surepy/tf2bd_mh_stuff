@@ -62,19 +62,20 @@ if (MH_STUFF_COMPILE_LIBRARY)
 	add_library(mh_stuff STATIC
 		${MH_STUFF_SOURCES}
 		"cpp/src/text/string_insertion.cpp"
-	 "cpp/src/source_location.cpp"  "cpp/src/text/case_insensitive_string.cpp")
+		"cpp/src/source_location.cpp"
+		"cpp/src/text/case_insensitive_string.cpp"
+	)
 
 	# intellisense doesn't work properly with variables that contain dollar signs
 	if (MSVC)
 		set(MH_COMPILE_LIBRARY_WORKAROUND "$MH_COMPILE_LIBRARY")
-		target_compile_definitions(mh_stuff PRIVATE ${MH_COMPILE_LIBRARY_WORKAROUND} "${MH_COMPILE_LIBRARY_WORKAROUND}1")
+		target_compile_definitions(mh_stuff PUBLIC ${MH_COMPILE_LIBRARY_WORKAROUND} "${MH_COMPILE_LIBRARY_WORKAROUND}1")
 	endif()
 
 	target_compile_definitions(mh_stuff PUBLIC
 		"$$MH_COMPILE_LIBRARY"
 		"$$MH_COMPILE_LIBRARY_INLINE=inline"
 	)
-	# target_compile_options(mh_stuff PUBLIC "-DMH_COMPILE_LIBRARY")
 
 	# Create a cpp file of all .inl files and add it to the target
 	file(GLOB_RECURSE MH_INL_FILES "*.inl")
@@ -87,14 +88,14 @@ if (MH_STUFF_COMPILE_LIBRARY)
 
 	target_sources(mh_stuff PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/library.cpp")
 
-	set_target_properties(mh_stuff PROPERTIES CXX_STANDARD 20)
-
 else()
 	add_library(mh_stuff INTERFACE
 		${MH_STUFF_SOURCES}
 	)
 endif()
 
-add_library(mh::stuff ALIAS mh_stuff)
+target_compile_features(mh_stuff PUBLIC cxx_std_20)
 
 target_include_directories(mh_stuff PUBLIC "cpp/include")
+
+add_library(mh::stuff ALIAS mh_stuff)
