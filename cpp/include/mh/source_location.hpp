@@ -74,7 +74,7 @@ struct mh::formatter<mh::source_location, CharT>
 	{
 		auto it = ctx.begin();
 		const auto end = ctx.end();
-		if (it != ctx.end())
+		if (it != end)
 		{
 			if (*it != '}')
 			{
@@ -107,9 +107,11 @@ struct mh::formatter<mh::source_location, CharT>
 				else
 					throw format_error(mh::format("Unexpected character '{}' in formatting string", *it));
 			}
+
+			throw format_error("Unexpected end of format string when looking for '}'");
 		}
 
-		throw format_error("Unexpected end of format string when looking for '}'");
+		return it;
 	}
 
 	template<typename FormatContext>
