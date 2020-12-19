@@ -2,7 +2,7 @@
 #include <iostream>
 #include <sstream>
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && defined(_DEBUG) // _CrtDbgReport
 #include <crtdbg.h>
 #endif
 
@@ -46,7 +46,7 @@ namespace mh::detail::ensure_hpp
 
 		std::cerr << ss.str() << std::endl;
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && defined(_DEBUG)
 		const auto userResult = _CrtDbgReport(_CRT_ASSERT, info.m_FileName, info.m_FileLine, nullptr, "%s", ss.str().c_str());
 		if (userResult == 1 || userResult == -1) // -1 = error, 1 = user clicked "break" (retry)
 			return ensure_trigger_result::debugger_break;
