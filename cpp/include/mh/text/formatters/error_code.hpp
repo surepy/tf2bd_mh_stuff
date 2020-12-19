@@ -21,7 +21,7 @@ struct mh::formatter<T, CharT, std::enable_if_t<std::is_same_v<T, std::error_cod
 	{
 		auto it = ctx.begin();
 		const auto end = ctx.end();
-		if (it != ctx.end())
+		if (it != end)
 		{
 			if (*it != '}')
 			{
@@ -43,9 +43,11 @@ struct mh::formatter<T, CharT, std::enable_if_t<std::is_same_v<T, std::error_cod
 				else
 					throw format_error(mh::format("Unexpected character '{}' in formatting string", *it));
 			}
+
+			throw format_error("Unexpected end of format string when looking for '}'");
 		}
 
-		throw format_error("Unexpected end of format string when looking for '}'");
+		return it;
 	}
 
 	template<typename FormatContext>
