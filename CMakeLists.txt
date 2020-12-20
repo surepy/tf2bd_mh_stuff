@@ -11,6 +11,8 @@ set(MH_STUFF_SOURCES
 	"cpp/include/mh/concurrency/main_thread.hpp"
 	"cpp/include/mh/concurrency/thread_pool.hpp"
 
+	"cpp/include/mh/coroutine/generator.hpp"
+
 	"cpp/include/mh/data/bit_float.hpp"
 	"cpp/include/mh/data/bits.hpp"
 	"cpp/include/mh/data/variable_pusher.hpp"

@@ -171,12 +171,12 @@ namespace mh
 	}
 }
 
-#if __has_include(<cppcoro/generator.hpp>)
-#include <cppcoro/generator.hpp>
+#if __has_include(<mh/coroutine/generator.hpp>) && (__cpp_impl_coroutine >= 201902)
+#include <mh/coroutine/generator.hpp>
 namespace mh
 {
 	template<typename CharT, typename Traits>
-	[[nodiscard]] cppcoro::generator<std::basic_string_view<CharT, Traits>> split_string(
+	[[nodiscard]] mh::generator<std::basic_string_view<CharT, Traits>> split_string(
 		const std::basic_string_view<CharT, Traits>& string, const std::basic_string_view<CharT, Traits>& splitChars)
 	{
 		size_t lastEnd = 0;
