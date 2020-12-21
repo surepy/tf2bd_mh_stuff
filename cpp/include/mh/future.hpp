@@ -15,7 +15,9 @@ namespace mh
 	template<typename T>
 	std::future<T> make_ready_future(T&& value)
 	{
-		return emplace_ready_future<T>(std::move(value));
+		std::promise<T> promise;
+		promise.set_value(std::move(value));
+		return promise.get_future();
 	}
 	template<typename T>
 	std::future<T> make_ready_future(const T& value)
