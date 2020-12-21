@@ -18,11 +18,12 @@ namespace mh
 			using duration_type = typename clock_type::duration;
 			using time_point_type = typename clock_type::time_point;
 
-			cached_variable_base(duration_type updateInterval, TUpdateFunc updateFunc) :
+			template<typename... TArgs>
+			cached_variable_base(duration_type updateInterval, TUpdateFunc updateFunc, TArgs&&... updateFuncArgs) :
 				m_NextUpdate(clock_type::now() + updateInterval),
 				m_UpdateInterval(updateInterval),
 				m_UpdateFunc(std::move(updateFunc)),
-				m_Value(std::invoke(m_UpdateFunc))
+				m_Value(m_UpdateFunc(std::forward<TArgs>(updateFuncArgs)...))
 			{
 			}
 
@@ -41,12 +42,13 @@ namespace mh
 			[[no_unique_address]] TUpdateFunc m_UpdateFunc{};
 
 		protected:
-			bool try_update()
+			template<typename... TArgs>
+			bool try_update(TArgs&&... args)
 			{
 				auto now = clock_type::now();
 				if (now >= m_NextUpdate)
 				{
-					m_Value = std::invoke(m_UpdateFunc);
+					m_Value = m_UpdateFunc(std::forward<TArgs>(args)...);
 					m_NextUpdate = now + m_UpdateInterval;
 					return true;
 				}
@@ -70,9 +72,10 @@ namespace mh
 		T& get_no_update() { return cached_variable_base::m_Value; }
 		const T& get_no_update() const { return cached_variable_base::m_Value; }
 
-		T& get()
+		template<typename... TArgs>
+		T& get(TArgs&&... args)
 		{
-			cached_variable_base::try_update();
+			cached_variable_base::try_update(std::forward<TArgs>(args)...);
 			return cached_variable_base::m_Value;
 		}
 	};
@@ -92,10 +95,11 @@ namespace mh
 			return cached_variable_base::m_Value;
 		}
 
-		T get()
+		template<typename... TArgs>
+		T get(TArgs&&... args)
 		{
 			std::lock_guard lock(m_Mutex);
-			cached_variable_base::try_update();
+			cached_variable_base::try_update(std::forward<TArgs>(args)...);
 			return cached_variable_base::m_Value;
 		}
 
@@ -103,6 +107,6 @@ namespace mh
 		mutable std::mutex m_Mutex;
 	};
 
-	template<bool threadSafe = true, typename TUpdateFunc = void, typename TClock = detail::cached_variable_hpp::default_clock>
-	cached_variable(typename TClock::duration d, TUpdateFunc f) -> cached_variable<threadSafe, std::invoke_result_t<TUpdateFunc>, TUpdateFunc, TClock>;
+	template<bool threadSafe = true, typename TUpdateFunc = void, typename TClock = detail::cached_variable_hpp::default_clock, typename... TArgs>
+	cached_variable(typename TClock::duration d, TUpdateFunc f, TArgs&&... args) -> cached_variable<threadSafe, std::invoke_result_t<TUpdateFunc, TArgs...>, TUpdateFunc, TClock>;
 }
