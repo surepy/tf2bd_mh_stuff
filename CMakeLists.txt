@@ -76,7 +76,7 @@ if (MH_STUFF_COMPILE_LIBRARY)
 
 	target_compile_definitions(mh_stuff PUBLIC
 		"$$MH_COMPILE_LIBRARY"
-		"$$MH_COMPILE_LIBRARY_INLINE=inline"
+		"$$MH_COMPILE_LIBRARY_INLINE="
 	)
 
 	# Create a cpp file of all .inl files and add it to the target
@@ -93,6 +93,10 @@ if (MH_STUFF_COMPILE_LIBRARY)
 else()
 	add_library(mh_stuff INTERFACE
 		${MH_STUFF_SOURCES}
+	)
+
+	target_compile_definitions(mh_stuff PUBLIC
+		"$$MH_COMPILE_LIBRARY_INLINE=inline"
 	)
 endif()
 
