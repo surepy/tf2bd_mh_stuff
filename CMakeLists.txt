@@ -48,7 +48,6 @@ set(MH_STUFF_SOURCES
 	"cpp/include/mh/text/insertion_conversion.hpp"
 	"cpp/include/mh/text/memstream.hpp"
 	"cpp/include/mh/text/string_insertion.hpp"
-	"cpp/src/text/string_insertion.cpp"
 	"cpp/include/mh/text/stringops.hpp"
 
 	"cpp/include/mh/types/disable_copy_move.hpp"
@@ -63,9 +62,10 @@ set(MH_STUFF_SOURCES
 if (MH_STUFF_COMPILE_LIBRARY)
 	add_library(mh_stuff STATIC
 		${MH_STUFF_SOURCES}
+		"cpp/src/text/case_insensitive_string.cpp"
+		"cpp/src/text/codecvt.cpp"
 		"cpp/src/text/string_insertion.cpp"
 		"cpp/src/source_location.cpp"
-		"cpp/src/text/case_insensitive_string.cpp"
 	)
 
 	# intellisense doesn't work properly with variables that contain dollar signs

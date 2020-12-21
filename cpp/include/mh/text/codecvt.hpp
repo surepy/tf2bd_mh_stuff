@@ -3,6 +3,7 @@
 #include <cassert>
 #include <cuchar>
 #include <cwchar>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -11,35 +12,6 @@ namespace mh
 {
 	namespace detail::codecvt_hpp
 	{
-		template<typename T1, typename T2>
-		struct in_out_types
-		{
-			using intern_type = T1;
-			using extern_type = T2;
-		};
-
-		template<> struct in_out_types<char, char16_t> : in_out_types<char16_t, char> {};
-		template<> struct in_out_types<char8_t, char16_t> : in_out_types<char16_t, char8_t> {};
-		template<> struct in_out_types<char, char32_t> : in_out_types<char32_t, char> {};
-		template<> struct in_out_types<char8_t, char32_t> : in_out_types<char32_t, char8_t> {};
-		template<> struct in_out_types<char, wchar_t> : in_out_types<wchar_t, char> {};
-
-		template<typename T1, typename T2> using intern_type_t = typename in_out_types<T1, T2>::intern_type;
-		template<typename T1, typename T2> using extern_type_t = typename in_out_types<T1, T2>::extern_type;
-
-		// char underlying type
-		template<typename T> struct cut { using type = T; };
-		template<> struct cut<char8_t> { using type = char; };
-		template<> struct cut<char16_t> { using type = wchar_t; };
-		template<> struct cut<char32_t> { using type = uint32_t; };
-
-		template<typename T>
-		auto as_cut(T* value)
-		{
-			using type = typename cut<T>::type;
-			return reinterpret_cast<type*>(value);
-		}
-
 		template<typename T> constexpr bool is_utf_v =
 			std::is_same_v<T, char8_t> || std::is_same_v<T, char16_t> || std::is_same_v<T, char32_t>;
 
@@ -60,14 +32,15 @@ namespace mh
 			return std::c32rtomb(buf, from, &state);
 		}
 
-#if __cplusplus >= 202000L
 		template<typename T, typename = std::enable_if_t<std::is_same_v<T, char8_t>>>
-		inline auto convert_to_utf(T* buf, const char* mb, std::size_t mbmax, std::mbstate_t& state) ->
-			decltype(std::mbrtoc8(buf, mb, mbmax, &state))
+		inline auto convert_to_utf(T* buf, const char* mb, std::size_t mbmax, std::mbstate_t& state)
 		{
+#if __cplusplus >= 202000L
 			return std::mbrtoc8(buf, mb, mbmax, &state);
-		}
+#else
+			static_assert(false, "std::mbrtoc8 unsupported");
 #endif
+		}
 		inline std::size_t convert_to_utf(char16_t* buf, const char* mb, std::size_t mbmax, std::mbstate_t& state)
 		{
 			return std::mbrtoc16(buf, mb, mbmax, &state);
@@ -194,6 +167,26 @@ namespace mh
 			return -1;
 		}
 
+		inline size_t convert_to_uc(char32_t in, std::basic_string<char8_t>& out)
+		{
+			char8_t buf[4];
+			const size_t chars = convert_to_u8(in, buf);
+			out.append(buf, chars);
+			return chars;
+		}
+		inline size_t convert_to_uc(char32_t in, std::basic_string<char16_t>& out)
+		{
+			char16_t buf[2];
+			const size_t chars = convert_to_u16(in, buf);
+			out.append(buf, chars);
+			return chars;
+		}
+		inline size_t convert_to_uc(char32_t in, std::basic_string<char32_t>& out)
+		{
+			out += in;
+			return 1;
+		}
+
 		template<typename T>
 		inline void utf_to_mb(std::string& out, T u32, std::mbstate_t& state)
 		{
@@ -243,6 +236,7 @@ namespace mh
 		{
 			std::basic_string<To> operator()(const char* begin, const char* end) const
 			{
+				static_assert(is_utf_v<To>);
 				std::basic_string<To> retVal;
 
 				std::mbstate_t state{};
@@ -253,17 +247,19 @@ namespace mh
 					if (result == 0)
 					{
 						// Stored the null character, we're an std::string so we can continue
-						retVal += u32;
+						retVal += To(0);
 						state = {};
 						++it;
 					}
 					else if (result == -3)
 					{
 						// Another charN_t needs to be written to the output stream
-						retVal += u32;
+						convert_to_uc(u32, retVal);
 					}
 					else if (result == -2)
 					{
+						// FIXME is this correct? "...forms an incomplete, but so far valid, multibyte character"
+						// https://en.cppreference.com/w/cpp/string/multibyte/mbrtoc32
 						throw std::invalid_argument("Segment forms invalid UTF character sequence");
 					}
 					else if (result == -1)
@@ -273,7 +269,7 @@ namespace mh
 					else
 					{
 						it += result;
-						retVal += u32;
+						convert_to_uc(u32, retVal);
 					}
 				}
 
@@ -334,7 +330,8 @@ namespace mh
 					constexpr int MB_LEN_MAX = 64;
 #endif
 					char buf[MB_LEN_MAX];
-					const auto result = std::wcrtomb(buf, *it, &state);
+					size_t result;
+					wcrtomb_s(&result, buf, sizeof(buf), *it, &state);
 
 					if (result == -1)
 					{
@@ -353,12 +350,12 @@ namespace mh
 		};
 
 		template<typename From>
-		struct change_encoding_impl<From, wchar_t>
+		struct change_encoding_impl<From, wchar_t, std::enable_if_t<!std::is_same_v<wchar_t, From>>>
 		{
 			std::basic_string<wchar_t> operator()(const From* begin, const From* end) const
 			{
-				auto converted = change_encoding_impl<From, char>(begin, end);
-				return change_encoding_impl<char, wchar_t>(converted.data(), converted.data() + converted.size());
+				auto converted = change_encoding_impl<From, char>{}(begin, end);
+				return change_encoding_impl<char, wchar_t>{}(converted.data(), converted.data() + converted.size());
 			}
 		};
 
@@ -435,12 +432,43 @@ namespace mh
 	}
 
 	template<typename To, typename From, typename FromTraits = std::char_traits<From>>
-	auto change_encoding(const std::basic_string_view<From, FromTraits>& input) ->
-		decltype(detail::codecvt_hpp::change_encoding_impl<From, To>{}(input.data(), input.data() + input.size()))
+	std::basic_string<To> change_encoding(const std::basic_string_view<From, FromTraits>& input)
 	{
 		const detail::codecvt_hpp::change_encoding_impl<From, To> impl;
 		return impl(input.data(), input.data() + input.size());
 	}
+
+#ifdef $MH_COMPILE_LIBRARY
+	extern template std::string change_encoding<char, char>(const std::string_view&);
+	extern template std::string change_encoding<char, wchar_t>(const std::wstring_view&);
+	extern template std::string change_encoding<char, char8_t>(const std::u8string_view&);
+	extern template std::string change_encoding<char, char16_t>(const std::u16string_view&);
+	extern template std::string change_encoding<char, char32_t>(const std::u32string_view&);
+
+	extern template std::wstring change_encoding<wchar_t, char>(const std::string_view&);
+	extern template std::wstring change_encoding<wchar_t, wchar_t>(const std::wstring_view&);
+	extern template std::wstring change_encoding<wchar_t, char8_t>(const std::u8string_view&);
+	extern template std::wstring change_encoding<wchar_t, char16_t>(const std::u16string_view&);
+	extern template std::wstring change_encoding<wchar_t, char32_t>(const std::u32string_view&);
+
+	extern template std::u8string change_encoding<char8_t, char>(const std::string_view&);
+	extern template std::u8string change_encoding<char8_t, wchar_t>(const std::wstring_view&);
+	extern template std::u8string change_encoding<char8_t, char8_t>(const std::u8string_view&);
+	extern template std::u8string change_encoding<char8_t, char16_t>(const std::u16string_view&);
+	extern template std::u8string change_encoding<char8_t, char32_t>(const std::u32string_view&);
+
+	extern template std::u16string change_encoding<char16_t, char>(const std::string_view&);
+	extern template std::u16string change_encoding<char16_t, wchar_t>(const std::wstring_view&);
+	extern template std::u16string change_encoding<char16_t, char8_t>(const std::u8string_view&);
+	extern template std::u16string change_encoding<char16_t, char16_t>(const std::u16string_view&);
+	extern template std::u16string change_encoding<char16_t, char32_t>(const std::u32string_view&);
+
+	extern template std::u32string change_encoding<char32_t, char>(const std::string_view&);
+	extern template std::u32string change_encoding<char32_t, wchar_t>(const std::wstring_view&);
+	extern template std::u32string change_encoding<char32_t, char8_t>(const std::u8string_view&);
+	extern template std::u32string change_encoding<char32_t, char16_t>(const std::u16string_view&);
+	extern template std::u32string change_encoding<char32_t, char32_t>(const std::u32string_view&);
+#endif
 
 	template<typename To, typename From>
 	inline auto change_encoding(const From* input)
