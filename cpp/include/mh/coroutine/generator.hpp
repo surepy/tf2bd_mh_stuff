@@ -14,6 +14,7 @@ namespace mh::detail::generator_hpp
 }
 #endif
 
+#include <cassert>
 #include <exception>
 #include <iterator>
 #include <variant>
@@ -133,8 +134,26 @@ namespace mh
 	{
 	public:
 		using promise_type = detail::generator_hpp::promise<T>;
+		using coroutine_type = detail::generator_hpp::coro::coroutine_handle<promise_type>;
 
-		generator(detail::generator_hpp::coro::coroutine_handle<promise_type> handle) : m_Handle(std::move(handle)) {}
+		generator(coroutine_type handle) : m_Handle(std::move(handle)) {}
+
+		generator(generator&& other) noexcept : m_Handle(std::exchange(other.m_Handle, nullptr)) {}
+		generator& operator=(generator&& other) noexcept
+		{
+			assert(std::addressof(other) != this);
+			if (m_Handle)
+				m_Handle.destroy();
+
+			m_Handle = std::exchange(other.m_Handle, nullptr);
+			return *this;
+		}
+
+		~generator()
+		{
+			if (m_Handle)
+				m_Handle.destroy();
+		}
 
 		detail::generator_hpp::iterator<T> begin()
 		{
@@ -149,7 +168,7 @@ namespace mh
 		detail::generator_hpp::iterator_end end() { return {}; }
 
 	private:
-		detail::generator_hpp::coro::coroutine_handle<promise_type> m_Handle;
+		coroutine_type m_Handle;
 	};
 
 	template<typename T>
