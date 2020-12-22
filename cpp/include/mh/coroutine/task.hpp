@@ -3,7 +3,6 @@
 #include <cassert>
 #include <condition_variable>
 #include <mutex>
-#include <semaphore>
 #include <stdexcept>
 #include <variant>
 
@@ -33,11 +32,6 @@ namespace mh
 			static constexpr size_t IDX_WAITERS = 0;
 			static constexpr size_t IDX_VALUE = 1;
 			static constexpr size_t IDX_EXCEPTION = 2;
-
-			~promise()
-			{
-				__debugbreak();
-			}
 
 			constexpr detail::task_hpp::coro::suspend_never initial_suspend() const noexcept { return {}; }
 			constexpr detail::task_hpp::coro::suspend_always final_suspend() const noexcept { return {}; }

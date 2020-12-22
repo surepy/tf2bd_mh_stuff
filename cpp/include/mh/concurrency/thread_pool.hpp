@@ -15,7 +15,6 @@
 #include <queue>
 #include <stdexcept>
 #include <thread>
-#include <variant>
 #include <vector>
 
 namespace mh
@@ -117,7 +116,7 @@ namespace mh
 							task.m_Promise.set_value(task.m_Function());
 						}
 					}
-					catch (const std::exception& e)
+					catch (...)
 					{
 						task.m_Promise.set_exception(std::current_exception());
 					}
