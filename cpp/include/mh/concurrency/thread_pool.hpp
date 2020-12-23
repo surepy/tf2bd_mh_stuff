@@ -1,10 +1,16 @@
 #pragma once
 
+#if __has_include(<mh/concurrency/future.hpp>)
+#include <mh/concurrency/future.hpp>
+#else
+#include <future>
+#endif
+
 #include <chrono>
 #include <condition_variable>
+#include <coroutine>
 #include <exception>
 #include <functional>
-#include <future>
 #include <mutex>
 #include <queue>
 #include <stdexcept>
@@ -18,7 +24,14 @@ namespace mh
 	{
 	public:
 		using function_type = std::function<T()>;
+
+#if __has_include(<mh/concurrency/future.hpp>)
+		using promise_type = mh::promise<T>;
+		using future_type = mh::shared_future<T>;
+#else
+		using promise_type = std::promise<T>;
 		using future_type = std::shared_future<T>;
+#endif
 
 		thread_pool(size_t threadCount = std::thread::hardware_concurrency())
 		{
@@ -54,7 +67,7 @@ namespace mh
 		struct Task
 		{
 			function_type m_Function;
-			std::promise<T> m_Promise;
+			promise_type m_Promise;
 		};
 
 		struct ThreadData
@@ -103,7 +116,7 @@ namespace mh
 							task.m_Promise.set_value(task.m_Function());
 						}
 					}
-					catch (const std::exception& e)
+					catch (...)
 					{
 						task.m_Promise.set_exception(std::current_exception());
 					}
