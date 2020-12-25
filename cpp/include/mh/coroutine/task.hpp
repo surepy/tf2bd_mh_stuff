@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <cassert>
 #include <condition_variable>
 #include <mutex>
@@ -111,6 +112,18 @@ namespace mh
 				}
 			}
 
+			void add_ref()
+			{
+				assert(m_RefCount >= 1);
+				++m_RefCount;
+			}
+			[[nodiscard]] bool remove_ref()
+			{
+				auto newVal = --m_RefCount;
+				assert(newVal >= 0);
+				return newVal <= 0;
+			}
+
 		private:
 			template<size_t IDX, typename TValue>
 			void set_state(TValue&& value)
@@ -126,6 +139,7 @@ namespace mh
 					waiter.resume();
 			}
 
+			std::atomic_int32_t m_RefCount = 1;
 			mutable std::recursive_mutex m_Mutex;
 			mutable std::condition_variable_any m_ValueReadyCV;
 			std::variant<std::vector<coro::coroutine_handle<>>, T, std::exception_ptr> m_State;
@@ -141,28 +155,47 @@ namespace mh
 			handle_wrapper(std::nullptr_t) noexcept : m_Handle(nullptr) {}
 			handle_wrapper(coroutine_type handle) noexcept : m_Handle(std::move(handle)) {}
 
-			handle_wrapper(handle_wrapper&& other) noexcept : m_Handle(std::exchange(other.m_Handle, nullptr)) {}
+			handle_wrapper(const handle_wrapper& other) noexcept :
+				m_Handle(other.m_Handle)
+			{
+				if (m_Handle)
+					m_Handle.promise().add_ref();
+			}
+			handle_wrapper& operator=(const handle_wrapper& other) noexcept
+			{
+				release();
+				m_Handle = other.m_Handle;
+				m_Handle.promise().add_ref();
+				return *this;
+			}
+
+			handle_wrapper(handle_wrapper&& other) noexcept :
+				m_Handle(std::exchange(other.m_Handle, nullptr))
+			{
+				assert(std::addressof(other) != this);
+			}
 			handle_wrapper& operator=(handle_wrapper&& other) noexcept
 			{
 				assert(std::addressof(other) != this);
-				if (m_Handle)
-					m_Handle.destroy();
-
+				release();
 				m_Handle = std::exchange(other.m_Handle, nullptr);
 				return *this;
 			}
 
-			~handle_wrapper()
-			{
-				if (m_Handle)
-					m_Handle.destroy();
-			}
+			~handle_wrapper() { release(); }
 
 			coroutine_type m_Handle;
+
+		private:
+			void release()
+			{
+				if (m_Handle && m_Handle.promise().remove_ref())
+					m_Handle.destroy();
+
+				m_Handle = nullptr;
+			}
 		};
 	}
-
-	template<typename T> class shared_task;
 
 	template<typename T>
 	class [[nodiscard]] task
@@ -201,59 +234,18 @@ namespace mh
 		coroutine_type& get_handle() { return const_cast<coroutine_type&>(const_cast<const task<T>*>(this)->get_handle()); }
 
 		wrapper_type m_Wrapper;
-		template<typename T> friend class shared_task;
-	};
-
-	template<typename T>
-	class [[nodiscard]] shared_task
-	{
-		using wrapper_type = detail::task_hpp::handle_wrapper<T>;
-	public:
-		using promise_type = typename wrapper_type::promise_type;
-		using coroutine_type = typename wrapper_type::coroutine_type;
-
-		shared_task() = default;
-		shared_task(coroutine_type handle) : m_Wrapper(std::make_shared<wrapper_type>(handle)) {}
-		shared_task(task<T>&& task) : m_Wrapper(std::make_shared<wrapper_type>(std::exchange(task.m_Wrapper, nullptr))) {}
-
-		shared_task(const shared_task& other) noexcept = default;
-		shared_task& operator=(const shared_task& other) noexcept = default;
-
-		shared_task(shared_task&& other) noexcept = default;
-		shared_task& operator=(shared_task&& other) noexcept = default;
-
-		constexpr bool await_ready() const { return is_ready(); }
-		const T& await_resume() const { return get(); }
-		bool await_suspend(detail::task_hpp::coro::coroutine_handle<> parent)
-		{
-			return get_handle().promise().add_waiter(parent);
-		}
-
-		task_state state() const { return m_Wrapper ? m_Wrapper->get_task_state() : task_state::empty; }
-		bool valid() const { return m_Wrapper && m_Wrapper->m_Handle; }
-		operator bool() const { return valid(); }
-
-		bool is_ready() const { return valid() && m_Wrapper->m_Handle.promise().is_ready(); }
-		const T& get() const { return get_handle().promise().value(); }
-		const T* try_get() const { return get_handle().promise().try_get_value(); }
-
-	private:
-		const coroutine_type& get_handle() const
-		{
-			if (!valid())
-				throw std::runtime_error("empty task");
-
-			return m_Wrapper->m_Handle;
-		}
-		coroutine_type& get_handle() { return const_cast<coroutine_type&>(const_cast<const task<T>*>(this)->get_handle()); }
-
-		std::shared_ptr<wrapper_type> m_Wrapper;
 	};
 
 	template<typename T>
 	inline constexpr task<T> detail::task_hpp::promise<T>::get_return_object()
 	{
 		return { task<T>::coroutine_type::from_promise(*this) };
+	}
+
+	template<typename T, typename... TArgs>
+	inline task<T> make_ready_task(TArgs&&... args)
+	{
+		co_return T(std::forward<TArgs>(args)...);
 	}
 }
 
