@@ -29,6 +29,7 @@ set(MH_STUFF_SOURCES
 	"cpp/include/mh/error/nested_exception.hpp"
 	"cpp/include/mh/error/status.hpp"
 
+	"cpp/include/mh/io/file.hpp"
 	"cpp/include/mh/io/getopt.hpp"
 
 	"cpp/include/mh/math/interpolation.hpp"
@@ -67,6 +68,7 @@ set(MH_STUFF_SOURCES
 if (MH_STUFF_COMPILE_LIBRARY)
 	add_library(mh_stuff STATIC
 		${MH_STUFF_SOURCES}
+		"cpp/src/io/file.cpp"
 		"cpp/src/text/case_insensitive_string.cpp"
 		"cpp/src/text/codecvt.cpp"
 		"cpp/src/text/string_insertion.cpp"
