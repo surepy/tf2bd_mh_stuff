@@ -1,7 +1,7 @@
 #pragma once
 
-#if __has_include(<mh/concurrency/future.hpp>)
-#include <mh/concurrency/future.hpp>
+#if __has_include(<mh/coroutine/future.hpp>)
+#include <mh/coroutine/future.hpp>
 namespace mh::detail::async_hpp
 {
 	template<typename T> using promise_type = mh::promise<T>;

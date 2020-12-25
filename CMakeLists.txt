@@ -9,10 +9,11 @@ set(MH_STUFF_SOURCES
 	"cpp/include/mh/algorithm/multi_compare.hpp"
 
 	"cpp/include/mh/concurrency/async.hpp"
-	"cpp/include/mh/concurrency/future.hpp"
 	"cpp/include/mh/concurrency/main_thread.hpp"
 	"cpp/include/mh/concurrency/thread_pool.hpp"
 
+	"cpp/include/mh/coroutine/coroutine_common.hpp"
+	"cpp/include/mh/coroutine/future.hpp"
 	"cpp/include/mh/coroutine/generator.hpp"
 	"cpp/include/mh/coroutine/task.hpp"
 	"cpp/include/mh/coroutine/thread.hpp"

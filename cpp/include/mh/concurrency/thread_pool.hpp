@@ -1,7 +1,7 @@
 #pragma once
 
-#if __has_include(<mh/concurrency/future.hpp>)
-#include <mh/concurrency/future.hpp>
+#if __has_include(<mh/coroutine/future.hpp>)
+#include <mh/coroutine/future.hpp>
 #else
 #include <future>
 #endif
@@ -25,7 +25,7 @@ namespace mh
 	public:
 		using function_type = std::function<T()>;
 
-#if __has_include(<mh/concurrency/future.hpp>)
+#if __has_include(<mh/coroutine/future.hpp>)
 		using promise_type = mh::promise<T>;
 		using future_type = mh::shared_future<T>;
 #else
