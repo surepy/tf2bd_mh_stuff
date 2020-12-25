@@ -205,6 +205,7 @@ namespace mh
 #undef max
 #undef min
 
+#if MH_FORMATTER != MH_FORMATTER_NONE
 template<typename T, typename CharT>
 struct mh::formatter<::mh::enum_fmt_t<T>, CharT>
 {
@@ -361,4 +362,5 @@ struct mh::formatter<::mh::enum_fmt_t<T>, CharT>
 	}
 };
 
+#endif
 #endif
