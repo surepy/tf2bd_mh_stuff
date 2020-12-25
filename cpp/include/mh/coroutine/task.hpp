@@ -24,6 +24,14 @@ namespace mh
 {
 	template<typename T> class task;
 
+	enum class task_state
+	{
+		empty, // no state, never initialized, or was moved from
+		running,
+		value,
+		exception,
+	};
+
 	namespace detail::task_hpp
 	{
 		template<typename T>
@@ -40,19 +48,22 @@ namespace mh
 
 			void return_value(T value)
 			{
-				std::lock_guard lock(m_Mutex);
-				auto waiters = std::move(std::get<IDX_WAITERS>(m_State));
-
-				m_State = std::move(value);
-
-				for (const auto& waiter : waiters)
-					waiter.resume();
+				set_state<IDX_VALUE>(std::move(value));
 			}
 
 			void unhandled_exception()
 			{
-				std::lock_guard lock(m_Mutex);
-				m_State = std::current_exception();
+				set_state<IDX_EXCEPTION>(std::current_exception());
+			}
+
+			task_state get_task_state() const
+			{
+				switch (m_State.index())
+				{
+				case IDX_WAITERS:    return task_state::running;
+				case IDX_VALUE:      return task_state::value;
+				case IDX_EXCEPTION:  return task_state::exception;
+				}
 			}
 
 			bool is_ready() const
@@ -72,6 +83,13 @@ namespace mh
 				return std::get<IDX_VALUE>(m_State);
 			}
 
+			const T* try_get_value() const
+			{
+				std::unique_lock lock(m_Mutex);
+				m_ValueReadyCV.wait(lock, [&] { return is_ready(); });
+				return std::get_if<IDX_VALUE>(&m_State);
+			}
+
 			[[nodiscard]] bool add_waiter(coro::coroutine_handle<> handle)
 			{
 				if (is_ready())
@@ -81,12 +99,33 @@ namespace mh
 				else
 				{
 					std::lock_guard lock(m_Mutex);
-					std::get<IDX_WAITERS>(m_State).push_back(handle);
-					return true;   // suspend
+					if (is_ready())
+					{
+						return false; // don't suspend
+					}
+					else
+					{
+						std::get<IDX_WAITERS>(m_State).push_back(handle);
+						return true;   // suspend
+					}
 				}
 			}
 
 		private:
+			template<size_t IDX, typename TValue>
+			void set_state(TValue&& value)
+			{
+				std::lock_guard lock(m_Mutex);
+				auto waiters = std::move(std::get<IDX_WAITERS>(m_State));
+
+				static_assert(IDX == IDX_VALUE || IDX == IDX_EXCEPTION);
+				m_State.emplace<IDX>(std::move(value));
+
+				m_ValueReadyCV.notify_all();
+				for (const auto& waiter : waiters)
+					waiter.resume();
+			}
+
 			mutable std::recursive_mutex m_Mutex;
 			mutable std::condition_variable_any m_ValueReadyCV;
 			std::variant<std::vector<coro::coroutine_handle<>>, T, std::exception_ptr> m_State;
@@ -143,11 +182,13 @@ namespace mh
 			return get_handle().promise().add_waiter(parent);
 		}
 
+		task_state state() const { return m_Wrapper ? m_Wrapper->get_task_state() : task_state::empty; }
 		bool valid() const { return !!m_Wrapper.m_Handle; }
 		operator bool() const { return valid(); }
 
 		bool is_ready() const { return valid() && m_Wrapper.m_Handle.promise().is_ready(); }
 		const T& get() const { return get_handle().promise().value(); }
+		const T* try_get() const { return get_handle().promise().try_get_value(); }
 
 	private:
 		const coroutine_type& get_handle() const
@@ -188,11 +229,13 @@ namespace mh
 			return get_handle().promise().add_waiter(parent);
 		}
 
+		task_state state() const { return m_Wrapper ? m_Wrapper->get_task_state() : task_state::empty; }
 		bool valid() const { return m_Wrapper && m_Wrapper->m_Handle; }
 		operator bool() const { return valid(); }
 
 		bool is_ready() const { return valid() && m_Wrapper->m_Handle.promise().is_ready(); }
 		const T& get() const { return get_handle().promise().value(); }
+		const T* try_get() const { return get_handle().promise().try_get_value(); }
 
 	private:
 		const coroutine_type& get_handle() const
@@ -213,3 +256,14 @@ namespace mh
 		return { task<T>::coroutine_type::from_promise(*this) };
 	}
 }
+
+#if __has_include(<mh/reflection/enum.hpp>)
+#include <mh/reflection/enum.hpp>
+
+MH_ENUM_REFLECT_BEGIN(mh::task_state)
+	MH_ENUM_REFLECT_VALUE(empty)
+	MH_ENUM_REFLECT_VALUE(running)
+	MH_ENUM_REFLECT_VALUE(value)
+	MH_ENUM_REFLECT_VALUE(exception)
+MH_ENUM_REFLECT_END()
+#endif
