@@ -15,6 +15,8 @@ set(MH_STUFF_SOURCES
 
 	"cpp/include/mh/coroutine/generator.hpp"
 	"cpp/include/mh/coroutine/task.hpp"
+	"cpp/include/mh/coroutine/thread.hpp"
+	"cpp/include/mh/coroutine/thread.inl"
 
 	"cpp/include/mh/data/bit_float.hpp"
 	"cpp/include/mh/data/bits.hpp"
