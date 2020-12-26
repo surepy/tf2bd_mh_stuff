@@ -26,6 +26,8 @@ set(MH_STUFF_SOURCES
 	"cpp/include/mh/error/ensure.inl"
 	"cpp/include/mh/error/ensure.hpp"
 	"cpp/include/mh/error/error_code_exception.hpp"
+	"cpp/include/mh/error/exception_details.hpp"
+	"cpp/include/mh/error/exception_details.inl"
 	"cpp/include/mh/error/expected.hpp"
 	"cpp/include/mh/error/nested_exception.hpp"
 	"cpp/include/mh/error/status.hpp"
