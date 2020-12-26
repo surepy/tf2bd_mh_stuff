@@ -9,7 +9,7 @@
 
 namespace mh
 {
-	template<typename T> class task;
+	template<typename T = void> class task;
 
 	namespace detail::task_hpp
 	{
