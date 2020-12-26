@@ -353,6 +353,15 @@ namespace mh
 			return promise->try_get_value();
 		}
 	};
+
+	template<typename TState>
+	class awaitable<void, TState> : public detail::coroutine_common_hpp::awaitable_base<void, TState>
+	{
+		using super = detail::coroutine_common_hpp::awaitable_base<void, TState>;
+
+	public:
+		using super::super;
+	};
 }
 
 #if __has_include(<mh/reflection/enum.hpp>)
