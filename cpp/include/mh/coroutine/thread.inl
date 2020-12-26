@@ -6,6 +6,26 @@
 #define $MH_COMPILE_LIBRARY_INLINE inline
 #endif
 
+#if __has_include (<mh/concurrency/main_thread.hpp>)
+#include <mh/concurrency/main_thread.hpp>
+namespace mh::detail::coroutine::thread_hpp
+{
+	$MH_COMPILE_LIBRARY_INLINE bool is_main_thread()
+	{
+		return mh::is_main_thread();
+	}
+}
+#else
+namespace mh::detail::coroutine::thread_hpp
+{
+	$MH_COMPILE_LIBRARY_INLINE static std::thread::id s_MainThreadID = std::this_thread::get_id();
+	$MH_COMPILE_LIBRARY_INLINE bool is_main_thread()
+	{
+		return std::this_thread::get_id() == s_MainThreadID;
+	}
+}
+#endif
+
 #include <cassert>
 #include <thread>
 
@@ -13,20 +33,39 @@ namespace mh::detail::coroutine::thread_hpp
 {
 	$MH_COMPILE_LIBRARY_INLINE bool task::await_suspend(std::coroutine_handle<> waiter)
 	{
-		std::thread t([waiter]() { waiter.resume(); });
-		t.detach();
+		if (m_Flags == co_create_thread_flags::none ||
+			(m_Flags == co_create_thread_flags::off_main_thread && is_main_thread()))
+		{
+			std::thread t([waiter]() { waiter.resume(); });
+			t.detach();
 
-		// always suspend
-		return true;
+			// always suspend
+			return true;
+		}
+		else
+		{
+			// resume on current thread
+			return false;
+		}
 	}
 
-	$MH_COMPILE_LIBRARY_INLINE task promise::get_return_object()
+	//$MH_COMPILE_LIBRARY_INLINE task promise::get_return_object()
+	//{
+	//	return {};
+	//}
+
+	$MH_COMPILE_LIBRARY_INLINE task::task(co_create_thread_flags flags) :
+		m_Flags(flags)
 	{
-		return {};
 	}
 }
 
 $MH_COMPILE_LIBRARY_INLINE mh::detail::coroutine::thread_hpp::task mh::co_create_thread()
 {
 	return {};
+}
+
+$MH_COMPILE_LIBRARY_INLINE mh::detail::coroutine::thread_hpp::task mh::co_create_background_thread()
+{
+	return { detail::coroutine::thread_hpp::co_create_thread_flags::off_main_thread };
 }
