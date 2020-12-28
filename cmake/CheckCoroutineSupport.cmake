@@ -11,22 +11,23 @@ function(check_cxx_coroutine_support IS_SUPPORTED COROUTINES_FLAGS)
 	endif()
 
 	if (COROUTINES_FLAG_FCOROUTINES)
-		set(COROUTINES_FLAGS -fcoroutines)
+		set(${COROUTINES_FLAGS} -fcoroutines)
 	elseif (COROUTINES_FLAG_FCOROUTINES_TS)
-		set(COROUTINES_FLAGS -fcoroutines-ts)
+		set(${COROUTINES_FLAGS} -fcoroutines-ts)
+	else()
+		set(${COROUTINES_FLAGS})
 	endif()
 
 	try_compile(${IS_SUPPORTED}
 		${CMAKE_CURRENT_BINARY_DIR}
 		"${PROJECT_SOURCE_DIR}/cmake/CheckCoroutineSupport.cpp"
 		CXX_STANDARD 20
-		COMPILE_DEFINITIONS ${COROUTINES_FLAGS}
+		COMPILE_DEFINITIONS ${${COROUTINES_FLAGS}}
 		OUTPUT_VARIABLE TRY_COMPILE_OUTPUT)
 
-	message("check_cxx_coroutine_support IS_SUPPORTED = ${${IS_SUPPORTED}}")
+	message("check_cxx_coroutine_support ${IS_SUPPORTED} = ${${IS_SUPPORTED}}, ${COROUTINES_FLAGS} = ${${COROUTINES_FLAGS}}")
 	if (NOT ${${IS_SUPPORTED}})
 		message("check_cxx_coroutine_support output = ${TRY_COMPILE_OUTPUT}")
 	endif()
 
 endfunction()
-

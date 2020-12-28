@@ -28,6 +28,7 @@ endfunction()
 function(mh_target_compile_options targetName)
 
 	get_target_property(TARGET_TYPE_VALUE ${targetName} TYPE)
+	message("mh_target_compile_options(${targetName} ${ARGN})")
 	if (TARGET_TYPE_VALUE STREQUAL "INTERFACE_LIBRARY")
 		target_compile_options(${targetName} INTERFACE ${ARGN})
 	else()
