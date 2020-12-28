@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16.3)
 
 include(CheckCXXCompilerFlag)
 
-function(check_cxx_coroutine_support IS_SUPPORTED COROUTINES_FLAGS)
+function(check_cxx_coroutine_support IS_SUPPORTED REQUIRED_FLAGS)
 	set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
 
 	check_cxx_compiler_flag(-fcoroutines COROUTINES_FLAG_FCOROUTINES)
@@ -11,21 +11,21 @@ function(check_cxx_coroutine_support IS_SUPPORTED COROUTINES_FLAGS)
 	endif()
 
 	if (COROUTINES_FLAG_FCOROUTINES)
-		set(${COROUTINES_FLAGS} -fcoroutines)
+		set(${REQUIRED_FLAGS} -fcoroutines)
 	elseif (COROUTINES_FLAG_FCOROUTINES_TS)
-		set(${COROUTINES_FLAGS} -fcoroutines-ts)
+		set(${REQUIRED_FLAGS} -fcoroutines-ts)
 	else()
-		set(${COROUTINES_FLAGS})
+		set(${REQUIRED_FLAGS})
 	endif()
 
 	try_compile(${IS_SUPPORTED}
 		${CMAKE_CURRENT_BINARY_DIR}
 		"${PROJECT_SOURCE_DIR}/cmake/CheckCoroutineSupport.cpp"
 		CXX_STANDARD 20
-		COMPILE_DEFINITIONS ${${COROUTINES_FLAGS}}
+		COMPILE_DEFINITIONS ${${REQUIRED_FLAGS}}
 		OUTPUT_VARIABLE TRY_COMPILE_OUTPUT)
 
-	message("check_cxx_coroutine_support ${IS_SUPPORTED} = ${${IS_SUPPORTED}}, ${COROUTINES_FLAGS} = ${${COROUTINES_FLAGS}}")
+	message("check_cxx_coroutine_support ${IS_SUPPORTED} = ${${IS_SUPPORTED}}, ${REQUIRED_FLAGS} = ${${REQUIRED_FLAGS}}")
 	if (NOT ${${IS_SUPPORTED}})
 		message("check_cxx_coroutine_support output = ${TRY_COMPILE_OUTPUT}")
 	endif()
