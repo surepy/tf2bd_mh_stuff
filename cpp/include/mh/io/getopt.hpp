@@ -1,12 +1,18 @@
 #pragma once
 
+#if __has_include(<getopt.h>) || __has_include(<uinstd.h>)
+#if __has_include(<getopt.h>)
+#include <getopt.h>
+#elif __has_include(<unistd.h>)
+#include <unistd.h>
+#endif
+
 #include <iomanip>
 #include <ostream>
 #include <stdexcept>
 #include <string>
 #include <string_view>
 
-#include <getopt.h>
 
 #if __has_include(<mh/data/variable_pusher.hpp>)
 #include <mh/data/variable_pusher.hpp>
@@ -276,3 +282,5 @@ std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>&
 
 	return os << "\n}";
 }
+
+#endif

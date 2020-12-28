@@ -1,5 +1,7 @@
 #pragma once
 
+#if __cpp_concepts >= 201907
+
 #include <utility>
 #include <variant>
 
@@ -9,12 +11,18 @@ namespace mh
 
 	namespace detail::error::expected_hpp
 	{
-		struct expect_t {};
-		struct unexpect_t {};
+		struct expect_t
+		{
+			explicit constexpr expect_t() = default;
+		};
+		struct unexpect_t
+		{
+			explicit constexpr unexpect_t() = default;
+		};
 	}
 
-	static detail::error::expected_hpp::expect_t expect;
-	static detail::error::expected_hpp::unexpect_t unexpect;
+	inline constexpr detail::error::expected_hpp::expect_t expect;
+	inline constexpr static detail::error::expected_hpp::unexpect_t unexpect;
 
 	namespace detail::error::expected_hpp
 	{
@@ -88,7 +96,7 @@ namespace mh
 		constexpr expected(unexpect_t&, const error_type& value) : m_State(std::in_place_index_t<ERROR_IDX>{}, value) {}
 
 		constexpr this_type& operator=(value_type&& value)
-			noexcept(noexcept(emplace(expect, std::move(error))))
+			noexcept(noexcept(emplace(expect, std::move(value))))
 		{
 			emplace(expect, std::move(value));
 			return *this;
@@ -106,7 +114,7 @@ namespace mh
 			return *this;
 		}
 		constexpr this_type& operator=(const error_type& error)
-			noexcept(noexcept(emplace(unexpect, value)))
+			noexcept(noexcept(emplace(unexpect, error)))
 		{
 			emplace(unexpect, error);
 			return *this;
@@ -136,14 +144,14 @@ namespace mh
 		template<typename... TArgs>
 		value_type& emplace(expect_t&, TArgs&&... args)
 		{
-			m_State.emplace<VALUE_IDX>(std::forward<TArgs>(args)...);
+			m_State.template emplace<VALUE_IDX>(std::forward<TArgs>(args)...);
 			return value();
 		}
 
 		template<typename... TArgs>
 		error_type& emplace(unexpect_t&, TArgs&&... args)
 		{
-			m_State.emplace<ERROR_IDX>(std::forward<TArgs>(args)...);
+			m_State.template emplace<ERROR_IDX>(std::forward<TArgs>(args)...);
 			return error();
 		}
 
@@ -173,3 +181,5 @@ namespace mh
 		std::variant<value_type, error_type> m_State;
 	};
 }
+
+#endif

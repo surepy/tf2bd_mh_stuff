@@ -3,6 +3,7 @@
 #include <array>
 #include <cstdarg>
 #include <cstdio>
+#include <cstring>
 #include <ostream>
 #include <string>
 #include <string_view>
@@ -68,7 +69,7 @@ namespace mh
 			return m_Length;
 		}
 
-#if __has_include(<mh/text/format.hpp>)
+#if MH_FORMATTER != MH_FORMATTER_NONE
 		template<typename... TArgs>
 		auto fmt(const view_type& fmtStr, const TArgs&... args) ->
 			decltype(mh::format_to_n((CharT*)nullptr, max_size(), fmtStr, args...), size_t{})
@@ -109,9 +110,9 @@ namespace mh
 	public:
 		using base_type = base_format_string<N, CharT, Traits>;
 		using this_type = printf_string;
-		using value_type = base_type::value_type;
-		using traits_type = base_type::traits_type;
-		using view_type = base_type::view_type;
+		using value_type = typename base_type::value_type;
+		using traits_type = typename base_type::traits_type;
+		using view_type = typename base_type::view_type;
 
 		constexpr printf_string() = default;
 		printf_string(const value_type* fmtStr, ...)
@@ -131,16 +132,17 @@ namespace mh
 	template<size_t N, typename CharT = char, typename Traits = std::char_traits<CharT>>
 	using pfstr = printf_string<N, CharT, Traits>;
 
+#if MH_FORMATTER != MH_FORMATTER_NONE
 	template<size_t N, typename CharT = char, typename Traits = std::char_traits<CharT>>
 	class format_string : public base_format_string<N, CharT, Traits>
 	{
 	public:
 		using base_type = base_format_string<N, CharT, Traits>;
 		using this_type = format_string;
-		using value_type = base_type::value_type;
-		using traits_type = base_type::traits_type;
-		using view_type = base_type::view_type;
-		using array_type = base_type::array_type;
+		using value_type = typename base_type::value_type;
+		using traits_type = typename base_type::traits_type;
+		using view_type = typename base_type::view_type;
+		using array_type = typename base_type::array_type;
 
 		constexpr format_string() = default;
 		template<typename... TArgs, typename = decltype(mh::format(std::declval<view_type>(), std::declval<TArgs>()...))>
@@ -157,6 +159,7 @@ namespace mh
 	};
 	template<size_t N, typename CharT = char, typename Traits = std::char_traits<CharT>>
 	using fmtstr = format_string<N, CharT, Traits>;
+#endif
 }
 
 template<typename CharT, typename Traits, size_t N>

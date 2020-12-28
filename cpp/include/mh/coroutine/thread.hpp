@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef MH_COROUTINES_SUPPORTED
+
 #include <coroutine>
 
 namespace mh
@@ -47,6 +49,8 @@ namespace mh
 	detail::coroutine::thread_hpp::task co_create_background_thread();
 }
 
-#ifndef $MH_COMPILE_LIBRARY
+#ifndef MH_COMPILE_LIBRARY
 #include <mh/coroutine/thread.inl>
+#endif
+
 #endif

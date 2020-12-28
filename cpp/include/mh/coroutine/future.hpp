@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef MH_COROUTINES_SUPPORTED
+
 #include "coroutine_common.hpp"
 
 #include <cassert>
@@ -224,3 +226,12 @@ namespace mh
 		return shared_future<T>(std::move(super::m_State));
 	}
 }
+#else
+#include <future>
+namespace mh
+{
+	template<typename T> using promise = std::promise<T>;
+	template<typename T> using future = std::future<T>;
+	template<typename T> using shared_future = std::shared_future<T>;
+}
+#endif

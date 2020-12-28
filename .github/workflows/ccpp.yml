@@ -2,35 +2,94 @@ name: C/C++ CI
 
 on: [push]
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
-  ci:
-    name: ${{ matrix.compiler }}
+  ci-linux:
+    # name: ${{ matrix.compiler }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        compiler: [clang++-10, clang++-9, g++-9, clang++-8, g++-8, clang++-7]
+        MH_STUFF_COMPILE_LIBRARY: [true, false]
+        # compiler: [clang++-11, clang++-10, g++-10, clang++-9, g++-9, clang++-8, g++-8, clang++-7]
+        compiler:
+          - exe: clang++-11
+            deps: libc++-11-dev libc++abi-11-dev
+          - exe: clang++-10
+            deps: libc++-10-dev libc++abi-10-dev
+          - exe: clang++-9
+            deps: libc++-9-dev libc++abi-9-dev
+          - exe: clang++-8
+            deps: libc++-8-dev libc++abi-8-dev
+          - exe: clang++-7
+            deps: libc++-7-dev libc++abi-7-dev
+          - exe: g++-10
+            deps: ""
+          - exe: g++-9
+            deps: ""
+          - exe: g++-8
+            deps: ""
 
     steps:
-    - uses: actions/checkout@v1
-    - name: Checkout submodules
-      uses: textbook/git-checkout-submodule-action@2.0.0
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
 
     - name: Add repos
       run: |
+        sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 15CF4D18AF4F7421
         sudo add-apt-repository ppa:ubuntu-toolchain-r/test
         echo "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic main" | sudo tee /etc/apt/sources.list.d/llvm.list
-        echo "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-8 main" | sudo tee -a /etc/apt/sources.list.d/llvm.list
-        echo "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-9 main" | sudo tee -a /etc/apt/sources.list.d/llvm.list
+        echo "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-10 main" | sudo tee -a /etc/apt/sources.list.d/llvm.list
+        echo "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-11 main" | sudo tee -a /etc/apt/sources.list.d/llvm.list
 
     - name: Install compiler
       run: |
-        sudo rm -rf /var/lib/apt/lists/*
-        sudo apt clean
+        # sudo rm -rf /var/lib/apt/lists/*
+        # sudo apt clean
         sudo apt update
-        sudo apt install ${{ matrix.compiler }} libc++-10-dev libc++abi-10-dev -y
+        sudo apt install ${{ matrix.compiler.exe }} ${{ matrix.compiler.deps }} ninja-build -y
+
+    # - name: Run tests
+    #   working-directory: ./test
+    #   run: make -j`grep -c ^processor /proc/cpuinfo` ${{ matrix.compiler }}_test_output.txt
 
     - name: Run tests
-      working-directory: ./test
-      run: make -j`grep -c ^processor /proc/cpuinfo` ${{ matrix.compiler }}_test_output.txt
+      env:
+        CXX: ${{ matrix.compiler.exe }}
+      run: |
+        mkdir build
+        cd build
+        cmake -DMH_STUFF_COMPILE_LIBRARY=${{ matrix.MH_STUFF_COMPILE_LIBRARY }} ../ -G Ninja
+        cmake --build .
+        ctest --output-on-failure
+
+
+
+  ci-windows:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        MH_STUFF_COMPILE_LIBRARY: [true, false]
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - uses: seanmiddleditch/gha-setup-ninja@v3
+    - name: Setup compiler paths
+      uses: ilammy/msvc-dev-cmd@v1.5.0
+
+    - name: Run tests
+      run: |
+        mkdir build
+        cd build
+        cmake -DMH_STUFF_COMPILE_LIBRARY=${{ matrix.MH_STUFF_COMPILE_LIBRARY }} ../ -G Ninja
+        cmake --build .
+        ctest --output-on-failure
