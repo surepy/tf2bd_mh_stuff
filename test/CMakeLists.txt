@@ -36,10 +36,8 @@ mh_test(text_stringops_test)
 
 include(CheckIncludeFileCXX)
 check_include_file_cxx(<getopt.h> HAS_GETOPT)
-if (NOT HAS_GETOPT)
-	check_include_file_cxx(<unistd.h> HAS_GETOPT)
-endif()
-if (HAS_GETOPT)
+check_include_file_cxx(<unistd.h> HAS_UNISTD)
+if (HAS_GETOPT OR HAS_UNISTD)
 	mh_test(io_getopt_test)
 endif()
 
