@@ -121,7 +121,6 @@ if (FCONCEPTS_FLAG)
 endif()
 
 check_cxx_coroutine_support(SUPPORTS_COROUTINES COROUTINES_FLAGS)
-message("SUPPORTS_COROUTINES = ${SUPPORTS_COROUTINES}")
 if (SUPPORTS_COROUTINES)
 	list(APPEND MH_STUFF_SOURCES
 		"cpp/include/mh/coroutine/coroutine_common.hpp"
@@ -141,9 +140,9 @@ if (NOT SUPPORTS_UNICODE)
 	mh_target_compile_definitions(mh_stuff "MH_BROKEN_UNICODE")
 endif()
 
-message("CMAKE_CXX_COMPILER_VERSION = ${CMAKE_CXX_COMPILER_VERSION}")
-
 add_library(mh::stuff ALIAS mh_stuff)
 
-include(CTest)
-add_subdirectory("test")
+if (CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
+	include(CTest)
+	add_subdirectory("test")
+endif()

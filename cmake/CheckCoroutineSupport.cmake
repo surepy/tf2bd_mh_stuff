@@ -17,16 +17,17 @@ function(check_cxx_coroutine_support IS_SUPPORTED COROUTINES_FLAGS)
 	endif()
 
 	set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} ${COROUTINES_FLAG})
-	set(CMAKE_CXX_STANDARD 20)
 
-	check_cxx_source_compiles(
-	"#include <coroutine> \
-	int main(int argc, char** argv) { std::coroutine_handle<> handle; return 0; }"
-		${IS_SUPPORTED})
-
-	# try_compile(${PROJECT_NAME}_SUPPORTS_COROUTINES ${CMAKE_CURRENT_BINARY_DIR} "${CMAKE_CURRENT_LIST_DIR}/CheckCoroutineSupport.cpp"
-	# 	CXX_STANDARD 20)
+	try_compile(${IS_SUPPORTED}
+		${CMAKE_CURRENT_BINARY_DIR}
+		"${PROJECT_SOURCE_DIR}/cmake/CheckCoroutineSupport.cpp"
+		CXX_STANDARD 20
+		OUTPUT_VARIABLE TRY_COMPILE_OUTPUT)
 
 	message("check_cxx_coroutine_support IS_SUPPORTED = ${${IS_SUPPORTED}}")
+	if (NOT ${${IS_SUPPORTED}})
+		message("check_cxx_coroutine_support output = ${TRY_COMPILE_OUTPUT}")
+	endif()
+
 endfunction()
 

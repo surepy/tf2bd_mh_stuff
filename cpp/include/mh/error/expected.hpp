@@ -1,6 +1,6 @@
 #pragma once
 
-#if __cpp_concepts >= 201907
+#if (__cpp_concepts >= 201907) || (defined(_MSC_VER) && (__cpp_concepts >= 201811))
 
 #include <utility>
 #include <variant>
@@ -89,11 +89,11 @@ namespace mh
 		{
 		}
 
-		constexpr expected(expect_t&, value_type&& value) : m_State(std::in_place_index_t<VALUE_IDX>{}, std::move(value)) {}
-		constexpr expected(expect_t&, const value_type& value) : m_State(std::in_place_index_t<VALUE_IDX>{}, value) {}
+		constexpr expected(expect_t, value_type&& value) : m_State(std::in_place_index_t<VALUE_IDX>{}, std::move(value)) {}
+		constexpr expected(expect_t, const value_type& value) : m_State(std::in_place_index_t<VALUE_IDX>{}, value) {}
 
-		constexpr expected(unexpect_t&, error_type&& value) : m_State(std::in_place_index_t<ERROR_IDX>{}, std::move(value)) {}
-		constexpr expected(unexpect_t&, const error_type& value) : m_State(std::in_place_index_t<ERROR_IDX>{}, value) {}
+		constexpr expected(unexpect_t, error_type&& value) : m_State(std::in_place_index_t<ERROR_IDX>{}, std::move(value)) {}
+		constexpr expected(unexpect_t, const error_type& value) : m_State(std::in_place_index_t<ERROR_IDX>{}, value) {}
 
 		constexpr this_type& operator=(value_type&& value)
 			noexcept(noexcept(emplace(expect, std::move(value))))
@@ -142,14 +142,14 @@ namespace mh
 		constexpr const value_type* operator->() const { return &value(); }
 
 		template<typename... TArgs>
-		value_type& emplace(expect_t&, TArgs&&... args)
+		value_type& emplace(expect_t, TArgs&&... args)
 		{
 			m_State.template emplace<VALUE_IDX>(std::forward<TArgs>(args)...);
 			return value();
 		}
 
 		template<typename... TArgs>
-		error_type& emplace(unexpect_t&, TArgs&&... args)
+		error_type& emplace(unexpect_t, TArgs&&... args)
 		{
 			m_State.template emplace<ERROR_IDX>(std::forward<TArgs>(args)...);
 			return error();
