@@ -10,12 +10,11 @@ function(check_cxx_coroutine_support IS_SUPPORTED REQUIRED_FLAGS)
 		check_cxx_compiler_flag(-fcoroutines-ts COROUTINES_FLAG_FCOROUTINES_TS)
 	endif()
 
+	set(${REQUIRED_FLAGS})
 	if (COROUTINES_FLAG_FCOROUTINES)
 		set(${REQUIRED_FLAGS} -fcoroutines)
 	elseif (COROUTINES_FLAG_FCOROUTINES_TS)
 		set(${REQUIRED_FLAGS} -fcoroutines-ts)
-	else()
-		set(${REQUIRED_FLAGS})
 	endif()
 
 	try_compile(${IS_SUPPORTED}
