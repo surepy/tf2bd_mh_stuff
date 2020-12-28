@@ -16,12 +16,11 @@ function(check_cxx_coroutine_support IS_SUPPORTED COROUTINES_FLAGS)
 		set(COROUTINES_FLAGS -fcoroutines-ts)
 	endif()
 
-	set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} ${COROUTINES_FLAG})
-
 	try_compile(${IS_SUPPORTED}
 		${CMAKE_CURRENT_BINARY_DIR}
 		"${PROJECT_SOURCE_DIR}/cmake/CheckCoroutineSupport.cpp"
 		CXX_STANDARD 20
+		COMPILE_DEFINITIONS ${COROUTINES_FLAGS}
 		OUTPUT_VARIABLE TRY_COMPILE_OUTPUT)
 
 	message("check_cxx_coroutine_support IS_SUPPORTED = ${${IS_SUPPORTED}}")
