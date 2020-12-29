@@ -26,8 +26,16 @@ namespace mh
 
 		struct thread_data
 		{
+			thread_data(bool singleThread) :
+				m_IsSingleThread(singleThread)
+			{
+			}
+
+			bool m_IsSingleThread{};
+
 			mutable std::mutex m_TasksMutex;
-			std::queue<std::shared_ptr<task_data>> m_Tasks;
+			std::condition_variable m_TasksAvailableCV;
+			std::queue<std::coroutine_handle<>> m_Tasks;
 
 			const std::thread::id m_OwnerThread = std::this_thread::get_id();
 		};
@@ -39,28 +47,37 @@ namespace mh
 
 		MH_COMPILE_LIBRARY_INLINE bool co_dispatch_task::await_ready() const
 		{
-			return std::this_thread::get_id() == m_ThreadData->m_OwnerThread;
+			return m_ThreadData->m_IsSingleThread && std::this_thread::get_id() == m_ThreadData->m_OwnerThread;
 		}
 
 		MH_COMPILE_LIBRARY_INLINE void co_dispatch_task::await_resume() const
 		{
-			assert(m_TaskData);
-			std::unique_lock lock(m_TaskData->m_TaskCompleteCVMutex);
-			m_TaskData->m_TaskCompleteCV.wait(lock, [&] { return !m_TaskData->m_IsTaskComplete; });
+			assert(!m_ThreadData->m_IsSingleThread || m_ThreadData->m_OwnerThread == std::this_thread::get_id());
+			//assert(m_TaskData);
+			//std::unique_lock lock(m_TaskData->m_TaskCompleteCVMutex);
+			//m_TaskData->m_TaskCompleteCV.wait(lock, [&] { return !m_TaskData->m_IsTaskComplete; });
 		}
 
 		MH_COMPILE_LIBRARY_INLINE bool co_dispatch_task::await_suspend(std::coroutine_handle<> handle)
 		{
 			// Should never hit this, await_ready() should prevent suspension of coroutines
-			// that are already on the correct thread
-			assert(std::this_thread::get_id() != m_ThreadData->m_OwnerThread);
+			// that are already on the correct thread (unless we are not single threaded, in which case we *want*
+			// to be able to defer
+			assert(!m_ThreadData->m_IsSingleThread || std::this_thread::get_id() != m_ThreadData->m_OwnerThread);
 
-			throw "Not implemented";
+			{
+				std::lock_guard lock(m_ThreadData->m_TasksMutex);
+				m_ThreadData->m_Tasks.push(handle);
+			}
+
+			m_ThreadData->m_TasksAvailableCV.notify_one();
+
+			return true;  // always suspend
 		}
 	}
 
-	MH_COMPILE_LIBRARY_INLINE dispatcher::dispatcher() :
-		m_ThreadData(std::make_shared<thread_data>())
+	MH_COMPILE_LIBRARY_INLINE dispatcher::dispatcher(bool singleThread) :
+		m_ThreadData(std::make_shared<thread_data>(singleThread))
 	{
 	}
 
@@ -76,21 +93,29 @@ namespace mh
 
 	MH_COMPILE_LIBRARY_INLINE bool dispatcher::run_one()
 	{
-		using detail::dispatcher_hpp::task_data;
+		{
+			const bool isAllowed = !m_ThreadData->m_IsSingleThread || m_ThreadData->m_OwnerThread == std::this_thread::get_id();
+			assert(isAllowed);
+			if (!isAllowed)
+				return false;
+		}
 
-		assert(m_ThreadData->m_OwnerThread == std::this_thread::get_id());
+		using detail::dispatcher_hpp::task_data;
 
 		if (!m_ThreadData->m_Tasks.empty())
 		{
-			std::shared_ptr<task_data> task;
+			std::coroutine_handle<> task;
 			{
 				std::lock_guard lock(m_ThreadData->m_TasksMutex);
+				if (m_ThreadData->m_Tasks.empty())
+					return false; // Someone else grabbed the task out from under us
+
 				task = std::move(m_ThreadData->m_Tasks.front());
 				m_ThreadData->m_Tasks.pop();
 			}
 
 			// This could throw
-			task->m_Handle.resume();
+			task.resume();
 			return true;
 		}
 
@@ -101,5 +126,17 @@ namespace mh
 	{
 		assert(m_ThreadData);
 		return { m_ThreadData };
+	}
+
+	MH_COMPILE_LIBRARY_INLINE size_t dispatcher::task_count() const
+	{
+		return m_ThreadData->m_Tasks.size();
+	}
+
+	MH_COMPILE_LIBRARY_INLINE bool dispatcher::wait_tasks_for(std::chrono::high_resolution_clock::duration duration) const
+	{
+		auto threadData = m_ThreadData;
+		std::unique_lock lock(threadData->m_TasksMutex);
+		return threadData->m_TasksAvailableCV.wait_for(lock, duration, [&]() { return !threadData->m_Tasks.empty(); });
 	}
 }
