@@ -115,6 +115,11 @@ endif()
 mh_target_include_directories(mh_stuff "cpp/include")
 mh_target_compile_features(mh_stuff "cxx_std_20")
 
+if (CMAKE_CXX_COMPILER_ID MATCHES GNU OR CMAKE_CXX_COMPILER_ID MATCHES Clang)
+	mh_target_compile_options(mh_stuff -pthread)
+	mh_target_link_options(mh_stuff -pthread)
+endif()
+
 check_cxx_compiler_flag(-fconcepts FCONCEPTS_FLAG)
 if (FCONCEPTS_FLAG)
 	mh_target_compile_options(mh_stuff -fconcepts)
@@ -131,6 +136,7 @@ if (SUPPORTS_COROUTINES)
 		"cpp/include/mh/coroutine/thread.inl"
 	)
 
+	message("COROUTINES_FLAGS = ${COROUTINES_FLAGS}")
 	mh_target_compile_options(mh_stuff ${COROUTINES_FLAGS})
 	mh_target_compile_definitions(mh_stuff "MH_COROUTINES_SUPPORTED")
 endif()
