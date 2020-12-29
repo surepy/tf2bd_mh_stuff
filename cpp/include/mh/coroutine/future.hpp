@@ -216,8 +216,23 @@ namespace mh
 		shared_future(const shared_future&) = default;
 		shared_future& operator=(const shared_future&) = default;
 
-		typename super::const_reference get() const { return super::get_state().get_ref(); }
+		typename super::const_reference get() const { return super::get_state().get_value(); }
 		typename super::const_reference await_resume() const { return get(); }
+	};
+
+	template<>
+	class shared_future<void> : public detail::future_hpp::future_base<void>
+	{
+		using super = detail::future_hpp::future_base<void>;
+	public:
+		using super::super;
+		shared_future(future<void>&& f) : shared_future(f.share()) {}
+
+		shared_future(shared_future&&) noexcept = default;
+		shared_future& operator=(shared_future&&) noexcept = default;
+
+		shared_future(const shared_future&) = default;
+		shared_future& operator=(const shared_future&) = default;
 	};
 
 	template<typename T>

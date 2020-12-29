@@ -20,6 +20,8 @@ set(MH_STUFF_SOURCES
 	"cpp/include/mh/algorithm/multi_compare.hpp"
 
 	"cpp/include/mh/concurrency/async.hpp"
+	"cpp/include/mh/concurrency/dispatcher.hpp"
+	"cpp/include/mh/concurrency/dispatcher.inl"
 	"cpp/include/mh/concurrency/main_thread.hpp"
 	"cpp/include/mh/concurrency/thread_pool.hpp"
 	"cpp/include/mh/concurrency/thread_sentinel.hpp"

@@ -85,7 +85,10 @@ namespace mh
 			void release()
 			{
 				if (m_Handle && m_Handle.promise().remove_ref())
+				{
+					assert(m_Handle.done());
 					m_Handle.destroy();
+				}
 
 				m_Handle = nullptr;
 			}

@@ -18,19 +18,91 @@
 
 namespace mh
 {
-	template<typename T>
-	class thread_pool final
+	namespace detail::thread_pool_hpp
 	{
-	public:
-		using function_type = std::function<T()>;
+		template<typename T>
+		struct traits
+		{
+			using function_type = std::function<T()>;
 
 #if __has_include(<mh/coroutine/future.hpp>)
-		using promise_type = mh::promise<T>;
-		using future_type = mh::shared_future<T>;
+			using promise_type = mh::promise<T>;
+			using future_type = mh::shared_future<T>;
 #else
-		using promise_type = std::promise<T>;
-		using future_type = std::shared_future<T>;
+			using promise_type = std::promise<T>;
+			using future_type = std::shared_future<T>;
 #endif
+		};
+
+		template<typename T>
+		struct task : traits<T>
+		{
+			using super = traits<T>;
+
+			typename super::function_type m_Function;
+			typename super::promise_type m_Promise;
+		};
+
+		template<typename T>
+		struct thread_data : traits<T>
+		{
+			bool m_IsShuttingDown = false;
+
+			std::queue<task<T>> m_Tasks;
+			mutable std::mutex m_TasksMutex;
+			std::condition_variable m_TasksCV;
+			std::vector<std::thread> m_Threads;
+		};
+
+		template<typename T>
+		struct [[nodiscard]] co_task : traits<T>
+		{
+			co_task(std::shared_ptr<thread_data<T>> poolData) : m_PoolData(std::move(poolData)) {}
+
+			struct [[nodiscard]] promise_type
+			{
+				constexpr std::suspend_never initial_suspend() const noexcept { return {}; }
+				constexpr std::suspend_always final_suspend() const noexcept { return {}; }
+			};
+
+			constexpr bool await_ready() const { return false; }
+			constexpr void await_resume() const {}
+			bool await_suspend(std::coroutine_handle<> parent)
+			{
+#if 0
+				std::lock_guard lock(m_PoolData->m_TasksMutex);
+
+				auto func = std::bind([](std::coroutine_handle<> handle)
+					{
+						__debugbreak();
+						handle.resume();
+					}, parent);
+
+				using function_type = typename traits<T>::function_type;
+
+				m_PoolData->m_Tasks.push(function_type(std::move(func)));
+#else
+				throw "Not implemented, waiting for type-erased thread_pool rewrite";
+#endif
+
+				return true; // always suspend
+			}
+
+		private:
+			std::shared_ptr<thread_data<T>> m_PoolData;
+		};
+	}
+
+	template<typename T>
+	class thread_pool final : public detail::thread_pool_hpp::traits<T>
+	{
+		using traits = detail::thread_pool_hpp::traits<T>;
+		using thread_data = detail::thread_pool_hpp::thread_data<T>;
+		using task_type = detail::thread_pool_hpp::task<T>;
+	public:
+		using typename traits::function_type;
+		using typename traits::future_type;
+		using typename traits::promise_type;
 
 		thread_pool(size_t threadCount = std::thread::hardware_concurrency())
 		{
@@ -38,12 +110,12 @@ namespace mh
 				throw std::invalid_argument("threadCount must be >= 1");
 
 			for (size_t i = 0; i < threadCount; i++)
-				m_Threads.push_back(std::thread(&ThreadFunc, m_ThreadData));
+				m_ThreadData->m_Threads.push_back(std::thread(&ThreadFunc, m_ThreadData));
 		}
 		~thread_pool()
 		{
 			m_ThreadData->m_IsShuttingDown = true;
-			for (auto& thread : m_Threads)
+			for (auto& thread : m_ThreadData->m_Threads)
 				thread.detach();
 		}
 
@@ -51,7 +123,7 @@ namespace mh
 		{
 			std::lock_guard lock(m_ThreadData->m_TasksMutex);
 
-			Task& task = m_ThreadData->m_Tasks.emplace();
+			task_type& task = m_ThreadData->m_Tasks.emplace();
 			task.m_Function = std::move(func);
 
 			m_ThreadData->m_TasksCV.notify_one();
@@ -59,28 +131,18 @@ namespace mh
 			return task.m_Promise.get_future();
 		}
 
-		size_t thread_count() const { return m_Threads.size(); }
+		size_t thread_count() const { return m_ThreadData->m_Threads.size(); }
 		size_t task_count() const { return m_ThreadData->m_Tasks.size(); }
 
+		detail::thread_pool_hpp::co_task<T> co_add_task()
+		{
+			return { m_ThreadData };
+		}
+
 	private:
-		struct Task
-		{
-			function_type m_Function;
-			promise_type m_Promise;
-		};
+		std::shared_ptr<thread_data> m_ThreadData = std::make_shared<thread_data>();
 
-		struct ThreadData
-		{
-			bool m_IsShuttingDown = false;
-
-			std::queue<Task> m_Tasks;
-			mutable std::mutex m_TasksMutex;
-			std::condition_variable m_TasksCV;
-		};
-		std::shared_ptr<ThreadData> m_ThreadData = std::make_shared<ThreadData>();
-		std::vector<std::thread> m_Threads;
-
-		static void ThreadFunc(std::shared_ptr<ThreadData> data)
+		static void ThreadFunc(std::shared_ptr<thread_data> data)
 		{
 			using namespace std::chrono_literals;
 
@@ -93,7 +155,7 @@ namespace mh
 
 				while (!data->m_Tasks.empty() && !data->m_IsShuttingDown)
 				{
-					Task task;
+					task_type task;
 					{
 						std::lock_guard lock(data->m_TasksMutex);
 						if (data->m_Tasks.empty())
