@@ -13,6 +13,9 @@
 #include <mh/text/format.hpp>
 #endif
 
+#undef min
+#undef max
+
 namespace mh
 {
 	template<size_t N, typename CharT = char, typename Traits = std::char_traits<CharT>>

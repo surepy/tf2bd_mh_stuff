@@ -114,7 +114,7 @@ namespace mh
 				m_ThreadData->m_Tasks.pop();
 			}
 
-			// This could throw
+			// This could throw (...can it? what about promise_type::unhandled_exception()?)
 			task.resume();
 			return true;
 		}

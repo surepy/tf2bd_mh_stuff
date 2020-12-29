@@ -15,11 +15,28 @@ namespace mh
 
 	namespace detail::task_hpp
 	{
+		struct suspend_sometimes
+		{
+			constexpr suspend_sometimes(bool suspend) : m_Suspend(suspend) {}
+
+			[[nodiscard]] constexpr bool await_ready() const noexcept { return !m_Suspend; }
+
+			constexpr void await_suspend(std::coroutine_handle<>) const noexcept {}
+			constexpr void await_resume() const noexcept {}
+
+			bool m_Suspend;
+		};
+
 		template<typename T>
 		struct promise : public co_promise_base<T>
 		{
 			constexpr std::suspend_never initial_suspend() const noexcept { return {}; }
-			constexpr std::suspend_always final_suspend() const noexcept { return {}; }
+			constexpr suspend_sometimes final_suspend() const noexcept
+			{
+				// If m_RefCount == 0, we are in charge of our own destiny (all referencing tasks have gone out of
+				// scope, so just delete ourselves when we're done)
+				return m_RefCount != 0;
+			}
 
 			constexpr task<T> get_return_object();
 
@@ -78,6 +95,11 @@ namespace mh
 				return *this;
 			}
 
+			~task_state()
+			{
+				release();
+			}
+
 			const promise_type* try_get_promise() const { return m_Handle ? &m_Handle.promise() : nullptr; }
 			promise_type* try_get_promise() { return const_cast<promise_type*>(const_cast<const task_state*>(this)->try_get_promise()); }
 
@@ -86,8 +108,9 @@ namespace mh
 			{
 				if (m_Handle && m_Handle.promise().remove_ref())
 				{
-					assert(m_Handle.done());
-					m_Handle.destroy();
+					// TODO probably a race condition here
+					if (m_Handle.done())
+						m_Handle.destroy();
 				}
 
 				m_Handle = nullptr;
