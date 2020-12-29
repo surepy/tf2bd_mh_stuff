@@ -22,6 +22,8 @@ set(MH_STUFF_SOURCES
 	"cpp/include/mh/concurrency/async.hpp"
 	"cpp/include/mh/concurrency/main_thread.hpp"
 	"cpp/include/mh/concurrency/thread_pool.hpp"
+	"cpp/include/mh/concurrency/thread_sentinel.hpp"
+	"cpp/include/mh/concurrency/thread_sentinel.inl"
 
 	"cpp/include/mh/data/bit_float.hpp"
 	"cpp/include/mh/data/bits.hpp"
