@@ -74,7 +74,7 @@ jobs:
         ctest --output-on-failure
 
         gcovr --version
-        gcovr --root "../" --exclude ".*/catch.hpp" --sort-percentage --html-details "results_${{ matrix.compiler.exe }}.html" .
+        gcovr --root "../" --exclude ".*/catch.hpp" --exclude ".*/test_compile_file/.*" --exclude ".*/test/.*" --sort-percentage --html-details "results_${{ matrix.compiler.exe }}.html" .
 
     - name: Save test results
       if: ${{ matrix.MH_STUFF_COMPILE_LIBRARY }}
