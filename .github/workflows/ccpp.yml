@@ -52,7 +52,9 @@ jobs:
         # sudo rm -rf /var/lib/apt/lists/*
         # sudo apt clean
         sudo apt update
-        sudo apt install ${{ matrix.compiler.exe }} ${{ matrix.compiler.deps }} ninja-build gcovr -y
+        sudo apt upgrade -y
+        sudo apt install ${{ matrix.compiler.exe }} ${{ matrix.compiler.deps }} ninja-build -y
+        sudo pip3 install gcovr
 
     # - name: Run tests
     #   working-directory: ./test
