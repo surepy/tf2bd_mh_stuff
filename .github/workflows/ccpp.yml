@@ -74,12 +74,13 @@ jobs:
         ctest --output-on-failure
 
         gcovr --version
-        gcovr --root "../" --exclude "catch.hpp" --sort-percentage --html "results.html" --html-details .
+        gcovr --root "../" --exclude "catch.hpp" --sort-percentage --html-details "results_${{ matrix.compiler }}.html" .
 
     - name: Save test results
+      if: ${{ matrix.MH_STUFF_COMPILE_LIBRARY }}
       uses: actions/upload-artifact@v2
       with:
-        name: gcovr_results
+        name: gcovr_results_${{ matrix.compiler }}
         path: build/results*.html
 
 
