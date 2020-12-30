@@ -28,6 +28,14 @@ set(MH_STUFF_SOURCES
 	"cpp/include/mh/concurrency/thread_sentinel.hpp"
 	"cpp/include/mh/concurrency/thread_sentinel.inl"
 
+	"cpp/include/mh/coroutine/coroutine_include.hpp"
+	"cpp/include/mh/coroutine/coroutine_common.hpp"
+	"cpp/include/mh/coroutine/future.hpp"
+	"cpp/include/mh/coroutine/generator.hpp"
+	"cpp/include/mh/coroutine/task.hpp"
+	"cpp/include/mh/coroutine/thread.hpp"
+	"cpp/include/mh/coroutine/thread.inl"
+
 	"cpp/include/mh/data/bit_float.hpp"
 	"cpp/include/mh/data/bits.hpp"
 	"cpp/include/mh/data/variable_pusher.hpp"
@@ -118,21 +126,7 @@ else()
 endif()
 
 check_cxx_coroutine_support(SUPPORTS_COROUTINES COROUTINES_FLAGS)
-# if (SUPPORTS_COROUTINES)
-	target_sources(mh_stuff PUBLIC
-		"cpp/include/mh/coroutine/coroutine_include.hpp"
-		"cpp/include/mh/coroutine/coroutine_common.hpp"
-		"cpp/include/mh/coroutine/future.hpp"
-		"cpp/include/mh/coroutine/generator.hpp"
-		"cpp/include/mh/coroutine/task.hpp"
-		"cpp/include/mh/coroutine/thread.hpp"
-		"cpp/include/mh/coroutine/thread.inl"
-	)
-
-# 	message("COROUTINES_FLAGS = ${COROUTINES_FLAGS}")
-	mh_target_compile_options(mh_stuff ${COROUTINES_FLAGS})
-#	mh_target_compile_definitions(mh_stuff "MH_COROUTINES_SUPPORTED")
-# endif()
+mh_target_compile_options(mh_stuff ${COROUTINES_FLAGS})
 
 mh_target_include_directories(mh_stuff "cpp/include")
 mh_target_compile_features(mh_stuff "cxx_std_20")
