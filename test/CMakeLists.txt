@@ -14,11 +14,22 @@ if (CMAKE_CXX_COMPILER_ID MATCHES Clang)
 	target_link_options(Catch2WithMain PUBLIC -stdlib=libc++ -lc++abi)
 endif()
 
+if (CMAKE_CXX_COMPILER_ID MATCHES Clang OR CMAKE_CXX_COMPILER_ID MATCHES GNU)
+	mh_target_compile_options(mh_stuff --coverage -g)
+	mh_target_link_options(mh_stuff -lgcov --coverage -g)
+endif()
+
 function(mh_test name)
 	add_executable(${name} "${name}.cpp")
 
 	target_link_libraries(${name} Catch2::Catch2WithMain mh::stuff)
 	catch_discover_tests(${name} TEST_PREFIX "${PROJECT_NAME}.")
+
+	if (CMAKE_CXX_COMPILER_ID MATCHES Clang OR CMAKE_CXX_COMPILER_ID MATCHES GNU)
+		target_compile_options(${name} PUBLIC --coverage -g)
+		target_link_options(${name} PUBLIC -lgcov --coverage -g)
+	endif()
+
 endfunction()
 
 mh_test(algorithm_algorithm_test)

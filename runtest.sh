@@ -13,3 +13,6 @@ cmake --build .
 
 echo Running CTest...
 ctest --output-on-failure
+
+echo Running gcovr...
+gcovr --root "../" --exclude ".*/catch.hpp" --exclude ".*/test_compile_file/.*" --exclude ".*/test/.*" --sort-percentage --html-details "results.html" .

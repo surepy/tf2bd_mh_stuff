@@ -53,6 +53,7 @@ jobs:
         # sudo apt clean
         sudo apt update
         sudo apt install ${{ matrix.compiler.exe }} ${{ matrix.compiler.deps }} ninja-build -y
+        sudo pip3 install gcovr
 
     # - name: Run tests
     #   working-directory: ./test
@@ -64,9 +65,23 @@ jobs:
       run: |
         mkdir build
         cd build
+
+        cmake --version
         cmake -DMH_STUFF_COMPILE_LIBRARY=${{ matrix.MH_STUFF_COMPILE_LIBRARY }} ../ -G Ninja
         cmake --build .
+
+        ctest --version
         ctest --output-on-failure
+
+        gcovr --version
+        gcovr --root "../" --exclude ".*/catch.hpp" --exclude ".*/test_compile_file/.*" --exclude ".*/test/.*" --sort-percentage --html-details "results_${{ matrix.compiler.exe }}.html" .
+
+    - name: Save test results
+      if: ${{ matrix.MH_STUFF_COMPILE_LIBRARY }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: gcovr_results_${{ matrix.compiler.exe }}
+        path: build/results*.html
 
 
 
