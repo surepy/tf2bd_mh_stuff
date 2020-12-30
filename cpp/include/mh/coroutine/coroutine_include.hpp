@@ -1,6 +1,6 @@
 #pragma once
 
-#if __has_include(<coroutine>)
+#if defined(__INTELLISENSE__) || __has_include(<coroutine>)
 #include <coroutine>
 #define MH_COROUTINES_SUPPORTED 1
 namespace mh::detail
