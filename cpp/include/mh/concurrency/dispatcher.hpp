@@ -1,7 +1,12 @@
 #pragma once
 
+#if __has_include(<mh/coroutine/coroutine_include.hpp>)
+#include <mh/coroutine/coroutine_include.hpp>
+#endif
+
+#ifdef MH_COROUTINES_SUPPORTED
+
 #include <chrono>
-#include <coroutine>
 #include <memory>
 
 namespace mh
@@ -17,7 +22,7 @@ namespace mh
 
 			bool await_ready() const;
 			void await_resume() const;
-			bool await_suspend(std::coroutine_handle<> parent);
+			bool await_suspend(coro::coroutine_handle<> parent);
 
 		private:
 			std::shared_ptr<thread_data> m_ThreadData;
@@ -89,4 +94,6 @@ namespace mh
 
 #ifndef MH_COMPILE_LIBRARY
 #include "dispatcher.inl"
+#endif
+
 #endif

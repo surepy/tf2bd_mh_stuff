@@ -1,9 +1,11 @@
 #pragma once
 
+#include "coroutine_include.hpp"
+
 #ifdef MH_COROUTINES_SUPPORTED
+
 #include <cassert>
 #include <condition_variable>
-#include <coroutine>
 #include <exception>
 #include <future>
 #include <mutex>
@@ -158,7 +160,7 @@ namespace mh
 			}
 
 			bool await_ready() const { return is_ready(); }
-			bool await_suspend(std::coroutine_handle<> parent)
+			bool await_suspend(coro::coroutine_handle<> parent)
 			{
 				if (is_ready())
 				{
@@ -193,7 +195,7 @@ namespace mh
 				m_State.template emplace<IDX>(std::move(value));
 
 				m_ValueReadyCV.notify_all();
-				for (const auto& waiter : waiters)
+				for (auto& waiter : waiters)
 					waiter.resume();
 			}
 
@@ -203,7 +205,7 @@ namespace mh
 		protected:
 			mutable std::mutex m_Mutex;
 			mutable std::condition_variable m_ValueReadyCV;
-			std::variant<std::vector<std::coroutine_handle<>>, std::monostate, storage_type, std::exception_ptr> m_State;
+			std::variant<std::vector<coro::coroutine_handle<>>, std::monostate, storage_type, std::exception_ptr> m_State;
 		};
 	}
 

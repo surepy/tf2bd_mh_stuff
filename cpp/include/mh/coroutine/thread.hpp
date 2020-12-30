@@ -1,12 +1,11 @@
 #pragma once
 
-#ifdef MH_COROUTINES_SUPPORTED
+#include "coroutine_include.hpp"
 
-#include <coroutine>
+#ifdef MH_COROUTINES_SUPPORTED
 
 namespace mh
 {
-
 	namespace detail::coroutine::thread_hpp
 	{
 		enum class co_create_thread_flags
@@ -23,8 +22,8 @@ namespace mh
 		{
 			//task get_return_object();
 
-			constexpr std::suspend_never initial_suspend() const noexcept { return {}; }
-			constexpr std::suspend_always final_suspend() const noexcept { return {}; }
+			constexpr coro::suspend_never initial_suspend() const noexcept { return {}; }
+			constexpr coro::suspend_always final_suspend() const noexcept { return {}; }
 		};
 
 		struct [[nodiscard]] task
@@ -35,7 +34,7 @@ namespace mh
 
 			constexpr bool await_ready() const { return false; }
 			constexpr void await_resume() const {}
-			bool await_suspend(std::coroutine_handle<> parent);
+			bool await_suspend(coro::coroutine_handle<> parent);
 
 		private:
 			co_create_thread_flags m_Flags;
