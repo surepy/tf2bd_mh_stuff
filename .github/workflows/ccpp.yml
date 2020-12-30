@@ -73,7 +73,7 @@ jobs:
         ctest --output-on-failure
 
         gcovr --version
-        gcovr --root "../" --exclude "catch.hpp" --sort-percentage --html-details "results.html" .
+        gcovr --root "../" --exclude "catch.hpp" --sort-percentage --html "results.html" --html-details .
 
     - name: Save test results
       uses: actions/upload-artifact@v2

@@ -17,4 +17,4 @@ ctest --output-on-failure
 echo Running gcovr...
 # cd test/CMakeFiles/text_stringops_test.dir
 # cd ../
-gcovr --root "../" --exclude "catch.hpp" --sort-percentage --html-details "results.html" .
+gcovr --root "../" --exclude "catch.hpp" --sort-percentage --html "results.html" --html-details .
