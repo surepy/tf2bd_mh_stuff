@@ -19,6 +19,12 @@ function(mh_test name)
 
 	target_link_libraries(${name} Catch2::Catch2WithMain mh::stuff)
 	catch_discover_tests(${name} TEST_PREFIX "${PROJECT_NAME}.")
+
+	if (CMAKE_CXX_COMPILER_ID MATCHES Clang OR CMAKE_CXX_COMPILER_ID MATCHES GNU)
+		target_compile_options(${name} PUBLIC --coverage -g)
+		target_link_options(${name} PUBLIC -lgcov --coverage -g)
+	endif()
+
 endfunction()
 
 mh_test(algorithm_algorithm_test)

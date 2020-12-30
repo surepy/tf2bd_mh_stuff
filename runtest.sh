@@ -13,3 +13,8 @@ cmake --build .
 
 echo Running CTest...
 ctest --output-on-failure
+
+echo Running gcovr...
+# cd test/CMakeFiles/text_stringops_test.dir
+# cd ../
+gcovr --root "../" --exclude "catch.hpp" --sort-percentage --html-details "results.html"
