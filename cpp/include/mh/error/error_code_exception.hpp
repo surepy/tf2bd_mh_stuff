@@ -7,7 +7,7 @@
 
 namespace mh
 {
-	template<typename TBase, typename TError = std::error_code>
+	template<typename TBase, typename TError = std::error_condition>
 	class basic_error_code_exception : public TBase
 	{
 	public:
@@ -46,6 +46,5 @@ namespace mh
 	template<typename TBase> using basic_error_condition_exception =
 		basic_error_code_exception<TBase, std::error_condition>;
 
-	using error_code_exception = basic_error_code_exception<std::runtime_error>;
 	using error_condition_exception = basic_error_condition_exception<std::runtime_error>;
 }
