@@ -230,7 +230,7 @@ namespace mh
 		{
 			return std::get_if<super::IDX_VALUE>(std::addressof(super::m_State));
 		}
-		T* try_get_value() { return const_cast<T*>(const_cast<const co_promise_base*>(this)->try_get_ptr()); }
+		T* try_get_value() { return const_cast<T*>(const_cast<const co_promise_base*>(this)->try_get_value()); }
 
 		void return_value(T value)
 		{
@@ -287,6 +287,8 @@ namespace mh
 				auto promise = m_State.try_get_promise();
 				return promise && promise->is_ready();
 			}
+
+			[[nodiscard]] bool empty() const { return m_State.empty(); }
 
 			void wait() const
 			{

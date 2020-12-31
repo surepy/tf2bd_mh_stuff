@@ -99,6 +99,8 @@ namespace mh
 				release();
 			}
 
+			[[nodiscard]] bool empty() const { return !m_Handle; }
+
 			const promise_type* try_get_promise() const { return m_Handle ? &m_Handle.promise() : nullptr; }
 			promise_type* try_get_promise() { return const_cast<promise_type*>(const_cast<const task_state*>(this)->try_get_promise()); }
 
@@ -138,6 +140,16 @@ namespace mh
 	inline task<T> make_ready_task(TArgs&&... args)
 	{
 		co_return T(std::forward<TArgs>(args)...);
+	}
+
+	/// <summary>
+	/// Allocates a callable in the coroutine promise so it is safe if we suspend.
+	/// </summary>
+	/// <returns>Result of co_awaiting the callable.</returns>
+	template<typename TFunc, typename... TArgs>
+	inline task<std::invoke_result_t<TFunc, TArgs...>> make_lambda_task(TFunc func, TArgs... args)
+	{
+		co_return co_await func(std::forward<TArgs>(args)...);
 	}
 }
 
