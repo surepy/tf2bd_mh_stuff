@@ -30,7 +30,148 @@ namespace mh
 #endif
 			false;
 
+#if MH_HAS_CHAR8
+		[[nodiscard]] MH_COMPILE_LIBRARY_INLINE char32_t convert_to_u32(
+			const char8_t*& it, const char8_t* end)
+		{
+			unsigned continuationBytes = 0;
+
+			uint32_t retVal{};
+
+			// https://en.wikipedia.org/wiki/UTF-8#Examples
+			const uint8_t firstByte = uint8_t(*it++);
+			if ((firstByte & 0b1111'0000) == 0b1111'0000)
+			{
+				retVal = uint32_t(0b0000'0111 & firstByte) << 18;
+				continuationBytes = 3;
+			}
+			else if ((firstByte & 0b1110'0000) == 0b1110'0000)
+			{
+				retVal = uint32_t(0b0000'1111 & firstByte) << 12;
+				continuationBytes = 2;
+			}
+			else if ((firstByte & 0b1100'0000) == 0b1100'0000)
+			{
+				retVal = uint32_t(0b0001'1111 & firstByte) << 6;
+				continuationBytes = 1;
+			}
+			else //if ((firstByte & 0b1000'0000) == 0b0000'0000)
+			{
+				return char32_t(0b0111'1111 & firstByte);
+				//retVal = 0b0111'1111 & firstByte;
+				//continuationBytes = 0;
+			}
+
+			// Stop at continuationBytes == 0 or reaching the end iterator, whichever is sooner
+			for (; it != end && continuationBytes--; ++it)
+			{
+				retVal |= uint32_t((*it) & 0b0011'1111) << (6 * continuationBytes);
+			}
+
+			return char32_t(retVal);
+		}
+#endif
+
 #if MH_HAS_UNICODE
+		MH_COMPILE_LIBRARY_INLINE char32_t convert_to_u32(const char16_t*& it, const char16_t* end)
+		{
+			// https://en.wikipedia.org/wiki/UTF-16#Description
+			constexpr uint16_t TOP6_MASK = 0xFC00;
+
+			const uint16_t firstByte = uint16_t(*it++);
+			if ((firstByte & TOP6_MASK) == 0xD800)
+			{
+				uint32_t retVal = uint32_t(firstByte & (~TOP6_MASK)) << 10;
+
+				if (it != end)
+					retVal |= uint32_t(uint32_t(*it++) & (~TOP6_MASK));
+
+				return 0x10000 + retVal;
+			}
+
+			return firstByte;
+		}
+
+		template<typename T>
+		[[nodiscard]] MH_COMPILE_LIBRARY_INLINE constexpr size_t convert_to_u8(char32_t in, T out[4])
+		{
+			const uint32_t in_raw = in;
+
+			if (in_raw <= 0x7F)
+			{
+				out[0] = in_raw & 0b0111'1111;
+				return 1;
+			}
+			else if (in_raw <= 0x7FF)
+			{
+				out[0] = 0b1100'0000 | ((in_raw >> 6) & 0b0001'1111);
+				out[1] = 0b1000'0000 | (in_raw & 0b0011'1111);
+				return 2;
+			}
+			else if (in_raw <= 0xFFFF)
+			{
+				out[0] = 0b1110'0000 | ((in_raw >> 12) & 0b0000'1111);
+				out[1] = 0b1000'0000 | ((in_raw >> 6) & 0b0011'1111);
+				out[2] = 0b1000'0000 | ((in_raw >> 0) & 0b0011'1111);
+				return 3;
+			}
+			else if (in_raw <= 0x10FFFF)
+			{
+				out[0] = 0b1111'0000 | ((in_raw >> 18) & 0b0000'0111);
+				out[1] = 0b1000'0000 | ((in_raw >> 12) & 0b0011'1111);
+				out[2] = 0b1000'0000 | ((in_raw >> 6) & 0b0011'1111);
+				out[3] = 0b1000'0000 | ((in_raw >> 0) & 0b0011'1111);
+				return 4;
+			}
+
+			return -1;
+		}
+		MH_COMPILE_LIBRARY_INLINE size_t convert_to_u16(char32_t in, char16_t out[2])
+		{
+			constexpr uint16_t TOP6_MASK = 0xFC00;
+			constexpr uint16_t BYTE0_MARKER = 0xD800;
+			constexpr uint16_t BYTE1_MARKER = 0xDC00;
+
+			uint32_t in_raw = in;
+			if (in_raw > 0xFFFF || ((in_raw & TOP6_MASK) == BYTE0_MARKER))
+			{
+				in_raw -= 0x10000;
+
+				// Two bytes
+				out[0] = BYTE0_MARKER | ((in_raw >> 10) & (~TOP6_MASK));
+				out[1] = BYTE1_MARKER | (in_raw & (~TOP6_MASK));
+				return 2;
+			}
+			else
+			{
+				// One byte
+				out[0] = in_raw & 0xFFFF;
+				return 1;
+			}
+		}
+
+#if MH_HAS_CHAR8
+		MH_COMPILE_LIBRARY_INLINE size_t convert_to_uc(char32_t in, std::basic_string<char8_t>& out)
+		{
+			char8_t buf[4];
+			const size_t chars = convert_to_u8(in, buf);
+			out.append(buf, chars);
+			return chars;
+		}
+#endif
+		MH_COMPILE_LIBRARY_INLINE size_t convert_to_uc(char32_t in, std::basic_string<char16_t>& out)
+		{
+			char16_t buf[2];
+			const size_t chars = convert_to_u16(in, buf);
+			out.append(buf, chars);
+			return chars;
+		}
+		MH_COMPILE_LIBRARY_INLINE size_t convert_to_uc(char32_t in, std::basic_string<char32_t>& out)
+		{
+			out += in;
+			return 1;
+		}
+
 #if __has_include(<cuchar>)
 		MH_COMPILE_LIBRARY_INLINE std::size_t convert_to_mb(char* buf, char16_t from,
 			std::mbstate_t& state)
@@ -71,147 +212,6 @@ namespace mh
 
 			out.append(tempBuf, bytesWritten);
 		}
-#endif
-
-		MH_COMPILE_LIBRARY_INLINE char32_t convert_to_u32(const char16_t*& it, const char16_t* end)
-		{
-			// https://en.wikipedia.org/wiki/UTF-16#Description
-			constexpr uint16_t TOP6_MASK = 0xFC00;
-
-			const uint16_t firstByte = uint16_t(*it++);
-			if ((firstByte & TOP6_MASK) == 0xD800)
-			{
-				uint32_t retVal = uint32_t(firstByte & (~TOP6_MASK)) << 10;
-
-				if (it != end)
-					retVal |= uint32_t(uint32_t(*it++) & (~TOP6_MASK));
-
-				return 0x10000 + retVal;
-			}
-
-			return firstByte;
-		}
-
-		MH_COMPILE_LIBRARY_INLINE size_t convert_to_u16(char32_t in, char16_t out[2])
-		{
-			constexpr uint16_t TOP6_MASK = 0xFC00;
-			constexpr uint16_t BYTE0_MARKER = 0xD800;
-			constexpr uint16_t BYTE1_MARKER = 0xDC00;
-
-			uint32_t in_raw = in;
-			if (in_raw > 0xFFFF || ((in_raw & TOP6_MASK) == BYTE0_MARKER))
-			{
-				in_raw -= 0x10000;
-
-				// Two bytes
-				out[0] = BYTE0_MARKER | ((in_raw >> 10) & (~TOP6_MASK));
-				out[1] = BYTE1_MARKER | (in_raw & (~TOP6_MASK));
-				return 2;
-			}
-			else
-			{
-				// One byte
-				out[0] = in_raw & 0xFFFF;
-				return 1;
-			}
-		}
-
-		MH_COMPILE_LIBRARY_INLINE size_t convert_to_uc(char32_t in, std::basic_string<char16_t>& out)
-		{
-			char16_t buf[2];
-			const size_t chars = convert_to_u16(in, buf);
-			out.append(buf, chars);
-			return chars;
-		}
-		MH_COMPILE_LIBRARY_INLINE size_t convert_to_uc(char32_t in, std::basic_string<char32_t>& out)
-		{
-			out += in;
-			return 1;
-		}
-
-#if MH_HAS_CHAR8
-		template<typename T>
-		[[nodiscard]] MH_COMPILE_LIBRARY_INLINE constexpr size_t convert_to_u8(char32_t in, T out[4])
-		{
-			const uint32_t in_raw = in;
-
-			if (in_raw <= 0x7F)
-			{
-				out[0] = in_raw & 0b0111'1111;
-				return 1;
-			}
-			else if (in_raw <= 0x7FF)
-			{
-				out[0] = 0b1100'0000 | ((in_raw >> 6) & 0b0001'1111);
-				out[1] = 0b1000'0000 | (in_raw & 0b0011'1111);
-				return 2;
-			}
-			else if (in_raw <= 0xFFFF)
-			{
-				out[0] = 0b1110'0000 | ((in_raw >> 12) & 0b0000'1111);
-				out[1] = 0b1000'0000 | ((in_raw >> 6) & 0b0011'1111);
-				out[2] = 0b1000'0000 | ((in_raw >> 0) & 0b0011'1111);
-				return 3;
-			}
-			else if (in_raw <= 0x10FFFF)
-			{
-				out[0] = 0b1111'0000 | ((in_raw >> 18) & 0b0000'0111);
-				out[1] = 0b1000'0000 | ((in_raw >> 12) & 0b0011'1111);
-				out[2] = 0b1000'0000 | ((in_raw >> 6) & 0b0011'1111);
-				out[3] = 0b1000'0000 | ((in_raw >> 0) & 0b0011'1111);
-				return 4;
-			}
-
-			return -1;
-		}
-
-		[[nodiscard]] MH_COMPILE_LIBRARY_INLINE char32_t convert_to_u32(
-			const char8_t*& it, const char8_t* end)
-		{
-			unsigned continuationBytes = 0;
-
-			uint32_t retVal{};
-
-			// https://en.wikipedia.org/wiki/UTF-8#Examples
-			const uint8_t firstByte = uint8_t(*it++);
-			if ((firstByte & 0b1111'0000) == 0b1111'0000)
-			{
-				retVal = uint32_t(0b0000'0111 & firstByte) << 18;
-				continuationBytes = 3;
-			}
-			else if ((firstByte & 0b1110'0000) == 0b1110'0000)
-			{
-				retVal = uint32_t(0b0000'1111 & firstByte) << 12;
-				continuationBytes = 2;
-			}
-			else if ((firstByte & 0b1100'0000) == 0b1100'0000)
-			{
-				retVal = uint32_t(0b0001'1111 & firstByte) << 6;
-				continuationBytes = 1;
-			}
-			else //if ((firstByte & 0b1000'0000) == 0b0000'0000)
-			{
-				return char32_t(0b0111'1111 & firstByte);
-				//retVal = 0b0111'1111 & firstByte;
-				//continuationBytes = 0;
-			}
-
-			// Stop at continuationBytes == 0 or reaching the end iterator, whichever is sooner
-			for (; it != end && continuationBytes--; ++it)
-			{
-				retVal |= uint32_t((*it) & 0b0011'1111) << (6 * continuationBytes);
-			}
-
-			return char32_t(retVal);
-		}
-
-		MH_COMPILE_LIBRARY_INLINE size_t convert_to_uc(char32_t in, std::basic_string<char8_t>& out)
-		{
-			char8_t buf[4];
-			const size_t chars = convert_to_u8(in, buf);
-			out.append(buf, chars);
-			return chars;
-		}
 
 		template<>
 		struct change_encoding_impl<char8_t, char>
@@ -230,7 +230,68 @@ namespace mh
 				return retVal;
 			}
 		};
-#endif
+
+		template<typename From>
+		struct change_encoding_impl<From, char, std::enable_if_t<is_utf_v<From>>>
+		{
+			std::string operator()(const From* begin, const From* end) const
+			{
+				std::string retVal;
+				std::mbstate_t state{};
+
+				for (auto it = begin; it != end; ++it)
+					utf_to_mb(retVal, *it, state);
+
+				return retVal;
+			}
+		};
+
+		template<typename To>
+		struct change_encoding_impl<char, To, std::enable_if_t<!std::is_same_v<char, To>>>
+		{
+			std::basic_string<To> operator()(const char* begin, const char* end) const
+			{
+				static_assert(is_utf_v<To>);
+				std::basic_string<To> retVal;
+
+				std::mbstate_t state{};
+				for (auto it = begin; it != end; )
+				{
+					char32_t u32;
+					const auto result = convert_to_utf(&u32, it, end - it, state);
+					if (result == 0)
+					{
+						// Stored the null character, we're an std::string so we can continue
+						retVal += To(0);
+						state = {};
+						++it;
+					}
+					else if (result == -3)
+					{
+						// Another charN_t needs to be written to the output stream
+						convert_to_uc(u32, retVal);
+					}
+					else if (result == -2)
+					{
+						// FIXME is this correct? "...forms an incomplete, but so far valid, multibyte character"
+						// https://en.cppreference.com/w/cpp/string/multibyte/mbrtoc32
+						throw std::invalid_argument("Segment forms invalid UTF character sequence");
+					}
+					else if (result == -1)
+					{
+						throw std::runtime_error("Encoding error");
+					}
+					else
+					{
+						it += result;
+						convert_to_uc(u32, retVal);
+					}
+				}
+
+				return retVal;
+			}
+		};
+#endif  // __has_include(<cuchar>)
 
 		template<typename From, typename To>
 		struct change_encoding_impl<From, To, std::enable_if_t<!std::is_same_v<From, To>&& is_utf_v<From>&& is_utf_v<To>>>
@@ -372,67 +433,6 @@ namespace mh
 			{
 				return std::basic_string<T>(begin, end - begin);
 			};
-		};
-
-		template<typename From>
-		struct change_encoding_impl<From, char, std::enable_if_t<is_utf_v<From>>>
-		{
-			std::string operator()(const From* begin, const From* end) const
-			{
-				std::string retVal;
-				std::mbstate_t state{};
-
-				for (auto it = begin; it != end; ++it)
-					utf_to_mb(retVal, *it, state);
-
-				return retVal;
-			}
-		};
-
-		template<typename To>
-		struct change_encoding_impl<char, To, std::enable_if_t<!std::is_same_v<char, To>>>
-		{
-			std::basic_string<To> operator()(const char* begin, const char* end) const
-			{
-				static_assert(is_utf_v<To>);
-				std::basic_string<To> retVal;
-
-				std::mbstate_t state{};
-				for (auto it = begin; it != end; )
-				{
-					char32_t u32;
-					const auto result = convert_to_utf(&u32, it, end - it, state);
-					if (result == 0)
-					{
-						// Stored the null character, we're an std::string so we can continue
-						retVal += To(0);
-						state = {};
-						++it;
-					}
-					else if (result == -3)
-					{
-						// Another charN_t needs to be written to the output stream
-						convert_to_uc(u32, retVal);
-					}
-					else if (result == -2)
-					{
-						// FIXME is this correct? "...forms an incomplete, but so far valid, multibyte character"
-						// https://en.cppreference.com/w/cpp/string/multibyte/mbrtoc32
-						throw std::invalid_argument("Segment forms invalid UTF character sequence");
-					}
-					else if (result == -1)
-					{
-						throw std::runtime_error("Encoding error");
-					}
-					else
-					{
-						it += result;
-						convert_to_uc(u32, retVal);
-					}
-				}
-
-				return retVal;
-			}
 		};
 	}
 
