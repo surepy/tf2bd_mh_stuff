@@ -91,7 +91,6 @@ if (MH_STUFF_COMPILE_LIBRARY)
 		${MH_STUFF_SOURCES}
 		"cpp/src/io/file.cpp"
 		"cpp/src/text/case_insensitive_string.cpp"
-		"cpp/src/text/codecvt.cpp"
 		"cpp/src/text/string_insertion.cpp"
 		"cpp/src/source_location.cpp"
 	)
