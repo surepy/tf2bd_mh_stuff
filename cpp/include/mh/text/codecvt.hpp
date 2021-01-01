@@ -20,11 +20,13 @@ namespace mh
 #endif
 			std::is_same_v<T, char16_t> || std::is_same_v<T, char32_t>;
 
+#if __has_include(<cuchar>)
 		std::size_t convert_to_mb(char* buf, char16_t from, std::mbstate_t& state);
 		std::size_t convert_to_mb(char* buf, char32_t from, std::mbstate_t& state);
 
 		std::size_t convert_to_utf(char16_t* buf, const char* mb, std::size_t mbmax, std::mbstate_t& state);
 		std::size_t convert_to_utf(char32_t* buf, const char* mb, std::size_t mbmax, std::mbstate_t& state);
+#endif
 
 		template<typename T>
 		[[nodiscard]] inline constexpr size_t convert_to_u8(char32_t in, T out[4])
