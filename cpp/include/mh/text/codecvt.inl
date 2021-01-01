@@ -7,7 +7,11 @@
 #include <stdexcept>
 #include <type_traits>
 
-#if __has_include(<cuchar>)
+#ifndef MH_HAS_CUCHAR
+#define MH_HAS_CUCHAR (__has_include(<cuchar>))
+#endif
+
+#if MH_HAS_CUCHAR
 #include <cuchar>
 #endif
 
@@ -172,7 +176,7 @@ namespace mh
 			return 1;
 		}
 
-#if __has_include(<cuchar>)
+#if MH_HAS_CUCHAR
 		MH_COMPILE_LIBRARY_INLINE std::size_t convert_to_mb(char* buf, char16_t from,
 			std::mbstate_t& state)
 		{
@@ -451,29 +455,32 @@ namespace mh
 	template std::wstring change_encoding<wchar_t, wchar_t>(const std::wstring_view&);
 
 #if MH_HAS_UNICODE
+#if MH_HAS_CUCHAR
 	template std::u16string change_encoding<char16_t, char>(const std::string_view&);
 	template std::u16string change_encoding<char16_t, wchar_t>(const std::wstring_view&);
-	template std::u16string change_encoding<char16_t, char16_t>(const std::u16string_view&);
-	template std::u16string change_encoding<char16_t, char32_t>(const std::u32string_view&);
-
 	template std::u32string change_encoding<char32_t, char>(const std::string_view&);
 	template std::u32string change_encoding<char32_t, wchar_t>(const std::wstring_view&);
-	template std::u32string change_encoding<char32_t, char16_t>(const std::u16string_view&);
-	template std::u32string change_encoding<char32_t, char32_t>(const std::u32string_view&);
 
 	template std::string change_encoding<char, char16_t>(const std::u16string_view&);
 	template std::string change_encoding<char, char32_t>(const std::u32string_view&);
-
 	template std::wstring change_encoding<wchar_t, char16_t>(const std::u16string_view&);
 	template std::wstring change_encoding<wchar_t, char32_t>(const std::u32string_view&);
+#endif  // MH_HAS_CUCHAR
+
+	template std::u16string change_encoding<char16_t, char16_t>(const std::u16string_view&);
+	template std::u16string change_encoding<char16_t, char32_t>(const std::u32string_view&);
+	template std::u32string change_encoding<char32_t, char16_t>(const std::u16string_view&);
+	template std::u32string change_encoding<char32_t, char32_t>(const std::u32string_view&);
 
 #if MH_HAS_CHAR8
-	template std::string change_encoding<char, char8_t>(const std::u8string_view&);
-
-	template std::wstring change_encoding<wchar_t, char8_t>(const std::u8string_view&);
-
+#if MH_HAS_CUCHAR
 	template std::u8string change_encoding<char8_t, char>(const std::string_view&);
 	template std::u8string change_encoding<char8_t, wchar_t>(const std::wstring_view&);
+
+	template std::string change_encoding<char, char8_t>(const std::u8string_view&);
+	template std::wstring change_encoding<wchar_t, char8_t>(const std::u8string_view&);
+#endif  // MH_HAS_CUCHAR
+
 	template std::u8string change_encoding<char8_t, char8_t>(const std::u8string_view&);
 	template std::u8string change_encoding<char8_t, char16_t>(const std::u16string_view&);
 	template std::u8string change_encoding<char8_t, char32_t>(const std::u32string_view&);
@@ -481,7 +488,7 @@ namespace mh
 	template std::u16string change_encoding<char16_t, char8_t>(const std::u8string_view&);
 
 	template std::u32string change_encoding<char32_t, char8_t>(const std::u8string_view&);
-#endif
-#endif
-#endif
+#endif  // MH_HAS_CHAR8
+#endif  // MH_HAS_UNICODE
+#endif  // MH_COMPILE_LIBRARY
 }
