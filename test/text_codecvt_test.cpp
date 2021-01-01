@@ -18,12 +18,17 @@ static void CompareExpected(const std::basic_string_view<T1>& v1, const std::bas
 	RequireEqual<T1>(v1, mh::change_encoding<T1>(v2));
 }
 
+namespace
+{
+	struct dummy {};
+}
+
 #if MH_HAS_CHAR8
 #define U8_SV(str) u8 ## str
 #define U8_SV_REF const std::u8string_view&
 #else
 #define U8_SV(str) {}
-#define U8_SV_REF const std::monostate&
+#define U8_SV_REF const dummy&
 #endif
 
 #if MH_HAS_UNICODE
@@ -33,9 +38,9 @@ static void CompareExpected(const std::basic_string_view<T1>& v1, const std::bas
 #define U32_SV_REF const std::u32string_view&
 #else
 #define U16_SV(str) {}
-#define U32_SV(str)
-#define U16_SV_REF const std::monostate&
-#define U32_SV_REF const std::monostate&
+#define U32_SV(str) {}
+#define U16_SV_REF const dummy&
+#define U32_SV_REF const dummy&
 #endif
 
 static void CompareExpected3(U8_SV_REF v1, U16_SV_REF v2, U32_SV_REF v3)

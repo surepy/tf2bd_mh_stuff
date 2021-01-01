@@ -217,6 +217,7 @@ namespace mh
 			out.append(tempBuf, bytesWritten);
 		}
 
+#if MH_HAS_CHAR8
 		template<>
 		struct change_encoding_impl<char8_t, char>
 		{
@@ -234,6 +235,7 @@ namespace mh
 				return retVal;
 			}
 		};
+#endif
 
 		template<typename From>
 		struct change_encoding_impl<From, char, std::enable_if_t<is_utf_v<From>>>
