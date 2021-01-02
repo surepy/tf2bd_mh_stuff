@@ -137,8 +137,8 @@ namespace mh
 	template<typename TIn, typename TOut = float>
 	constexpr TOut remap_to_01(TIn in, TIn in_min, TIn in_max)
 	{
-		static_assert(std::is_floating_point_v<TIn>);
-		return TOut(TOut(in) - TOut(in_min)) / TOut(TOut(in_max) - TOut(in_min));
+		static_assert(std::is_floating_point_v<TOut>);
+		return TOut(in - in_min) / TOut(in_max - in_min);
 	}
 
 	template<typename TIn, typename TOut>
