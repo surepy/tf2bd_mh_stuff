@@ -12,6 +12,7 @@ namespace mh
 
 	using source_location = std::source_location;
 #define MH_SOURCE_LOCATION_CURRENT() ::mh::source_location::current()
+#define MH_SOURCE_LOCATION_AUTO(varName) const ::mh::source_location& varName = ::mh::source_location::current()
 
 #else
 
@@ -19,23 +20,38 @@ namespace mh
 	{
 	public:
 		constexpr source_location() noexcept = default;
-		constexpr source_location(std::uint_least32_t line, const char* fileName, const char* functionName) noexcept :
-			m_Line(line), m_FileName(fileName), m_FunctionName(functionName)
+		explicit constexpr source_location(std::uint_least32_t line, const char* fileName, const char* functionName, std::uint_least32_t column = 0) noexcept :
+			m_Line(line), m_Column(column), m_FileName(fileName), m_FunctionName(functionName)
 		{
 		}
 
+#if _MSC_VER >= 1927
+		static constexpr source_location current(std::uint_least32_t line = __builtin_LINE(), const char* fileName = __builtin_FILE(),
+			const char* functionName = __builtin_FUNCTION(), std::uint_least32_t column = __builtin_COLUMN()) noexcept
+		{
+			return source_location(line, fileName, functionName, column);
+		}
+#endif
+
 		constexpr std::uint_least32_t line() const noexcept { return m_Line; }
-		constexpr std::uint_least32_t column() const noexcept { return 0; } // unknown
+		constexpr std::uint_least32_t column() const noexcept { return m_Column; }
 		constexpr const char* file_name() const noexcept { return m_FileName; }
 		constexpr const char* function_name() const noexcept { return m_FunctionName; }
 
 	private:
 		std::uint_least32_t m_Line{};
+		std::uint_least32_t m_Column{};
 		const char* m_FileName = nullptr;
 		const char* m_FunctionName = nullptr;
 	};
 
+#if _MSC_VER >= 1927
+#define MH_SOURCE_LOCATION_CURRENT() ::mh::source_location::current()
+#define MH_SOURCE_LOCATION_AUTO(varName) const ::mh::source_location& varName = ::mh::source_location::current()
+#else
 #define MH_SOURCE_LOCATION_CURRENT() ::mh::source_location(__LINE__, __FILE__, __func__)
+#define MH_SOURCE_LOCATION_AUTO(varName) const ::mh::source_location& varName
+#endif
 
 #endif
 }
