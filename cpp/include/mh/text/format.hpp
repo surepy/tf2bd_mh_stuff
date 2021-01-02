@@ -71,16 +71,33 @@ namespace mh
 		}
 	}
 
+	using format_args = detail::format_hpp::fmtns::format_args;
+	using wformat_args = detail::format_hpp::fmtns::wformat_args;
+
+	template<typename... TArgs, typename = std::enable_if_t<detail::format_hpp::check_type<TArgs...>()>>
+	inline auto make_format_args(const TArgs&... args) ->
+		decltype(detail::format_hpp::fmtns::make_format_args(args...))
+	{
+		return detail::format_hpp::fmtns::make_format_args(args...);
+	}
+
 	template<typename TFmtStr, typename... TArgs,
 		typename = std::enable_if_t<detail::format_hpp::check_type<TArgs...>()>>
-	inline auto format(const TFmtStr& fmtStr, const TArgs&... args)
+		inline auto format(const TFmtStr& fmtStr, const TArgs&... args)
 	{
 		return detail::format_hpp::fmtns::format(fmtStr, args...);
 	}
 
+	template<typename TFmtStr>
+	inline auto vformat(const TFmtStr& fmtStr, const format_args& args) ->
+		decltype(detail::format_hpp::fmtns::vformat(fmtStr, args))
+	{
+		return detail::format_hpp::fmtns::vformat(fmtStr, args);
+	}
+
 	template<typename TOutputIt, typename TFmtStr, typename... TArgs,
 		typename = std::enable_if_t<detail::format_hpp::check_type<TArgs...>()>>
-	inline auto format_to(TOutputIt&& outputIt, const TFmtStr& fmtStr, const TArgs&... args) ->
+		inline auto format_to(TOutputIt&& outputIt, const TFmtStr& fmtStr, const TArgs&... args) ->
 		decltype(detail::format_hpp::fmtns::format_to(std::forward<TOutputIt>(outputIt), fmtStr, args...))
 	{
 		return detail::format_hpp::fmtns::format_to(std::forward<TOutputIt>(outputIt), fmtStr, args...);
@@ -88,14 +105,14 @@ namespace mh
 
 	template<typename TContainer, typename TFmtStr, typename... TArgs,
 		typename = std::enable_if_t<detail::format_hpp::check_type<TArgs...>()>>
-	inline auto format_to_container(TContainer& container, const TFmtStr& fmtStr, const TArgs&... args)
+		inline auto format_to_container(TContainer& container, const TFmtStr& fmtStr, const TArgs&... args)
 	{
 		return format_to(std::back_inserter(container), fmtStr, args...);
 	}
 
 	template<typename TOutputIt, typename TFmtStr, typename... TArgs,
 		typename = std::enable_if_t<detail::format_hpp::check_type<TArgs...>()>>
-	inline auto format_to_n(TOutputIt&& outputIt, size_t n, const TFmtStr& fmtStr, const TArgs&... args)
+		inline auto format_to_n(TOutputIt&& outputIt, size_t n, const TFmtStr& fmtStr, const TArgs&... args)
 	{
 		return detail::format_hpp::fmtns::format_to_n(std::forward<TOutputIt>(outputIt), n, fmtStr, args...);
 	}
@@ -118,6 +135,26 @@ namespace mh
 	{
 		return format(MH_FMT_STRING("FORMATTING ERROR @ {}: Unable to construct string with fmtstr {}: {}"),
 			__FUNCSIG__, std::quoted(fmtStr), e.what());
+	}
+
+	inline std::string try_vformat(const std::string_view& fmtStr, const format_args& args) try
+	{
+		return vformat(fmtStr, args);
+	}
+	catch (const format_error& e)
+	{
+		return format(MH_FMT_STRING("FORMATTING ERROR @ {}: Unable to construct string with fmtstr {}: {}"),
+			__FUNCSIG__, std::quoted(fmtStr), e.what());
+	}
+
+	inline std::wstring try_vformat(const std::wstring_view& fmtStr, const wformat_args& args) try
+	{
+		return vformat(fmtStr, args);
+	}
+	catch (const format_error& e)
+	{
+		return format(MH_FMT_STRING(L"FORMATTING ERROR @ {}: Unable to construct string with fmtstr {}"),
+			L"" __FUNCSIG__, std::quoted(fmtStr));
 	}
 }
 #endif
