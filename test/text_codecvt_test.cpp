@@ -2,6 +2,8 @@
 
 #include <mh/text/codecvt.hpp>
 
+using namespace std::string_view_literals;
+
 template<typename T>
 static void RequireEqual(const std::basic_string_view<T>& a, const std::basic_string_view<T>& b)
 {
@@ -56,7 +58,7 @@ static void CompareExpected3(U8_SV_REF v1, U16_SV_REF v2, U32_SV_REF v3)
 #endif
 }
 
-TEST_CASE("change_encoding fundamental", "[CharConverter]")
+TEST_CASE("change_encoding fundamental", "[mh][text][codecvt][change_encoding]")
 {
 #define COMPARE_EXPECTED_3(str) CompareExpected3(U8_SV(str), U16_SV(str), U32_SV(str))
 
@@ -96,7 +98,7 @@ static void CompareStringsAll(const std::basic_string_view<T>& val)
 #endif
 }
 
-TEST_CASE("change_encoding roundtrip", "[CharConverter]")
+TEST_CASE("change_encoding roundtrip", "[mh][text][codecvt][change_encoding]")
 {
 #if MH_HAS_CHAR8
 	constexpr const std::u8string_view value_u8 = u8"😐";
@@ -108,5 +110,20 @@ TEST_CASE("change_encoding roundtrip", "[CharConverter]")
 	constexpr const std::u32string_view value_u32 = U"😐";
 	CompareStringsAll(value_u16);
 	CompareStringsAll(value_u32);
+#endif
+}
+
+TEST_CASE("change_encoding to/from char", "[mh][text][codecvt][change_encoding]")
+{
+#if MH_HAS_CHAR8
+	{
+		auto u8 = u8"this is a test!"sv;
+		auto c = "this is a test!"sv;
+
+		auto u8_2_c = mh::change_encoding<char>(u8);
+		auto c_2_u8 = mh::change_encoding<char8_t>(c);
+		REQUIRE(u8_2_c == c);
+		REQUIRE(c_2_u8 == u8);
+	}
 #endif
 }
