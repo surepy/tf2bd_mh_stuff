@@ -79,23 +79,6 @@ namespace mh
 	extern template class case_insensitive_char_traits<std::char_traits<wchar_t>>;
 #endif
 
-	template<typename CharT = char, typename TraitsLHS = std::char_traits<CharT>, typename TraitsRHS = std::char_traits<CharT>>
-	bool case_insensitive_compare(
-		const std::basic_string_view<CharT, TraitsLHS>& lhs,
-		const std::basic_string_view<CharT, TraitsRHS>& rhs)
-	{
-		return std::basic_string_view<CharT, case_insensitive_char_traits<TraitsLHS>>(lhs.data(), lhs.size()) ==
-			std::basic_string_view<CharT, case_insensitive_char_traits<TraitsRHS>>(rhs.data(), rhs.size());
-	}
-
-	template<typename T0, typename T1,
-		typename CharT0 = typename T0::value_type, typename TraitsT0 = typename T0::traits_type,
-		typename CharT1 = typename T1::value_type, typename TraitsT1 = typename T1::traits_type>
-	bool case_insensitive_compare(const T0& lhs, const T1& rhs)
-	{
-		return case_insensitive_compare(std::basic_string_view<CharT0, TraitsT0>(lhs), std::basic_string_view<CharT1, TraitsT1>(rhs));
-	}
-
 	template<typename CharT, typename Traits>
 	auto case_insensitive_view(const std::basic_string_view<CharT, Traits>& sv)
 	{
@@ -131,6 +114,21 @@ namespace mh
 	auto case_insensitive_string(const CharT* str)
 	{
 		return case_insensitive_string<CharT, Traits, Alloc>(std::basic_string_view<CharT, Traits>(str));
+	}
+
+	template<typename CharT = char, typename TraitsLHS = std::char_traits<CharT>, typename TraitsRHS = std::char_traits<CharT>>
+	bool case_insensitive_compare(
+		const std::basic_string_view<CharT, TraitsLHS>& lhs,
+		const std::basic_string_view<CharT, TraitsRHS>& rhs)
+	{
+		return case_insensitive_view(lhs) == case_insensitive_view(rhs);
+	}
+	template<typename T0, typename T1,
+		typename CharT0 = typename T0::value_type, typename TraitsT0 = typename T0::traits_type,
+		typename CharT1 = typename T1::value_type, typename TraitsT1 = typename T1::traits_type>
+		bool case_insensitive_compare(const T0& lhs, const T1& rhs)
+	{
+		return case_insensitive_compare(std::basic_string_view<CharT0, TraitsT0>(lhs), std::basic_string_view<CharT1, TraitsT1>(rhs));
 	}
 }
 
