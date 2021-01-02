@@ -47,6 +47,7 @@ set(MH_STUFF_SOURCES
 	"cpp/include/mh/error/exception_details.inl"
 	"cpp/include/mh/error/expected.hpp"
 	"cpp/include/mh/error/nested_exception.hpp"
+	"cpp/include/mh/error/not_implemented_error.hpp"
 	"cpp/include/mh/error/status.hpp"
 
 	"cpp/include/mh/io/file.hpp"
