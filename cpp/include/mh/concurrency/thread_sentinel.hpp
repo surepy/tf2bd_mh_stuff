@@ -1,5 +1,7 @@
 #pragma once
 
+#include <mh/source_location.hpp>
+
 #include <stdexcept>
 #include <thread>
 
@@ -8,7 +10,12 @@ namespace mh
 	class thread_sentinel_exception : public std::runtime_error
 	{
 	public:
-		thread_sentinel_exception(const std::thread::id& expectedID);
+		thread_sentinel_exception(const mh::source_location& location, const std::thread::id& expectedID);
+
+		const mh::source_location& location() const;
+
+	private:
+		mh::source_location m_Location;
 	};
 
 	class thread_sentinel
@@ -16,7 +23,7 @@ namespace mh
 	public:
 		thread_sentinel() noexcept;
 
-		void check() const;
+		void check(MH_SOURCE_LOCATION_AUTO(location)) const;
 
 		void reset_id() noexcept;
 		void reset_id(const std::thread::id& id) noexcept;

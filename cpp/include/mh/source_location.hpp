@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <ostream>
 
 #if __has_include(<source_location>)
 #include <source_location>
@@ -54,6 +55,12 @@ namespace mh
 #endif
 
 #endif
+
+	template<typename CharT, typename Traits>
+	inline std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& os, const mh::source_location& location)
+	{
+		return os << location.file_name() << '(' << location.line() << "):" << location.function_name();
+	}
 }
 
 #if __has_include(<mh/text/format.hpp>)
