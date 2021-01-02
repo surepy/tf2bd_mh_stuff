@@ -98,24 +98,27 @@ static void CompareStringsAll(const std::basic_string_view<T>& val)
 #endif
 }
 
-TEST_CASE("change_encoding roundtrip", "[mh][text][codecvt][change_encoding]")
-{
 #if MH_HAS_CHAR8
+TEST_CASE("change_encoding roundtrip - u8", "[mh][text][codecvt][change_encoding]")
+{
 	constexpr const std::u8string_view value_u8 = u8"😐";
 	CompareStringsAll(value_u8);
+}
 #endif
 
 #if MH_HAS_UNICODE
+TEST_CASE("change_encoding roundtrip - u16/u32", "[mh][text][codecvt][change_encoding]")
+{
 	constexpr const std::u16string_view value_u16 = u"😐";
 	constexpr const std::u32string_view value_u32 = U"😐";
 	CompareStringsAll(value_u16);
 	CompareStringsAll(value_u32);
-#endif
 }
+#endif
 
-TEST_CASE("change_encoding to/from char", "[mh][text][codecvt][change_encoding]")
+#if MH_HAS_CHAR8 && MH_HAS_CUCHAR
+TEST_CASE("change_encoding - char <--> char8_t", "[mh][text][codecvt][change_encoding]")
 {
-#if MH_HAS_CHAR8
 	{
 		auto u8 = u8"this is a test!"sv;
 		auto c = "this is a test!"sv;
@@ -125,5 +128,5 @@ TEST_CASE("change_encoding to/from char", "[mh][text][codecvt][change_encoding]"
 		REQUIRE(u8_2_c == c);
 		REQUIRE(c_2_u8 == u8);
 	}
-#endif
 }
+#endif
