@@ -310,26 +310,9 @@ struct mh::formatter<::mh::enum_fmt_t<T>, CharT>
 
 		fmtStr[fmtStrPos] = '\0';
 
-#if 0
-		const auto get_format_string = [&]
-		{
-			using namespace std::string_view_literals;
-			const bool withName = m_Value && !valueName.empty();
-
-			if (m_Type == TypePresentation::None)
-				return withName ? "{2}"sv : throw format_error("Invalid flags combination: result cannot be blank");
-			else if (m_Type == TypePresentation::Short)
-				return withName ? "{0}::{2}"sv : "{0}({3})"sv;
-			else if (m_Type == TypePresentation::Long)
-				return withName ? "{1}::{2}"sv : "{1}({3})"sv;
-			else
-				throw format_error("Invalid TypePresentation value");
-		};
-#endif
-
 		if constexpr (std::is_same_v<CharT, char>)
 		{
-			return format_to(ctx.out(), fmtStr,
+			return mh::format_to(ctx.out(), fmtStr,
 				::mh::enum_type<T>::type_name(), ::mh::enum_type<T>::type_name_full(),
 				valueName, +std::underlying_type_t<T>(rc.m_Value));
 		}
@@ -355,7 +338,7 @@ struct mh::formatter<::mh::enum_fmt_t<T>, CharT>
 				return converted;
 			};
 
-			return format_to(ctx.out(), fmtStr,
+			return mh::format_to(ctx.out(), fmtStr,
 				convert_string(::mh::enum_type<T>::type_name()), convert_string(::mh::enum_type<T>::type_name_full()),
 				convert_string(valueName), +std::underlying_type_t<T>(rc.m_Value));
 		}

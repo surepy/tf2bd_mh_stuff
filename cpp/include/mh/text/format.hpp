@@ -35,33 +35,51 @@ namespace mh::detail::format_hpp
 
 namespace mh
 {
+	using detail::format_hpp::fmtns::format_error;
+	using detail::format_hpp::fmtns::formatter;
+	using detail::format_hpp::fmtns::basic_format_parse_context;
+	using detail::format_hpp::fmtns::basic_format_context;
+	using detail::format_hpp::fmtns::format_parse_context;
+	using detail::format_hpp::fmtns::wformat_parse_context;
+	using detail::format_hpp::fmtns::format_context;
+	using detail::format_hpp::fmtns::wformat_context;
+
 	namespace detail::format_hpp
 	{
 		template<typename T>
-		inline constexpr bool enum_class_check()
+		struct make_dependent
 		{
-			constexpr bool is_enum_class = std::is_enum_v<T> && !std::is_convertible_v<T, int>;
-			static_assert(!is_enum_class, "enum class formatting requires mh::enum_fmt");
-			return !is_enum_class;
-		}
+			using type = T;
+		};
+
+		template<typename T, typename TChar, typename = typename make_dependent<mh::formatter<T, TChar>>::type>
+		inline constexpr bool formatter_check(T*, TChar*) { return true; }
+
+		inline constexpr bool formatter_check(void*, void*) { return false; }
 
 		// Intellisense dies if you SFINAE on an explicit operator call
 #ifndef __INTELLISENSE__
 		template<typename T, typename TTo, typename = std::enable_if_t<std::is_convertible_v<T, TTo>>>
 		inline constexpr auto implicit_conversion_check(T* t, TTo*) -> decltype(t->operator TTo())
 		{
-			static_assert(false, "Formatting this type will result in it being formatted as one of its implicit converted types");
-			return false;
+			return true;
 		}
 #endif
 
-		inline constexpr bool implicit_conversion_check(void*, void*) { return true; }
+		inline constexpr bool implicit_conversion_check(void*, void*) { return false; }
 
 		template<typename T>
 		inline constexpr bool check_type_single()
 		{
-			return enum_class_check<T>() &&
-				implicit_conversion_check((T*)nullptr, (bool*)nullptr);
+			constexpr bool HAS_FORMATTER = formatter_check((T*)nullptr, (char*)nullptr);
+			constexpr bool HAS_IMPLICIT_CONVERSION = implicit_conversion_check((T*)nullptr, (bool*)nullptr);
+			constexpr bool IS_ENUM_CLASS = std::is_enum_v<T> && !std::is_convertible_v<T, int>;
+
+			static_assert(HAS_FORMATTER, "Formatter for type missing");
+			static_assert(!HAS_IMPLICIT_CONVERSION, "Formatting this type will result in it being formatted as one of its implicit converted types");
+			static_assert(!IS_ENUM_CLASS, "enum class formatting requires mh::enum_fmt");
+
+			return HAS_FORMATTER && !IS_ENUM_CLASS;
 		}
 
 		template<typename... T>
@@ -116,15 +134,6 @@ namespace mh
 	{
 		return detail::format_hpp::fmtns::format_to_n(std::forward<TOutputIt>(outputIt), n, fmtStr, args...);
 	}
-
-	using detail::format_hpp::fmtns::format_error;
-	using detail::format_hpp::fmtns::formatter;
-	using detail::format_hpp::fmtns::basic_format_parse_context;
-	using detail::format_hpp::fmtns::basic_format_context;
-	using detail::format_hpp::fmtns::format_parse_context;
-	using detail::format_hpp::fmtns::wformat_parse_context;
-	using detail::format_hpp::fmtns::format_context;
-	using detail::format_hpp::fmtns::wformat_context;
 
 	template<typename TFmtStr, typename... TArgs>
 	inline auto try_format(const TFmtStr& fmtStr, const TArgs&... args) -> decltype(format(fmtStr, args...)) try
