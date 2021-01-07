@@ -14,7 +14,7 @@ std::basic_string<CharT, Traits, Alloc> TestFunc(const std::filesystem::path& pa
 	const auto length = file.tellg();
 	file.seekg(0);
 
-	std::basic_string<CharT, Traits, Alloc> retVal(length, ' ');
+	std::basic_string<CharT, Traits, Alloc> retVal(static_cast<size_t>(length), ' ');
 	file.read(retVal.data(), length);
 
 	return retVal;
