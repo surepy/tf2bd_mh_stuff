@@ -27,10 +27,10 @@ namespace mh::detail::ensure_hpp
 		ss << "mh_ensure failed: " << info.m_ExpressionText;
 
 		print_details_label(ss, "in");
-		ss << info.m_FunctionName;
+		ss << info.m_Location.function_name();
 
 		print_details_label(ss, "at");
-		ss << info.m_FileName << ':' << info.m_FileLine;
+		ss << info.m_Location.file_name() << ':' << info.m_Location.line();
 
 		if (info.m_Message && info.m_Message[0])
 		{
@@ -47,7 +47,7 @@ namespace mh::detail::ensure_hpp
 		std::cerr << ss.str() << std::endl;
 
 #if defined(_MSC_VER) && defined(_DEBUG)
-		const auto userResult = _CrtDbgReport(_CRT_ASSERT, info.m_FileName, info.m_FileLine, nullptr, "%s", ss.str().c_str());
+		const auto userResult = _CrtDbgReport(_CRT_ASSERT, info.m_Location.file_name(), info.m_Location.line(), nullptr, "%s", ss.str().c_str());
 		if (userResult == 1 || userResult == -1) // -1 = error, 1 = user clicked "break" (retry)
 			return ensure_trigger_result::debugger_break;
 #endif

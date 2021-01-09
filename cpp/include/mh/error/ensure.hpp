@@ -1,5 +1,7 @@
 #pragma once
 
+#include <mh/source_location.hpp>
+
 #include <ostream>
 
 namespace mh
@@ -36,21 +38,11 @@ namespace mh
 #endif
 #endif
 
-#ifndef $MH_FUNCSIG
-#ifdef _MSC_VER
-#define $MH_FUNCSIG __FUNCSIG__
-#else
-#define $MH_FUNCSIG __func__
-#endif
-#endif
-
 		struct ensure_info_base
 		{
 			const char* m_ExpressionText = nullptr;
-			const char* m_FunctionName = nullptr;
-			const char* m_FileName = nullptr;
-			int m_FileLine = -1;
 			const char* m_Message = nullptr;
+			mh::source_location m_Location{};
 		};
 
 		struct ensure_traits_default_base
@@ -117,7 +109,7 @@ namespace mh
 	};
 
 #define mh_ensure_impl(expr, traitsType, msg) \
-	([](auto&& value, const char* funcName) -> decltype(auto) \
+	([](auto&& value, MH_SOURCE_LOCATION_AUTO(location)) -> decltype(auto) \
 	{ \
 		using type_t = std::decay_t<decltype(value)>; \
 		traitsType<type_t> traits; \
@@ -125,17 +117,15 @@ namespace mh
 		{ \
 			::mh::ensure_info<type_t> info{ .m_Value = value }; \
 			info.m_ExpressionText = #expr; \
-			info.m_FunctionName = funcName; \
-			info.m_FileName = __FILE__; \
-			info.m_FileLine = __LINE__; \
 			info.m_Message = msg; \
+			info.m_Location = location; \
 			\
 			const auto result = traits.trigger(info); \
 			if (result == ::mh::ensure_trigger_result::debugger_break) \
 				$MH_DEBUGBREAK(); \
 		} \
 		return std::move(value); \
-	}(expr, $MH_FUNCSIG))
+	}(expr, MH_SOURCE_LOCATION_CURRENT()))
 
 #ifdef _DEBUG
 #define mh_ensure_msg(expr, msg)  mh_ensure_impl(expr, ::mh::ensure_traits, msg)
