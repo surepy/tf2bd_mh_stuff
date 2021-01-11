@@ -5,7 +5,19 @@
 
 namespace mh
 {
-	template<typename T, typename TComparator = std::less<T>, typename TContainer = std::vector<T>>
+	namespace detail::heap_hpp
+	{
+		template<typename T>
+		struct less
+		{
+			constexpr bool operator()(const T& lhs, const T& rhs) const
+			{
+				return lhs < rhs;
+			}
+		};
+	}
+
+	template<typename T, typename TComparator = detail::heap_hpp::less<T>, typename TContainer = std::vector<T>>
 	class heap final
 	{
 	public:
