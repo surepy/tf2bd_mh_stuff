@@ -156,6 +156,7 @@ namespace mh
 			return *this;
 		}
 
+#if __cpp_impl_three_way_comparison >= 201907
 		template<typename TRet = std::common_comparison_category_t<std::compare_three_way_result_t<bool>, std::compare_three_way_result_t<value_type>>>
 		friend constexpr TRet operator<=>(const this_type& lhs, const value_type& rhs)
 		{
@@ -188,6 +189,8 @@ namespace mh
 
 			return lhs <=> rhs.error();
 		}
+#endif
+
 		friend constexpr bool operator==(const this_type& lhs, const value_type& rhs) { return lhs.has_value() && lhs.value() == rhs; }
 		friend constexpr bool operator==(const value_type& lhs, const this_type& rhs) { return rhs.has_value() && lhs == rhs.value(); }
 		friend constexpr bool operator==(const this_type& lhs, const error_type& rhs) { return lhs.has_error() && lhs.error() == rhs; }
