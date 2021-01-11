@@ -156,7 +156,7 @@ namespace mh
 			return *this;
 		}
 
-#if __cpp_impl_three_way_comparison >= 201907
+#if (__cpp_lib_three_way_comparison >= 201907) || (_MSC_VER >= 1928)
 		template<typename TRet = std::common_comparison_category_t<std::compare_three_way_result_t<bool>, std::compare_three_way_result_t<value_type>>>
 		friend constexpr TRet operator<=>(const this_type& lhs, const value_type& rhs)
 		{
