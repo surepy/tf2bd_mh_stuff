@@ -1,29 +1,31 @@
 #pragma once
 
-#include <mh/coroutine/coroutine_include.hpp>
+#include <mh/coroutine/task.hpp>
 
 #ifdef MH_COROUTINES_SUPPORTED
 
-#include <mh/concurrency/dispatcher.hpp>
-#include <mh/coroutine/task.hpp>
+#include "dispatcher.hpp"
 
-#include <chrono>
-#include <exception>
-#include <functional>
-#include <stdexcept>
-#include <thread>
-#include <vector>
+#include <memory>
+#include <optional>
 
 namespace mh
 {
 	namespace detail::thread_pool_hpp
 	{
-		struct thread_data
-		{
-			bool m_IsShuttingDown = false;
+		struct thread_data;
 
-			mh::dispatcher m_Dispatcher{ false };
-			std::vector<std::thread> m_Threads;
+		struct dispatcher_task_wrapper
+		{
+			explicit dispatcher_task_wrapper(mh::dispatcher::dispatch_task_t dispatchTask);
+			explicit dispatcher_task_wrapper(std::nullptr_t) noexcept;
+
+			bool await_ready() const;
+			void await_resume() const;
+			bool await_suspend(coro::coroutine_handle<> parent);
+
+		private:
+			std::optional<mh::dispatcher::dispatch_task_t> m_DispatchTask;
 		};
 	}
 
@@ -34,20 +36,14 @@ namespace mh
 	public:
 		using clock_t = mh::dispatcher::clock_t;
 
-		thread_pool(size_t threadCount = std::thread::hardware_concurrency());
+		thread_pool();
+		thread_pool(size_t threadCount);
 		~thread_pool();
 
-		auto co_add_task() { return m_ThreadData->m_Dispatcher.co_dispatch(); }
+		detail::thread_pool_hpp::dispatcher_task_wrapper co_add_task();
 
-		auto co_delay_until(clock_t::time_point timePoint)
-		{
-			return m_ThreadData->m_Dispatcher.co_delay_until(timePoint);
-		}
-		template<typename TRep, typename TPeriod>
-		auto co_delay_for(std::chrono::duration<TRep, TPeriod> duration)
-		{
-			return m_ThreadData->m_Dispatcher.co_delay_for(duration);
-		}
+		mh::dispatcher::delay_task_t co_delay_until(clock_t::time_point timePoint);
+		mh::dispatcher::delay_task_t co_delay_for(clock_t::duration duration);
 
 		template<typename TFunc, typename... TArgs>
 		mh::task<std::invoke_result_t<TFunc, TArgs...>> add_task(TFunc func, TArgs... args)
@@ -61,7 +57,7 @@ namespace mh
 		size_t task_count() const;
 
 	private:
-		std::shared_ptr<thread_data> m_ThreadData = std::make_shared<thread_data>();
+		std::shared_ptr<thread_data> m_ThreadData;
 
 		static void ThreadFunc(std::shared_ptr<thread_data> data);
 	};

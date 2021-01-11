@@ -47,18 +47,20 @@ namespace mh
 		using thread_data = detail::dispatcher_hpp::thread_data;
 
 	public:
+		using dispatch_task_t = detail::dispatcher_hpp::co_dispatch_task;
+		using delay_task_t = detail::dispatcher_hpp::co_delay_task;
 		using clock_t = detail::dispatcher_hpp::clock_t;
 
 		dispatcher(bool singleThread = true);
 
 		size_t task_count() const;
 
-		detail::dispatcher_hpp::co_dispatch_task co_dispatch();
-		detail::dispatcher_hpp::co_delay_task co_delay_for(clock_t::duration duration);
-		detail::dispatcher_hpp::co_delay_task co_delay_until(clock_t::time_point endTime);
+		dispatch_task_t co_dispatch();
+		delay_task_t co_delay_for(clock_t::duration duration);
+		delay_task_t co_delay_until(clock_t::time_point endTime);
 
 		template<typename TRep, typename TPeriod>
-		detail::dispatcher_hpp::co_delay_task co_delay_for(std::chrono::duration<TRep, TPeriod> duration)
+		delay_task_t co_delay_for(std::chrono::duration<TRep, TPeriod> duration)
 		{
 			return co_delay_until(std::chrono::duration_cast<clock_t::duration>(duration));
 		}
