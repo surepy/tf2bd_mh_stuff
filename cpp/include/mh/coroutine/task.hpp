@@ -142,12 +142,28 @@ namespace mh
 		co_return T(std::forward<TArgs>(args)...);
 	}
 
+	namespace detail::task_hpp
+	{
+		constexpr bool has_co_await_operator(const void*) { return false; }
+
+		template<typename T>
+		constexpr auto has_co_await_operator(const T*) -> decltype(std::declval<T>().operator co_await(), bool{}) { return true; }
+
+		template<typename T> inline constexpr bool has_co_await_operator_v = has_co_await_operator((T*)nullptr);
+
+		template<typename T>
+		using awaiter_t = std::conditional_t<has_co_await_operator_v<T>, decltype(std::declval<T>().operator co_await()), T>;
+
+		template<typename T>
+		using await_result_t = decltype(std::declval<awaiter_t<T>>().await_resume());
+	}
+
 	/// <summary>
 	/// Allocates a callable in the coroutine promise so it is safe if we suspend.
 	/// </summary>
 	/// <returns>Result of co_awaiting the callable.</returns>
 	template<typename TFunc, typename... TArgs>
-	inline task<std::invoke_result_t<TFunc, TArgs...>> make_lambda_task(TFunc func, TArgs... args)
+	inline std::invoke_result_t<TFunc, TArgs...> make_lambda_task(TFunc func, TArgs... args)
 	{
 		co_return co_await func(std::forward<TArgs>(args)...);
 	}
