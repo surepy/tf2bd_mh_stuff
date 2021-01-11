@@ -24,4 +24,11 @@ namespace mh
 	{
 		return find_or_add_if(container, [&value](const auto& v) { return v == value; }, value);
 	}
+
+	template<typename Container>
+	inline bool contains(const Container& container, const typename Container::value_type& value)
+	{
+		const auto end = std::end(container);
+		return std::find(std::begin(container), end, value) != end;
+	}
 }
