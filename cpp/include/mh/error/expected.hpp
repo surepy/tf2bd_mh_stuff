@@ -109,14 +109,12 @@ namespace mh
 		{
 		}
 
-		constexpr this_type& operator=(const this_type& other)
-			noexcept(noexcept(m_State = other.m_State))
+		constexpr this_type& operator=(const this_type& other) noexcept(std::is_nothrow_copy_assignable_v<state_t>)
 		{
 			m_State = other.m_State;
 			return *this;
 		}
-		constexpr this_type& operator=(this_type&& other)
-			noexcept(noexcept(m_State = std::move(other.m_State)))
+		constexpr this_type& operator=(this_type&& other) noexcept(std::is_nothrow_move_assignable_v<state_t>)
 		{
 			m_State = std::move(other.m_State);
 			return *this;
