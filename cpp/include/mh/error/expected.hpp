@@ -63,6 +63,10 @@ namespace mh
 		using value_type = TValue;
 		using error_type = TError;
 
+	private:
+		using state_t = std::variant<value_type, error_type>;
+
+	public:
 		static_assert(!std::is_same_v<value_type, void>, "value type cannot be void");
 		static_assert(!std::is_same_v<value_type, expect_t>, "value type cannot be expect_t");
 		static_assert(!std::is_same_v<value_type, unexpect_t>, "value type cannot be unexpect_t");
@@ -94,6 +98,28 @@ namespace mh
 
 		constexpr expected(unexpect_t, error_type&& value) : m_State(std::in_place_index_t<ERROR_IDX>{}, std::move(value)) {}
 		constexpr expected(unexpect_t, const error_type& value) : m_State(std::in_place_index_t<ERROR_IDX>{}, value) {}
+
+		constexpr expected(const this_type& other) noexcept(std::is_nothrow_copy_constructible_v<state_t>) :
+			m_State(other.m_State)
+		{
+		}
+		constexpr expected(this_type&& other) noexcept(std::is_nothrow_move_constructible_v<state_t>) :
+			m_State(std::move(other.m_State))
+		{
+		}
+
+		constexpr this_type& operator=(const this_type& other)
+			noexcept(noexcept(m_State = other.m_State))
+		{
+			m_State = other.m_State;
+			return *this;
+		}
+		constexpr this_type& operator=(this_type&& other)
+			noexcept(noexcept(m_State = std::move(other.m_State)))
+		{
+			m_State = std::move(other.m_State);
+			return *this;
+		}
 
 		constexpr this_type& operator=(value_type&& value)
 			noexcept(noexcept(emplace(expect, std::move(value))))
@@ -129,7 +155,45 @@ namespace mh
 			return *this;
 		}
 
+		template<typename TRet = std::common_comparison_category_t<std::compare_three_way_result_t<bool>, std::compare_three_way_result_t<value_type>>>
+		friend constexpr TRet operator<=>(const this_type& lhs, const value_type& rhs)
+		{
+			if (!lhs.has_value())
+				return false <=> true;
+
+			return lhs.value() <=> rhs;
+		}
+		template<typename TRet = std::common_comparison_category_t<std::compare_three_way_result_t<bool>, std::compare_three_way_result_t<value_type>>>
+		friend constexpr TRet operator<=>(const value_type& lhs, const this_type& rhs)
+		{
+			if (!rhs.has_value())
+				return true <=> false;
+
+			return lhs <=> rhs.value();
+		}
+		template<typename TRet = std::common_comparison_category_t<std::compare_three_way_result_t<bool>, std::compare_three_way_result_t<error_type>>>
+		friend constexpr TRet operator<=>(const this_type& lhs, const error_type& rhs)
+		{
+			if (!lhs.has_error())
+				return false <=> true;
+
+			return lhs.error() <=> rhs;
+		}
+		template<typename TRet = std::common_comparison_category_t<std::compare_three_way_result_t<bool>, std::compare_three_way_result_t<error_type>>>
+		friend constexpr TRet operator<=>(const error_type& lhs, const this_type& rhs)
+		{
+			if (!lhs.has_error())
+				return true <=> false;
+
+			return lhs <=> rhs.error();
+		}
+		friend constexpr bool operator==(const this_type& lhs, const value_type& rhs) { return lhs.has_value() && lhs.value() == rhs; }
+		friend constexpr bool operator==(const value_type& lhs, const this_type& rhs) { return rhs.has_value() && lhs == rhs.value(); }
+		friend constexpr bool operator==(const this_type& lhs, const error_type& rhs) { return lhs.has_error() && lhs.error() == rhs; }
+		friend constexpr bool operator==(const error_type& lhs, const this_type& rhs) { return rhs.has_error() && lhs == rhs.error(); }
+
 		constexpr bool has_value() const { return m_State.index() == VALUE_IDX; }
+		constexpr bool has_error() const { return !has_value(); }
 		constexpr operator bool() const { return has_value(); }
 
 		constexpr value_type& value() { return std::get<VALUE_IDX>(m_State); }
@@ -178,7 +242,7 @@ namespace mh
 		decltype(auto) map(TFunc&& func) const { return detail::error::expected_hpp::map(*this, std::forward<TFunc>(func)); }
 
 	private:
-		std::variant<value_type, error_type> m_State;
+		state_t m_State;
 	};
 }
 
