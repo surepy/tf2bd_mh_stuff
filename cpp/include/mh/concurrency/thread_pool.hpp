@@ -4,12 +4,6 @@
 
 #ifdef MH_COROUTINES_SUPPORTED
 
-#if __has_include(<mh/coroutine/future.hpp>)
-#include <mh/coroutine/future.hpp>
-#else
-#include <future>
-#endif
-
 #include <mh/concurrency/dispatcher.hpp>
 #include <mh/coroutine/task.hpp>
 
@@ -24,14 +18,6 @@ namespace mh
 {
 	namespace detail::thread_pool_hpp
 	{
-#if __has_include(<mh/coroutine/future.hpp>)
-		template<typename T> using promise_type = mh::promise<T>;
-		template<typename T> using future_type = mh::shared_future<T>;
-#else
-		template<typename T> using promise_type = std::promise<T>;
-		template<typename T> using future_type = std::future<T>;
-#endif
-
 		struct thread_data
 		{
 			bool m_IsShuttingDown = false;
@@ -46,10 +32,22 @@ namespace mh
 		using thread_data = detail::thread_pool_hpp::thread_data;
 
 	public:
+		using clock_t = mh::dispatcher::clock_t;
+
 		thread_pool(size_t threadCount = std::thread::hardware_concurrency());
 		~thread_pool();
 
 		auto co_add_task() { return m_ThreadData->m_Dispatcher.co_dispatch(); }
+
+		auto co_delay_until(clock_t::time_point timePoint)
+		{
+			return m_ThreadData->m_Dispatcher.co_delay_until(timePoint);
+		}
+		template<typename TRep, typename TPeriod>
+		auto co_delay_for(std::chrono::duration<TRep, TPeriod> duration)
+		{
+			return m_ThreadData->m_Dispatcher.co_delay_for(duration);
+		}
 
 		template<typename TFunc, typename... TArgs>
 		mh::task<std::invoke_result_t<TFunc, TArgs...>> add_task(TFunc func, TArgs... args)

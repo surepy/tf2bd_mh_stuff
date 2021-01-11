@@ -6,6 +6,9 @@
 
 #ifdef MH_COROUTINES_SUPPORTED
 
+#include <mh/error/not_implemented_error.hpp>
+#include <mh/containers/heap.hpp>
+
 #include <atomic>
 #include <cassert>
 #include <condition_variable>
@@ -26,6 +29,18 @@ namespace mh
 			coro::coroutine_handle<> m_Handle;
 		};
 
+		struct task_delay_data
+		{
+			constexpr bool operator<(const task_delay_data& rhs) const
+			{
+				// intentionally reversed
+				return rhs.m_DelayUntilTime < m_DelayUntilTime;
+			}
+
+			clock_t::time_point m_DelayUntilTime;
+			coro::coroutine_handle<> m_Handle;
+		};
+
 		struct thread_data
 		{
 			thread_data(bool singleThread) :
@@ -33,13 +48,86 @@ namespace mh
 			{
 			}
 
+			coro::coroutine_handle<> try_pop_task()
+			{
+				if (!m_Tasks.empty() || !m_DelayTasks.empty())
+				{
+					std::lock_guard lock(m_TasksMutex);
+
+					if (!m_DelayTasks.empty())
+					{
+						auto now = clock_t::now();
+						const task_delay_data& taskDelayData = m_DelayTasks.front();
+						if (taskDelayData.m_DelayUntilTime <= clock_t::now())
+						{
+							auto task = taskDelayData.m_Handle;
+							m_DelayTasks.pop();
+							return task;
+						}
+					}
+
+					if (!m_Tasks.empty())
+					{
+						auto task = m_Tasks.front();
+						m_Tasks.pop();
+						return task;
+					}
+				}
+
+				return nullptr;
+			}
+
+			void add_task(coro::coroutine_handle<> task)
+			{
+				std::lock_guard lock(m_TasksMutex);
+				m_Tasks.push(task);
+				m_TasksAvailableCV.notify_one();
+			}
+			void add_delay_task(task_delay_data data)
+			{
+				std::lock_guard lock(m_TasksMutex);
+				m_DelayTasks.push(std::move(data));
+			}
+
+			bool wait_tasks_until(const clock_t::time_point endTime) const
+			{
+				std::unique_lock lock(m_TasksMutex);
+
+				const auto IsTaskAvailable = [&]
+				{
+					if (!m_DelayTasks.empty() && m_DelayTasks.front().m_DelayUntilTime <= clock_t::now())
+						return true;
+
+					if (!m_Tasks.empty())
+						return true;
+
+					return false;
+				};
+
+				while (endTime > clock_t::now())
+				{
+					auto localEndTime = endTime;
+					if (!m_DelayTasks.empty())
+						localEndTime = std::min(localEndTime, m_DelayTasks.front().m_DelayUntilTime);
+
+					if (m_TasksAvailableCV.wait_until(lock, localEndTime, IsTaskAvailable))
+						return true;
+				}
+
+				return false;
+			}
+
+			size_t task_count() const { return m_Tasks.size() + m_DelayTasks.size(); }
+
 			bool m_IsSingleThread{};
 
-			mutable std::mutex m_TasksMutex;
-			std::condition_variable m_TasksAvailableCV;
-			std::queue<coro::coroutine_handle<>> m_Tasks;
-
 			const std::thread::id m_OwnerThread = std::this_thread::get_id();
+
+		private:
+			mutable std::mutex m_TasksMutex;
+			mutable std::condition_variable m_TasksAvailableCV;
+			std::queue<coro::coroutine_handle<>> m_Tasks;
+			mh::heap<task_delay_data> m_DelayTasks;
 		};
 
 		MH_COMPILE_LIBRARY_INLINE co_dispatch_task::co_dispatch_task(std::shared_ptr<thread_data> threadData) noexcept :
@@ -67,14 +155,38 @@ namespace mh
 			// to be able to defer
 			assert(!m_ThreadData->m_IsSingleThread || std::this_thread::get_id() != m_ThreadData->m_OwnerThread);
 
-			{
-				std::lock_guard lock(m_ThreadData->m_TasksMutex);
-				m_ThreadData->m_Tasks.push(handle);
-			}
-
-			m_ThreadData->m_TasksAvailableCV.notify_one();
+			m_ThreadData->add_task(handle);
 
 			return true;  // always suspend
+		}
+
+		MH_COMPILE_LIBRARY_INLINE co_delay_task::co_delay_task(
+			std::shared_ptr<thread_data> threadData, clock_t::time_point delayUntilTime) noexcept :
+			m_ThreadData(std::move(threadData)), m_DelayUntilTime(std::move(delayUntilTime))
+		{
+		}
+
+		MH_COMPILE_LIBRARY_INLINE bool co_delay_task::await_ready() const
+		{
+			return m_DelayUntilTime <= clock_t::now();
+		}
+		MH_COMPILE_LIBRARY_INLINE void co_delay_task::await_resume() const
+		{
+			//throw mh::not_implemented_error();
+		}
+		MH_COMPILE_LIBRARY_INLINE bool co_delay_task::await_suspend(coro::coroutine_handle<> parent)
+		{
+			if (await_ready())
+				return false; // no need for suspension
+
+			{
+				task_delay_data data;
+				data.m_DelayUntilTime = m_DelayUntilTime;
+				data.m_Handle = parent;
+				m_ThreadData->add_delay_task(std::move(data));
+			}
+
+			return true; // suspend
 		}
 	}
 
@@ -104,18 +216,8 @@ namespace mh
 
 		using detail::dispatcher_hpp::task_data;
 
-		if (!m_ThreadData->m_Tasks.empty())
+		if (mh::detail::coro::coroutine_handle<> task = m_ThreadData->try_pop_task())
 		{
-			mh::detail::coro::coroutine_handle<> task;
-			{
-				std::lock_guard lock(m_ThreadData->m_TasksMutex);
-				if (m_ThreadData->m_Tasks.empty())
-					return false; // Someone else grabbed the task out from under us
-
-				task = std::move(m_ThreadData->m_Tasks.front());
-				m_ThreadData->m_Tasks.pop();
-			}
-
 			// This could throw (...can it? what about promise_type::unhandled_exception()?)
 			task.resume();
 			return true;
@@ -132,14 +234,25 @@ namespace mh
 
 	MH_COMPILE_LIBRARY_INLINE size_t dispatcher::task_count() const
 	{
-		return m_ThreadData->m_Tasks.size();
+		return m_ThreadData->task_count();
 	}
 
-	MH_COMPILE_LIBRARY_INLINE bool dispatcher::wait_tasks_for(std::chrono::high_resolution_clock::duration duration) const
+	MH_COMPILE_LIBRARY_INLINE bool dispatcher::wait_tasks_for(clock_t::duration duration) const
 	{
-		auto threadData = m_ThreadData;
-		std::unique_lock lock(threadData->m_TasksMutex);
-		return threadData->m_TasksAvailableCV.wait_for(lock, duration, [&]() { return !threadData->m_Tasks.empty(); });
+		return wait_tasks_until(clock_t::now() + duration);
+	}
+	MH_COMPILE_LIBRARY_INLINE bool dispatcher::wait_tasks_until(clock_t::time_point endTime) const
+	{
+		return m_ThreadData->wait_tasks_until(endTime);
+	}
+
+	MH_COMPILE_LIBRARY_INLINE detail::dispatcher_hpp::co_delay_task dispatcher::co_delay_for(clock_t::duration duration)
+	{
+		return co_delay_until(clock_t::now() + duration);
+	}
+	MH_COMPILE_LIBRARY_INLINE detail::dispatcher_hpp::co_delay_task dispatcher::co_delay_until(clock_t::time_point endTime)
+	{
+		return detail::dispatcher_hpp::co_delay_task(m_ThreadData, endTime);
 	}
 }
 

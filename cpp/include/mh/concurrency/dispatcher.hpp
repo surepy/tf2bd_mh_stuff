@@ -14,7 +14,7 @@ namespace mh
 	namespace detail::dispatcher_hpp
 	{
 		struct thread_data;
-		struct task_data;
+		using clock_t = std::chrono::steady_clock;
 
 		struct [[nodiscard]] co_dispatch_task
 		{
@@ -26,8 +26,19 @@ namespace mh
 
 		private:
 			std::shared_ptr<thread_data> m_ThreadData;
+		};
 
-			//std::shared_ptr<task_data> m_TaskData;
+		struct [[nodiscard]] co_delay_task
+		{
+			co_delay_task(std::shared_ptr<thread_data> threadData, clock_t::time_point delayUntilTime) noexcept;
+
+			bool await_ready() const;
+			void await_resume() const;
+			bool await_suspend(coro::coroutine_handle<> parent);
+
+		private:
+			std::shared_ptr<thread_data> m_ThreadData;
+			clock_t::time_point m_DelayUntilTime;
 		};
 	}
 
@@ -36,11 +47,21 @@ namespace mh
 		using thread_data = detail::dispatcher_hpp::thread_data;
 
 	public:
+		using clock_t = detail::dispatcher_hpp::clock_t;
+
 		dispatcher(bool singleThread = true);
 
 		size_t task_count() const;
 
 		detail::dispatcher_hpp::co_dispatch_task co_dispatch();
+		detail::dispatcher_hpp::co_delay_task co_delay_for(clock_t::duration duration);
+		detail::dispatcher_hpp::co_delay_task co_delay_until(clock_t::time_point endTime);
+
+		template<typename TRep, typename TPeriod>
+		detail::dispatcher_hpp::co_delay_task co_delay_for(std::chrono::duration<TRep, TPeriod> duration)
+		{
+			return co_delay_until(std::chrono::duration_cast<clock_t::duration>(duration));
+		}
 
 		size_t run();
 		bool run_one();
@@ -66,14 +87,14 @@ namespace mh
 		template<typename TRep, typename TPeriod>
 		size_t run_for(std::chrono::duration<TRep, TPeriod> duration)
 		{
-			return run_until(std::chrono::high_resolution_clock::now() + duration);
+			return run_until(clock_t::now() + duration);
 		}
 
 		void wait_tasks() const;
 		bool wait_tasks_while(bool(*predicateFunc)(void* userData), void* userData = nullptr) const;
 		bool wait_tasks_while(bool(*predicateFunc)(const void* userData), const void* userData = nullptr) const;
-		bool wait_tasks_until(std::chrono::high_resolution_clock::time_point endTime) const;
-		bool wait_tasks_for(std::chrono::high_resolution_clock::duration duration) const;
+		bool wait_tasks_until(clock_t::time_point endTime) const;
+		bool wait_tasks_for(clock_t::duration duration) const;
 
 		template<typename TFunc>
 		bool wait_tasks_while(TFunc&& func) const
