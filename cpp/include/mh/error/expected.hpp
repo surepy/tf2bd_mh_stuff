@@ -50,7 +50,7 @@ namespace mh
 		}
 	}
 
-	template<typename TValue, typename TError>
+	template<typename TValue, typename TError = std::error_condition>
 	class expected final
 	{
 		using expect_t = detail::error::expected_hpp::expect_t;
