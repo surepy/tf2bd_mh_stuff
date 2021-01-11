@@ -62,6 +62,7 @@ set(MH_STUFF_SOURCES
 	"cpp/include/mh/memory/buffer.hpp"
 	"cpp/include/mh/memory/cached_variable.hpp"
 	"cpp/include/mh/memory/checked_ptr.hpp"
+	"cpp/include/mh/memory/memory_helpers.hpp"
 	"cpp/include/mh/memory/unique_object.hpp"
 
 	"cpp/include/mh/raii/scope_exit.hpp"
