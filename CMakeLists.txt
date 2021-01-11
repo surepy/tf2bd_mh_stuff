@@ -28,6 +28,8 @@ set(MH_STUFF_SOURCES
 	"cpp/include/mh/concurrency/thread_sentinel.hpp"
 	"cpp/include/mh/concurrency/thread_sentinel.inl"
 
+	"cpp/include/mh/containers/heap.hpp"
+
 	"cpp/include/mh/coroutine/coroutine_include.hpp"
 	"cpp/include/mh/coroutine/coroutine_common.hpp"
 	"cpp/include/mh/coroutine/future.hpp"
