@@ -26,8 +26,28 @@ namespace mh
 
 		const char* type_name() const noexcept;
 
+		// When this goes out of scope, the associated handler is removed.
+		struct [[nodiscard]] handler final
+		{
+			handler() = default;
+			~handler();
+
+			handler(const handler&) = delete;
+			handler& operator=(const handler&) = delete;
+
+			handler(handler&& other) noexcept;
+			handler& operator=(handler&& other) noexcept;
+
+		private:
+			friend struct exception_details;
+			explicit handler(const std::type_info* type) noexcept;
+			void release();
+
+			const std::type_info* m_Type = nullptr;
+		};
+
 		// Adds a new handler. Returns false if there is already a handler for this type.
-		static bool add_handler(const std::type_info& type, const exception_details_handler& handler);
+		static handler add_handler(const std::type_info& type, const exception_details_handler& handler);
 	};
 }
 
