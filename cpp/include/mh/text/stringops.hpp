@@ -192,8 +192,7 @@ namespace mh
 	template<typename TStr1, typename TStr2>
 	[[nodiscard]] auto split_string(const TStr1& string, const TStr2& splitChars)
 	{
-		using sv = std::basic_string_view<typename TStr1::value_type, typename TStr1::traits_type>;
-		return split_string(sv(string), sv(splitChars));
+		return split_string(std::basic_string_view(string), std::basic_string_view(splitChars));
 	}
 }
 #endif
