@@ -6,6 +6,7 @@
 #define MH_COMPILE_LIBRARY_INLINE inline
 #endif
 
+#include <cassert>
 #include <map>
 #include <mutex>
 #include <typeindex>
