@@ -19,6 +19,9 @@ set(MH_STUFF_SOURCES
 	"cpp/include/mh/algorithm/algorithm.hpp"
 	"cpp/include/mh/algorithm/multi_compare.hpp"
 
+	"cpp/include/mh/chrono/chrono_helpers.hpp"
+	"cpp/include/mh/chrono/chrono_helpers.inl"
+
 	"cpp/include/mh/concurrency/async.hpp"
 	"cpp/include/mh/concurrency/dispatcher.hpp"
 	"cpp/include/mh/concurrency/dispatcher.inl"
