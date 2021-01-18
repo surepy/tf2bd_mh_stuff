@@ -79,6 +79,7 @@ set(MH_STUFF_SOURCES
 	"cpp/include/mh/text/codecvt.inl"
 	"cpp/include/mh/text/fmtstr.hpp"
 	"cpp/include/mh/text/format.hpp"
+	"cpp/include/mh/text/indenting_ostream.hpp"
 	"cpp/include/mh/text/insertion_conversion.hpp"
 	"cpp/include/mh/text/memstream.hpp"
 	"cpp/include/mh/text/string_insertion.hpp"
