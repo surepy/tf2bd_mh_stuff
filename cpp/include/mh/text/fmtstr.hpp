@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <cassert>
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
@@ -22,26 +23,31 @@ namespace mh
 	class base_format_string
 	{
 	public:
+		static_assert(N >= 1);
+
 		using this_type = base_format_string;
 		using value_type = CharT;
 		using traits_type = Traits;
 		using array_type = std::array<value_type, N>;
 		using view_type = std::basic_string_view<value_type, traits_type>;
 
-		constexpr base_format_string()
+		constexpr base_format_string() noexcept
 		{
 			m_String[0] = value_type(0);
 		}
-		constexpr this_type& operator=(const this_type&) = default;
+		constexpr this_type& operator=(const this_type&) noexcept = default;
 
 		constexpr size_t size() const { return m_Length; }
 		static constexpr size_t max_size() { return N - 1; }
 
 		size_t vsprintf(const value_type* fmtStr, va_list args)
 		{
-			m_Length = std::vsnprintf(m_String.data(), max_size(), fmtStr, args);
-			if (m_Length > max_size())
-				m_Length = max_size();
+			assert(m_Length <= max_size());
+			const size_t maxWriteCount = max_size() - m_Length;
+			const size_t writeCount = std::vsnprintf(m_String.data() + m_Length, maxWriteCount, fmtStr, args);
+
+			m_Length += std::min(maxWriteCount, writeCount);
+			assert(m_Length <= max_size());
 
 			return m_Length;
 		}
@@ -49,25 +55,27 @@ namespace mh
 		{
 			va_list args;
 			va_start(args, fmtStr);
-			const auto retVal = vsprintf(fmtStr, args);
+			const auto retVal = this->vsprintf(fmtStr, args);
 			va_end(args);
 			return retVal;
 		}
 		constexpr size_t puts(const view_type& str)
 		{
-			m_Length = std::min(max_size(), str.size());
+			assert(m_Length <= max_size());
+			const auto copyCount = std::min(str.size(), max_size() - m_Length);
 #if __cpp_lib_is_constant_evaluated >= 201811
 			if (!std::is_constant_evaluated())
 			{
-				std::memcpy(m_String.data(), str.data(), m_Length * sizeof(value_type));
+				std::memcpy(m_String.data() + m_Length, str.data(), copyCount * sizeof(value_type));
 			}
 			else
 #endif
 			{
-				for (size_t i = 0; i < m_Length; i++)
-					m_String[i] = str[i];
+				for (size_t i = 0; i < copyCount; i++)
+					m_String[m_Length + i] = str[i];
 			}
 
+			m_Length += copyCount;
 			m_String[m_Length] = 0;
 			return m_Length;
 		}
@@ -77,18 +85,27 @@ namespace mh
 		auto fmt(const view_type& fmtStr, const TArgs&... args) ->
 			decltype(mh::format_to_n((CharT*)nullptr, max_size(), fmtStr, args...), size_t{})
 		{
-			const auto result = mh::format_to_n(m_String.data(), max_size(), fmtStr, args...);
+			const auto result = mh::format_to_n(m_String.data() + m_Length, max_size() - m_Length, fmtStr, args...);
 			m_Length = result.out - m_String.data();
+			assert(m_Length <= max_size());
 			m_String[m_Length] = value_type(0);
 			return m_Length;
 		}
 #endif
+
+		constexpr void clear()
+		{
+			m_Length = 0;
+			m_String[0] = 0;
+		}
 
 		constexpr this_type& operator=(const view_type& rhs)
 		{
 			puts(rhs);
 			return *this;
 		}
+
+		[[nodiscard]] constexpr bool empty() const { return m_Length == 0; }
 
 		constexpr const value_type* c_str() const { return m_String.data(); }
 		constexpr const array_type& array() const { return m_String; }
@@ -103,7 +120,7 @@ namespace mh
 		constexpr operator view_type() const { return view(); }
 
 	protected:
-		size_t m_Length = 0;
+		size_t m_Length = 0;  // not including null terminator
 		array_type m_String;
 	};
 
@@ -118,7 +135,7 @@ namespace mh
 		using view_type = typename base_type::view_type;
 
 		constexpr printf_string() = default;
-		printf_string(const value_type* fmtStr, ...)
+		explicit printf_string(const value_type* fmtStr, ...)
 		{
 			va_list args;
 			va_start(args, fmtStr);
@@ -149,7 +166,7 @@ namespace mh
 
 		constexpr format_string() = default;
 		template<typename... TArgs, typename = decltype(mh::format(std::declval<view_type>(), std::declval<TArgs>()...))>
-		format_string(const view_type& fmtStr, TArgs&&... args)
+		explicit format_string(const view_type& fmtStr, TArgs&&... args)
 		{
 			base_type::fmt(fmtStr, std::forward<TArgs>(args)...);
 		}
