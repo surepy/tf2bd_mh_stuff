@@ -144,7 +144,7 @@ else()
 
 	target_compile_definitions(mh_stuff INTERFACE
 		"MH_COMPILE_LIBRARY_INLINE=inline"
-		"MH_STUFF_API"
+		"MH_STUFF_API="
 	)
 endif()
 
