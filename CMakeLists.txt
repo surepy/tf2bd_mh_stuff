@@ -114,11 +114,6 @@ if (MH_STUFF_COMPILE_LIBRARY)
 		"MH_COMPILE_LIBRARY_INLINE="
 	)
 
-	generate_export_header(mh_stuff
-		EXPORT_MACRO_NAME MH_STUFF_API
-	)
-	target_precompile_headers(mh_stuff PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/mh_stuff_export.h")
-
 	# Create a cpp file of all .inl files and add it to the target
 	file(GLOB_RECURSE MH_INL_FILES "*.inl")
 	# message("MH_INL_FILES = ${MH_INL_FILES}")
@@ -142,6 +137,11 @@ else()
 		"MH_COMPILE_LIBRARY_INLINE=inline"
 	)
 endif()
+
+generate_export_header(mh_stuff
+	EXPORT_MACRO_NAME MH_STUFF_API
+)
+target_precompile_headers(mh_stuff PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/mh_stuff_export.h")
 
 check_cxx_coroutine_support(SUPPORTS_COROUTINES COROUTINES_FLAGS)
 mh_target_compile_options(mh_stuff ${COROUTINES_FLAGS})
