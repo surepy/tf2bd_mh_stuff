@@ -13,13 +13,17 @@ if (CMAKE_CXX_COMPILER_ID MATCHES Clang)
 	add_link_options(-stdlib=libc++ -lc++abi)
 endif()
 
-include("cmake/GenericTargetOptions.cmake")
 include("cmake/CheckCoroutineSupport.cmake")
 include("cmake/CheckUnicodeSupport.cmake")
 include(CheckCXXCompilerFlag)
 include(GenerateExportHeader)
 
 option(MH_STUFF_COMPILE_LIBRARY "True to compile some code into to a static library for less overhead" ON)
+if (MH_STUFF_COMPILE_LIBRARY)
+	set(MH_PUBLIC_OR_INTERFACE "PUBLIC")
+else()
+	set(MH_PUBLIC_OR_INTERFACE "INTERFACE")
+endif()
 
 set(MH_STUFF_SOURCES
 	"cpp/include/mh/algorithm/algorithm.hpp"
@@ -109,7 +113,7 @@ if (MH_STUFF_COMPILE_LIBRARY)
 		"cpp/src/source_location.cpp"
 	)
 
-	target_compile_definitions(mh_stuff PUBLIC
+	target_compile_definitions(mh_stuff ${MH_PUBLIC_OR_INTERFACE}
 		"MH_COMPILE_LIBRARY"
 		"MH_COMPILE_LIBRARY_INLINE="
 	)
@@ -141,27 +145,27 @@ endif()
 generate_export_header(mh_stuff
 	EXPORT_MACRO_NAME MH_STUFF_API
 )
-target_precompile_headers(mh_stuff PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/mh_stuff_export.h")
+target_precompile_headers(mh_stuff ${MH_PUBLIC_OR_INTERFACE} "${CMAKE_CURRENT_BINARY_DIR}/mh_stuff_export.h")
 
 check_cxx_coroutine_support(SUPPORTS_COROUTINES COROUTINES_FLAGS)
-mh_target_compile_options(mh_stuff ${COROUTINES_FLAGS})
+target_compile_options(mh_stuff ${MH_PUBLIC_OR_INTERFACE} ${COROUTINES_FLAGS})
 
-mh_target_include_directories(mh_stuff "cpp/include")
-mh_target_compile_features(mh_stuff "cxx_std_20")
+target_include_directories(mh_stuff ${MH_PUBLIC_OR_INTERFACE} "cpp/include")
+target_compile_features(mh_stuff ${MH_PUBLIC_OR_INTERFACE} "cxx_std_20")
 
 if (CMAKE_CXX_COMPILER_ID MATCHES GNU OR CMAKE_CXX_COMPILER_ID MATCHES Clang)
-	mh_target_compile_options(mh_stuff -pthread)
-	mh_target_link_options(mh_stuff -pthread)
+	target_compile_options(mh_stuff ${MH_PUBLIC_OR_INTERFACE} -pthread)
+	target_link_options(mh_stuff ${MH_PUBLIC_OR_INTERFACE} -pthread)
 endif()
 
 check_cxx_compiler_flag(-fconcepts FCONCEPTS_FLAG)
 if (FCONCEPTS_FLAG)
-	mh_target_compile_options(mh_stuff -fconcepts)
+	target_compile_options(mh_stuff ${MH_PUBLIC_OR_INTERFACE} -fconcepts)
 endif()
 
 check_cxx_unicode_support(SUPPORTS_UNICODE)
 if (NOT SUPPORTS_UNICODE)
-	mh_target_compile_definitions(mh_stuff "MH_BROKEN_UNICODE")
+	target_compile_definitions(mh_stuff ${MH_PUBLIC_OR_INTERFACE} "MH_BROKEN_UNICODE")
 endif()
 
 add_library(mh::stuff ALIAS mh_stuff)
