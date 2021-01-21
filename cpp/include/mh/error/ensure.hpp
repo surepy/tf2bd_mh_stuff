@@ -51,9 +51,9 @@ namespace mh
 
 		protected:
 			virtual int get_max_details_width() const { return 7; }  // "message"
-			virtual void print_details_label(std::ostream& str, const char* label) const;
+			MH_STUFF_API virtual void print_details_label(std::ostream& str, const char* label) const;
 
-			ensure_trigger_result trigger_generic(const ensure_info_base& info) const;
+			MH_STUFF_API ensure_trigger_result trigger_generic(const ensure_info_base& info) const;
 
 			virtual bool can_print_value() const = 0;
 			virtual void print_value_generic(std::ostream& os, const ensure_info_base& info) const = 0;

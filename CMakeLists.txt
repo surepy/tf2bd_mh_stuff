@@ -2,6 +2,11 @@ cmake_minimum_required(VERSION 3.16.3)
 
 project(mh_stuff CXX)
 
+option(MH_STUFF_BUILD_SHARED_LIBS "Build mh_stuff as a shared lib" OFF)
+if (MH_STUFF_BUILD_SHARED_LIBS)
+	set(BUILD_SHARED_LIBS ON)
+endif()
+
 # build with correct stdlib for complier
 if (CMAKE_CXX_COMPILER_ID MATCHES Clang)
 	add_compile_options(-stdlib=libc++)
@@ -12,6 +17,7 @@ include("cmake/GenericTargetOptions.cmake")
 include("cmake/CheckCoroutineSupport.cmake")
 include("cmake/CheckUnicodeSupport.cmake")
 include(CheckCXXCompilerFlag)
+include(GenerateExportHeader)
 
 option(MH_STUFF_COMPILE_LIBRARY "True to compile some code into to a static library for less overhead" ON)
 
@@ -95,7 +101,7 @@ set(MH_STUFF_SOURCES
 )
 
 if (MH_STUFF_COMPILE_LIBRARY)
-	add_library(mh_stuff STATIC
+	add_library(mh_stuff
 		${MH_STUFF_SOURCES}
 		"cpp/src/io/file.cpp"
 		"cpp/src/text/case_insensitive_string.cpp"
@@ -107,6 +113,11 @@ if (MH_STUFF_COMPILE_LIBRARY)
 		"MH_COMPILE_LIBRARY"
 		"MH_COMPILE_LIBRARY_INLINE="
 	)
+
+	generate_export_header(mh_stuff
+		EXPORT_MACRO_NAME MH_STUFF_API
+	)
+	target_precompile_headers(mh_stuff PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/mh_stuff_export.h")
 
 	# Create a cpp file of all .inl files and add it to the target
 	file(GLOB_RECURSE MH_INL_FILES "*.inl")

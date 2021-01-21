@@ -19,15 +19,15 @@ namespace mh
 	struct exception_details
 	{
 		exception_details() noexcept = default;
-		exception_details(const std::exception_ptr& e);
+		MH_STUFF_API exception_details(const std::exception_ptr& e);
 
 		const std::type_info* m_Type = nullptr;
 		std::string m_Message;
 
-		const char* type_name() const noexcept;
+		MH_STUFF_API const char* type_name() const noexcept;
 
 		// When this goes out of scope, the associated handler is removed.
-		struct [[nodiscard]] handler final
+		struct MH_STUFF_API [[nodiscard]] handler final
 		{
 			handler() = default;
 			~handler();
@@ -47,7 +47,7 @@ namespace mh
 		};
 
 		// Adds a new handler. Returns false if there is already a handler for this type.
-		static handler add_handler(const std::type_info& type, const exception_details_handler& handler);
+		MH_STUFF_API static handler add_handler(const std::type_info& type, const exception_details_handler& handler);
 	};
 }
 

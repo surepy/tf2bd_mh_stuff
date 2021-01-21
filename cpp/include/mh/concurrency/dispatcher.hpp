@@ -20,9 +20,9 @@ namespace mh
 		{
 			co_dispatch_task(std::shared_ptr<thread_data> threadData) noexcept;
 
-			bool await_ready() const;
-			void await_resume() const;
-			bool await_suspend(coro::coroutine_handle<> parent);
+			MH_STUFF_API bool await_ready() const;
+			MH_STUFF_API void await_resume() const;
+			MH_STUFF_API bool await_suspend(coro::coroutine_handle<> parent);
 
 		private:
 			std::shared_ptr<thread_data> m_ThreadData;
@@ -32,9 +32,9 @@ namespace mh
 		{
 			co_delay_task(std::shared_ptr<thread_data> threadData, clock_t::time_point delayUntilTime) noexcept;
 
-			bool await_ready() const;
-			void await_resume() const;
-			bool await_suspend(coro::coroutine_handle<> parent);
+			MH_STUFF_API bool await_ready() const;
+			MH_STUFF_API void await_resume() const;
+			MH_STUFF_API bool await_suspend(coro::coroutine_handle<> parent);
 
 		private:
 			std::shared_ptr<thread_data> m_ThreadData;
@@ -51,13 +51,13 @@ namespace mh
 		using delay_task_t = detail::dispatcher_hpp::co_delay_task;
 		using clock_t = detail::dispatcher_hpp::clock_t;
 
-		dispatcher(bool singleThread = true);
+		MH_STUFF_API dispatcher(bool singleThread = true);
 
-		size_t task_count() const;
+		MH_STUFF_API size_t task_count() const;
 
-		dispatch_task_t co_dispatch();
-		delay_task_t co_delay_for(clock_t::duration duration);
-		delay_task_t co_delay_until(clock_t::time_point endTime);
+		MH_STUFF_API dispatch_task_t co_dispatch();
+		MH_STUFF_API delay_task_t co_delay_for(clock_t::duration duration);
+		MH_STUFF_API delay_task_t co_delay_until(clock_t::time_point endTime);
 
 		template<typename TRep, typename TPeriod>
 		delay_task_t co_delay_for(std::chrono::duration<TRep, TPeriod> duration)
@@ -65,8 +65,8 @@ namespace mh
 			return co_delay_until(std::chrono::duration_cast<clock_t::duration>(duration));
 		}
 
-		size_t run();
-		bool run_one();
+		MH_STUFF_API size_t run();
+		MH_STUFF_API bool run_one();
 		template<typename TFunc>
 		size_t run_while(TFunc&& func)
 		{
@@ -92,11 +92,11 @@ namespace mh
 			return run_until(clock_t::now() + duration);
 		}
 
-		void wait_tasks() const;
-		bool wait_tasks_while(bool(*predicateFunc)(void* userData), void* userData = nullptr) const;
-		bool wait_tasks_while(bool(*predicateFunc)(const void* userData), const void* userData = nullptr) const;
-		bool wait_tasks_until(clock_t::time_point endTime) const;
-		bool wait_tasks_for(clock_t::duration duration) const;
+		MH_STUFF_API void wait_tasks() const;
+		MH_STUFF_API bool wait_tasks_while(bool(*predicateFunc)(void* userData), void* userData = nullptr) const;
+		MH_STUFF_API bool wait_tasks_while(bool(*predicateFunc)(const void* userData), const void* userData = nullptr) const;
+		MH_STUFF_API bool wait_tasks_until(clock_t::time_point endTime) const;
+		MH_STUFF_API bool wait_tasks_for(clock_t::duration duration) const;
 
 		template<typename TFunc>
 		bool wait_tasks_while(TFunc&& func) const

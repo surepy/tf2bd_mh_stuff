@@ -20,9 +20,9 @@ namespace mh
 			explicit dispatcher_task_wrapper(mh::dispatcher::dispatch_task_t dispatchTask);
 			explicit dispatcher_task_wrapper(std::nullptr_t) noexcept;
 
-			bool await_ready() const;
-			void await_resume() const;
-			bool await_suspend(coro::coroutine_handle<> parent);
+			MH_STUFF_API bool await_ready() const;
+			MH_STUFF_API void await_resume() const;
+			MH_STUFF_API bool await_suspend(coro::coroutine_handle<> parent);
 
 		private:
 			std::optional<mh::dispatcher::dispatch_task_t> m_DispatchTask;
@@ -36,14 +36,14 @@ namespace mh
 	public:
 		using clock_t = mh::dispatcher::clock_t;
 
-		thread_pool();
-		thread_pool(size_t threadCount);
-		~thread_pool();
+		MH_STUFF_API thread_pool();
+		MH_STUFF_API thread_pool(size_t threadCount);
+		MH_STUFF_API ~thread_pool();
 
-		detail::thread_pool_hpp::dispatcher_task_wrapper co_add_task();
+		MH_STUFF_API detail::thread_pool_hpp::dispatcher_task_wrapper co_add_task();
 
-		mh::dispatcher::delay_task_t co_delay_until(clock_t::time_point timePoint);
-		mh::dispatcher::delay_task_t co_delay_for(clock_t::duration duration);
+		MH_STUFF_API mh::dispatcher::delay_task_t co_delay_until(clock_t::time_point timePoint);
+		MH_STUFF_API mh::dispatcher::delay_task_t co_delay_for(clock_t::duration duration);
 
 		template<typename TFunc, typename... TArgs>
 		mh::task<std::invoke_result_t<TFunc, TArgs...>> add_task(TFunc func, TArgs... args)
@@ -53,8 +53,8 @@ namespace mh
 			co_return func(std::move(args)...);
 		}
 
-		size_t thread_count() const;
-		size_t task_count() const;
+		MH_STUFF_API size_t thread_count() const;
+		MH_STUFF_API size_t task_count() const;
 
 	private:
 		std::shared_ptr<thread_data> m_ThreadData;
