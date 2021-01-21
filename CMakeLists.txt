@@ -170,7 +170,7 @@ endif()
 
 add_library(mh::stuff ALIAS mh_stuff)
 
-if (CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
+if ((CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR) OR BUILD_TESTING)
 	include(CTest)
 	add_subdirectory("test")
 endif()
