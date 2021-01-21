@@ -132,6 +132,11 @@ if (MH_STUFF_COMPILE_LIBRARY)
 		target_compile_options(mh_stuff PRIVATE /W3 /permissive-)
 	endif()
 
+	generate_export_header(mh_stuff
+		EXPORT_MACRO_NAME MH_STUFF_API
+	)
+	target_precompile_headers(mh_stuff ${MH_PUBLIC_OR_INTERFACE} "${CMAKE_CURRENT_BINARY_DIR}/mh_stuff_export.h")
+
 else()
 	add_library(mh_stuff INTERFACE
 		${MH_STUFF_SOURCES}
@@ -139,13 +144,9 @@ else()
 
 	target_compile_definitions(mh_stuff INTERFACE
 		"MH_COMPILE_LIBRARY_INLINE=inline"
+		"MH_STUFF_API"
 	)
 endif()
-
-generate_export_header(mh_stuff
-	EXPORT_MACRO_NAME MH_STUFF_API
-)
-target_precompile_headers(mh_stuff ${MH_PUBLIC_OR_INTERFACE} "${CMAKE_CURRENT_BINARY_DIR}/mh_stuff_export.h")
 
 check_cxx_coroutine_support(SUPPORTS_COROUTINES COROUTINES_FLAGS)
 target_compile_options(mh_stuff ${MH_PUBLIC_OR_INTERFACE} ${COROUTINES_FLAGS})
