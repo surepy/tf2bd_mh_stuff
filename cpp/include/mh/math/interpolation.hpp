@@ -21,6 +21,9 @@
 #include <numeric>
 #include <type_traits>
 
+#undef min
+#undef max
+
 namespace mh
 {
 	namespace detail::interpolation_hpp
