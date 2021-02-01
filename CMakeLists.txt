@@ -96,6 +96,7 @@ set(MH_STUFF_SOURCES
 	"cpp/include/mh/text/stringops.hpp"
 
 	"cpp/include/mh/types/disable_copy_move.hpp"
+	"cpp/include/mh/types/enum_class_bit_ops.hpp"
 
 	"cpp/include/mh/compiler.hpp"
 	"cpp/include/mh/future.hpp"
