@@ -165,5 +165,16 @@ namespace mh
 		return format(MH_FMT_STRING(L"FORMATTING ERROR @ {}: Unable to construct string with fmtstr {}"),
 			L"" __FUNCSIG__, std::quoted(fmtStr));
 	}
+
+	template<typename TChar = char, typename TTraits = std::char_traits<TChar>, typename TAlloc = std::allocator<TChar>, typename... TArgs>
+	inline std::basic_string<TChar, TTraits, TAlloc> build_string(const TArgs&... args)
+	{
+		std::basic_string<TChar, TTraits, TAlloc> str;
+
+		auto inserter = std::back_inserter(str);
+		(format_to(inserter, MH_FMT_STRING("{}"), args), ...);
+
+		return str;
+	}
 }
 #endif
