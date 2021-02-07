@@ -147,6 +147,7 @@ namespace mh
 	template<typename TIn, typename TOut>
 	constexpr TOut remap(TIn in, TIn in_min, TIn in_max, TOut out_min, TOut out_max)
 	{
+		assert(in_min != in_max);
 		return lerp(remap_to_01(in, in_min, in_max), out_min, out_max);
 	}
 
