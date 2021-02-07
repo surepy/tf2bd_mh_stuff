@@ -71,9 +71,11 @@ namespace mh
 		template<typename T>
 		inline constexpr bool check_type_single()
 		{
-			constexpr bool HAS_FORMATTER = formatter_check((T*)nullptr, (char*)nullptr);
-			constexpr bool HAS_IMPLICIT_CONVERSION = implicit_conversion_check((T*)nullptr, (bool*)nullptr);
-			constexpr bool IS_ENUM_CLASS = std::is_enum_v<T> && !std::is_convertible_v<T, int>;
+			using type = std::decay_t<T>;
+
+			constexpr bool HAS_FORMATTER = formatter_check((type*)nullptr, (char*)nullptr);
+			constexpr bool HAS_IMPLICIT_CONVERSION = implicit_conversion_check((type*)nullptr, (bool*)nullptr);
+			constexpr bool IS_ENUM_CLASS = std::is_enum_v<type> && !std::is_convertible_v<type, int>;
 
 			static_assert(HAS_FORMATTER, "Formatter for type missing");
 			static_assert(!HAS_IMPLICIT_CONVERSION, "Formatting this type will result in it being formatted as one of its implicit converted types");
@@ -89,6 +91,12 @@ namespace mh
 		}
 	}
 
+	template<typename TChar, typename T>
+	inline auto fmtarg(const TChar* argName, const T& argValue)
+	{
+		return detail::format_hpp::fmtns::arg(argName, argValue);
+	}
+
 	using format_args = detail::format_hpp::fmtns::format_args;
 	using wformat_args = detail::format_hpp::fmtns::wformat_args;
 
@@ -101,9 +109,10 @@ namespace mh
 
 	template<typename TFmtStr, typename... TArgs,
 		typename = std::enable_if_t<detail::format_hpp::check_type<TArgs...>()>>
-		inline auto format(const TFmtStr& fmtStr, const TArgs&... args)
+		inline auto format(const TFmtStr& fmtStr, TArgs&&... args) ->
+		decltype(detail::format_hpp::fmtns::format(fmtStr, std::forward<TArgs>(args)...))
 	{
-		return detail::format_hpp::fmtns::format(fmtStr, args...);
+		return detail::format_hpp::fmtns::format(fmtStr, std::forward<TArgs>(args)...);
 	}
 
 	template<typename TFmtStr>
@@ -138,11 +147,11 @@ namespace mh
 	template<typename TFmtStr, typename... TArgs>
 	inline auto try_format(const TFmtStr& fmtStr, const TArgs&... args) -> decltype(format(fmtStr, args...)) try
 	{
-		return format(fmtStr, args...);
+		return ::mh::format(fmtStr, args...);
 	}
 	catch (const format_error& e)
 	{
-		return format(MH_FMT_STRING("FORMATTING ERROR @ {}: Unable to construct string with fmtstr {}: {}"),
+		return ::mh::format(MH_FMT_STRING("FORMATTING ERROR @ {}: Unable to construct string with fmtstr {}: {}"),
 			__FUNCSIG__, std::quoted(fmtStr), e.what());
 	}
 
@@ -152,7 +161,7 @@ namespace mh
 	}
 	catch (const format_error& e)
 	{
-		return format(MH_FMT_STRING("FORMATTING ERROR @ {}: Unable to construct string with fmtstr {}: {}"),
+		return ::mh::format(MH_FMT_STRING("FORMATTING ERROR @ {}: Unable to construct string with fmtstr {}: {}"),
 			__FUNCSIG__, std::quoted(fmtStr), e.what());
 	}
 
@@ -162,7 +171,7 @@ namespace mh
 	}
 	catch (const format_error& e)
 	{
-		return format(MH_FMT_STRING(L"FORMATTING ERROR @ {}: Unable to construct string with fmtstr {}"),
+		return ::mh::format(MH_FMT_STRING(L"FORMATTING ERROR @ {}: Unable to construct string with fmtstr {}"),
 			L"" __FUNCSIG__, std::quoted(fmtStr));
 	}
 
