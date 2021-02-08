@@ -81,6 +81,7 @@ set(MH_STUFF_SOURCES
 	"cpp/include/mh/raii/scope_exit.hpp"
 
 	"cpp/include/mh/reflection/enum.hpp"
+	"cpp/include/mh/reflection/struct.hpp"
 
 	"cpp/include/mh/text/formatters/error_code.hpp"
 	"cpp/include/mh/text/case_insensitive_string.hpp"

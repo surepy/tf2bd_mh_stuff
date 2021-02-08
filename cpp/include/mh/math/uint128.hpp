@@ -37,7 +37,7 @@ namespace mh
 			//if (!detail::is_constant_evaluated())
 			//	f();
 #endif
-	 	}
+		}
 
 #if (defined(__x86_64__)) && (defined(__GNUC__) || defined(__clang__))
 
@@ -303,7 +303,7 @@ namespace mh
 			retVal.set_u64<0>(((get_u64<0>() >> (bits % 64)) * lower) |
 #endif
 
-			return retVal;
+				return retVal;
 		}
 
 	public:
@@ -345,62 +345,61 @@ namespace mh
 		}
 #endif
 	};
-}
 
-inline constexpr bool operator==(const mh::uint128& lhs, const mh::uint128& rhs)
-{
-	return lhs.get_u64<0>() == rhs.get_u64<0>() && lhs.get_u64<1>() == rhs.get_u64<1>();
-}
-inline constexpr bool operator!=(const mh::uint128& lhs, const mh::uint128& rhs)
-{
-	return !(lhs == rhs);
-}
+	inline constexpr bool operator==(const mh::uint128& lhs, const mh::uint128& rhs)
+	{
+		return lhs.get_u64<0>() == rhs.get_u64<0>() && lhs.get_u64<1>() == rhs.get_u64<1>();
+	}
+	inline constexpr bool operator!=(const mh::uint128& lhs, const mh::uint128& rhs)
+	{
+		return !(lhs == rhs);
+	}
 
 #if (__cpp_impl_three_way_comparison >= 201907)
-inline constexpr std::strong_ordering operator<=>(
-	const mh::uint128& lhs, const mh::uint128& rhs)
-{
+	inline constexpr std::strong_ordering operator<=>(
+		const mh::uint128& lhs, const mh::uint128& rhs)
+	{
 #ifdef MH_UINT128_ENABLE_PLATFORM_UINT128
 		return lhs.get_u128() <=> rhs.get_u128();
 #else
-	if (auto result = lhs.get_u64<1>() <=> rhs.get_u64<1>(); std::is_neq(result))
-		return result;
+		if (auto result = lhs.get_u64<1>() <=> rhs.get_u64<1>(); std::is_neq(result))
+			return result;
 
-	return lhs.get_u64<0>() <=> rhs.get_u64<0>();
-#endif
-}
-
-template<typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-constexpr std::strong_ordering operator<=>(const mh::uint128& lhs, T rhs)
-{
-	if (!mh::detail::uint128_hpp::is_constant_evaluated())
-	{
-#ifdef MH_UINT128_ENABLE_PLATFORM_UINT128
-		return lhs.u128 <=> mh::detail::uint128_hpp::platform_uint128_t(rhs);
+		return lhs.get_u64<0>() <=> rhs.get_u64<0>();
 #endif
 	}
 
-	if (auto result = lhs.get_u64<1>() <=> 0; std::is_neq(result))
-		return result;
-
-	return lhs.get_u64<0>() <=> rhs;
-}
-
-template<typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-constexpr std::strong_ordering operator<=>(T lhs, const mh::uint128& rhs)
-{
-	if (!mh::detail::uint128_hpp::is_constant_evaluated())
+	template<typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
+	constexpr std::strong_ordering operator<=>(const mh::uint128& lhs, T rhs)
 	{
+		if (!mh::detail::uint128_hpp::is_constant_evaluated())
+		{
 #ifdef MH_UINT128_ENABLE_PLATFORM_UINT128
-		return mh::detail::uint128_hpp::platform_uint128_t(lhs) <=> rhs.u128;
+			return lhs.u128 <=> mh::detail::uint128_hpp::platform_uint128_t(rhs);
 #endif
+		}
+
+		if (auto result = lhs.get_u64<1>() <=> 0; std::is_neq(result))
+			return result;
+
+		return lhs.get_u64<0>() <=> rhs;
 	}
 
-	if (auto result = 0 <=> rhs.get_u64<1>(); std::is_neq(result))
-		return result;
+	template<typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
+	constexpr std::strong_ordering operator<=>(T lhs, const mh::uint128& rhs)
+	{
+		if (!mh::detail::uint128_hpp::is_constant_evaluated())
+		{
+#ifdef MH_UINT128_ENABLE_PLATFORM_UINT128
+			return mh::detail::uint128_hpp::platform_uint128_t(lhs) <=> rhs.u128;
+#endif
+		}
 
-	return lhs <=> rhs.get_u64<0>();
-}
+		if (auto result = 0 <=> rhs.get_u64<1>(); std::is_neq(result))
+			return result;
+
+		return lhs <=> rhs.get_u64<0>();
+	}
 #else
 	template<typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
 	constexpr bool operator<(const mh::uint128& lhs, T rhs)
@@ -419,129 +418,130 @@ constexpr std::strong_ordering operator<=>(T lhs, const mh::uint128& rhs)
 	}
 #endif
 
-template<typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-constexpr bool operator==(const mh::uint128& lhs, T rhs)
-{
-	if constexpr (sizeof(T) <= sizeof(uint64_t))
-		return !lhs.get_u64<1>() && lhs.get_u64<0>() == rhs;
-	else
-		return lhs == mh::uint128(rhs);
-}
-template<typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-constexpr bool operator==(T lhs, const mh::uint128& rhs)
-{
-	return rhs == lhs;
-}
+	template<typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
+	constexpr bool operator==(const mh::uint128& lhs, T rhs)
+	{
+		if constexpr (sizeof(T) <= sizeof(uint64_t))
+			return !lhs.get_u64<1>() && lhs.get_u64<0>() == rhs;
+		else
+			return lhs == mh::uint128(rhs);
+	}
+	template<typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
+	constexpr bool operator==(T lhs, const mh::uint128& rhs)
+	{
+		return rhs == lhs;
+	}
 
-template<typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-constexpr bool operator!=(const mh::uint128& lhs, T rhs)
-{
-	return !(lhs == rhs);
-}
-template<typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-constexpr bool operator!=(T lhs, const mh::uint128& rhs)
-{
-	return !(lhs == rhs);
-}
+	template<typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
+	constexpr bool operator!=(const mh::uint128& lhs, T rhs)
+	{
+		return !(lhs == rhs);
+	}
+	template<typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
+	constexpr bool operator!=(T lhs, const mh::uint128& rhs)
+	{
+		return !(lhs == rhs);
+	}
 
-template<typename CharT, typename Traits>
-std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& os, const mh::uint128& rhs)
-{
-	return os << '['
-		<< std::hex << rhs.template get_u64<1>() << '|'
-		<< std::hex << rhs.template get_u64<0>() << ']';
-}
+	template<typename CharT, typename Traits>
+	std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& os, const mh::uint128& rhs)
+	{
+		return os << '['
+			<< std::hex << rhs.template get_u64<1>() << '|'
+			<< std::hex << rhs.template get_u64<0>() << ']';
+	}
 
-inline constexpr mh::uint128 mh::uint128::operator/(uint64_t divisor) const
-{
-	uint128 quotient;
+	inline constexpr mh::uint128 mh::uint128::operator/(uint64_t divisor) const
+	{
+		uint128 quotient;
 
 #ifdef MH_UINT128_ENABLE_PLATFORM_UINT128
-	quotient.set_u128(get_u128() / divisor);
+		quotient.set_u128(get_u128() / divisor);
 #else
-	// It's slow, but it works
-	if (get_u64<1>() == 0)
-	{
-		quotient.set_u64<0>(get_u64<0>() / divisor);
-	}
-	else if (*this >= divisor)
-	{
-		uint64_t remainder64 = get_u64<1>() % divisor;
-		quotient.set_u64<1>(get_u64<1>() / divisor);
-		uint64_t quotientLow = 0;
-
-		uint64_t buffer = get_u64<0>();
-
-		const uint8_t skip = remainder64 ? 0 : detail::uint128_hpp::countl_zero(buffer);
-		buffer <<= skip;
-		uint8_t count = 64 - skip;
-
-		const auto print_bin = [](uint64_t val) -> const char*
+		// It's slow, but it works
+		if (get_u64<1>() == 0)
 		{
-			for (int i = 0; i < 64; i++)
-				std::cerr << ( (val & (uint64_t(1) << (63 - i))) ? '1' : '_' );
-
-			return "";
-		};
-
-		const auto print_vars = [&]
+			quotient.set_u64<0>(get_u64<0>() / divisor);
+		}
+		else if (*this >= divisor)
 		{
-			detail::uint128_hpp::debug([&]
+			uint64_t remainder64 = get_u64<1>() % divisor;
+			quotient.set_u64<1>(get_u64<1>() / divisor);
+			uint64_t quotientLow = 0;
+
+			uint64_t buffer = get_u64<0>();
+
+			const uint8_t skip = remainder64 ? 0 : detail::uint128_hpp::countl_zero(buffer);
+			buffer <<= skip;
+			uint8_t count = 64 - skip;
+
+			const auto print_bin = [](uint64_t val) -> const char*
 			{
-				std::cerr
-					<< "\nquotient:     " << print_bin(quotientLow)
-					<< "\nbuffer:       " << print_bin(buffer)
-					<< "\nremainder64:  " << print_bin(remainder64)
-					<< "\ndivisor:      " << print_bin(divisor)
-					<< "\n";
-			});
-		};
+				for (int i = 0; i < 64; i++)
+					std::cerr << ((val & (uint64_t(1) << (63 - i))) ? '1' : '_');
 
-		detail::uint128_hpp::debug([]{ std::cerr << "Initial value:\n"; });
-		print_vars();
+				return "";
+			};
 
-		if (divisor & (uint64_t(1) << 63))
-		{
-			while (count--)
+			const auto print_vars = [&]
 			{
-				const uint64_t high_bit = remainder64 & (uint64_t(1) << 63);
-				remainder64 <<= 1;
-				remainder64 |= (buffer >> 63);
-				buffer <<= 1;
-				//quotientLow <<= 1;
+				detail::uint128_hpp::debug([&]
+					{
+						std::cerr
+							<< "\nquotient:     " << print_bin(quotientLow)
+							<< "\nbuffer:       " << print_bin(buffer)
+							<< "\nremainder64:  " << print_bin(remainder64)
+							<< "\ndivisor:      " << print_bin(divisor)
+							<< "\n";
+					});
+			};
 
-				if (high_bit || remainder64 >= divisor)
+			detail::uint128_hpp::debug([] { std::cerr << "Initial value:\n"; });
+			print_vars();
+
+			if (divisor & (uint64_t(1) << 63))
+			{
+				while (count--)
 				{
-					remainder64 -= divisor;
-					quotientLow |= uint64_t(1) << count;
+					const uint64_t high_bit = remainder64 & (uint64_t(1) << 63);
+					remainder64 <<= 1;
+					remainder64 |= (buffer >> 63);
+					buffer <<= 1;
+					//quotientLow <<= 1;
+
+					if (high_bit || remainder64 >= divisor)
+					{
+						remainder64 -= divisor;
+						quotientLow |= uint64_t(1) << count;
+					}
 				}
 			}
-		}
-		else
-		{
-			while (count--)
+			else
 			{
-				remainder64 <<= 1;
-				remainder64 |= (buffer >> 63);
-				buffer <<= 1;
-				//quotientLow <<= 1;
-
-				if (remainder64 >= divisor)
+				while (count--)
 				{
-					detail::uint128_hpp::debug([&]{ std::cerr << remainder64 << " >= " << divisor << '\n'; });
-					//const auto test = remainder64 >= divisor;
-					remainder64 -= divisor;
-					quotientLow |= uint64_t(1) << count;
-				}
+					remainder64 <<= 1;
+					remainder64 |= (buffer >> 63);
+					buffer <<= 1;
+					//quotientLow <<= 1;
 
+					if (remainder64 >= divisor)
+					{
+						detail::uint128_hpp::debug([&] { std::cerr << remainder64 << " >= " << divisor << '\n'; });
+						//const auto test = remainder64 >= divisor;
+						remainder64 -= divisor;
+						quotientLow |= uint64_t(1) << count;
+					}
+
+					print_vars();
+				}
 				print_vars();
 			}
-			print_vars();
-		}
 
-		quotient.set_u64<0>(quotientLow);
-	}
+			quotient.set_u64<0>(quotientLow);
+		}
 #endif
 
-	return quotient;
+		return quotient;
+	}
 }
