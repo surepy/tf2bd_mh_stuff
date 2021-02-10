@@ -4,13 +4,15 @@
 
 #include <string_view>
 #include <tuple>
-#include <typeinfo>
 
 namespace mh
 {
 	template<typename TStruct, typename TMember>
 	struct struct_member_info
 	{
+		using struct_type = TStruct;
+		using value_type = TMember;
+
 		std::string_view name;
 		TStruct& obj;
 		TMember& value;
