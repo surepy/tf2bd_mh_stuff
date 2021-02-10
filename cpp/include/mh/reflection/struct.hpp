@@ -1,5 +1,7 @@
 #pragma once
 
+#if (__cpp_concepts >= 201907) || (_MSC_VER >= 1928)
+
 #include <string_view>
 #include <tuple>
 #include <typeinfo>
@@ -94,3 +96,5 @@ namespace mh
 #define MH_STRUCT_REFLECT_END() \
 		} \
 	};
+
+#endif
