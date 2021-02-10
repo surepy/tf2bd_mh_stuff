@@ -83,20 +83,21 @@ namespace mh
 #if MH_FORMATTER != MH_FORMATTER_NONE
 		template<typename... TArgs>
 		auto fmt(const view_type& fmtStr, const TArgs&... args) ->
-			decltype(mh::format_to_n((CharT*)nullptr, max_size(), fmtStr, args...), size_t{})
+			decltype(mh::format_to_n((CharT*)nullptr, max_size(), fmtStr, args...), *this)
 		{
 			const auto result = mh::format_to_n(m_String.data() + m_Length, max_size() - m_Length, fmtStr, args...);
 			m_Length = result.out - m_String.data();
 			assert(m_Length <= max_size());
 			m_String[m_Length] = value_type(0);
-			return m_Length;
+			return *this;
 		}
 #endif
 
-		constexpr void clear()
+		constexpr this_type& clear()
 		{
 			m_Length = 0;
 			m_String[0] = 0;
+			return *this;
 		}
 
 		constexpr this_type& operator=(const view_type& rhs)
