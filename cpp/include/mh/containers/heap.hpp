@@ -58,6 +58,9 @@ namespace mh
 
 	private:
 		TContainer m_Container;
-		[[no_unique_address]] TComparator m_Comparator{};
+#if __has_cpp_attribute(no_unique_address)
+		[[no_unique_address]]
+#endif
+		TComparator m_Comparator{};
 	};
 }
