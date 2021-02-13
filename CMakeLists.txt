@@ -68,6 +68,7 @@ set(MH_STUFF_SOURCES
 	"cpp/include/mh/io/file.hpp"
 	"cpp/include/mh/io/getopt.hpp"
 
+	"cpp/include/mh/math/angles.hpp"
 	"cpp/include/mh/math/interpolation.hpp"
 	"cpp/include/mh/math/uint128.hpp"
 
