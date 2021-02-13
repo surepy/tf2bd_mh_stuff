@@ -15,7 +15,6 @@ MH_COMPILE_LIBRARY_INLINE void mh::get_current_thread_stack_range(void*& lower, 
 	lower = (void*)tempLower;
 	upper = (void*)tempUpper;
 }
-#endif
 
 MH_COMPILE_LIBRARY_INLINE bool mh::is_variable_on_current_stack(const void* var)
 {
@@ -26,3 +25,4 @@ MH_COMPILE_LIBRARY_INLINE bool mh::is_variable_on_current_stack(const void* var)
 	assert(lower < upper);
 	return var >= lower && var <= upper;
 }
+#endif

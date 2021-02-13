@@ -4,6 +4,7 @@
 
 namespace mh
 {
+#ifdef _WIN32
 	// Gets the upper and lower bounds of the current thread's stack
 	void get_current_thread_stack_range(void*& lower, void*& upper);
 
@@ -15,6 +16,7 @@ namespace mh
 	{
 		return is_variable_on_current_stack((const void*)&var);
 	}
+#endif
 }
 
 #ifndef MH_COMPILE_LIBRARY
