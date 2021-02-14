@@ -255,6 +255,7 @@ namespace mh
 		void await_resume()
 		{
 			assert(is_ready());
+			rethrow_if_exception();
 		}
 	};
 
