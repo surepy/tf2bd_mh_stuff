@@ -159,6 +159,12 @@ target_compile_options(mh_stuff ${MH_PUBLIC_OR_INTERFACE} ${COROUTINES_FLAGS})
 target_include_directories(mh_stuff ${MH_PUBLIC_OR_INTERFACE} "cpp/include")
 target_compile_features(mh_stuff ${MH_PUBLIC_OR_INTERFACE} "cxx_std_20")
 
+if (MSVC)
+	# There is a bug in visual studio that prevents intellisense from realizing
+	# /std:c++latest is on the command line if you only use target_compile_features(cxx_std_20)
+	target_compile_options(mh_stuff ${MH_PUBLIC_OR_INTERFACE} "/std:c++latest")
+endif()
+
 if (CMAKE_CXX_COMPILER_ID MATCHES GNU OR CMAKE_CXX_COMPILER_ID MATCHES Clang)
 	target_compile_options(mh_stuff ${MH_PUBLIC_OR_INTERFACE} -pthread)
 	target_link_options(mh_stuff ${MH_PUBLIC_OR_INTERFACE} -pthread)
