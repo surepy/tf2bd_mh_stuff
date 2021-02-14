@@ -1,0 +1,8 @@
+{
+	"name": "mh-stuff",
+	"version-string": "",
+	"dependencies": [
+		"catch2",
+		"fmt"
+	]
+}

@@ -1,5 +1,5 @@
 #include "mh/text/memstream.hpp"
-#include "catch2/repo/single_include/catch2/catch.hpp"
+#include <catch2/catch.hpp>
 
 #include <cstring>
 

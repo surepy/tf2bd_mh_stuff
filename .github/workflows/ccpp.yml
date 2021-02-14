@@ -55,6 +55,10 @@ jobs:
         sudo apt install ${{ matrix.compiler.exe }} ${{ matrix.compiler.deps }} ninja-build -y
         sudo pip3 install gcovr
 
+    - uses: lukka/run-vcpkg@v7
+      with:
+        setupOnly: true
+
     # - name: Run tests
     #   working-directory: ./test
     #   run: make -j`grep -c ^processor /proc/cpuinfo` ${{ matrix.compiler }}_test_output.txt
@@ -67,7 +71,12 @@ jobs:
         cd build
 
         cmake --version
-        cmake -DMH_STUFF_COMPILE_LIBRARY=${{ matrix.MH_STUFF_COMPILE_LIBRARY }} ../ -G Ninja
+
+        cmake -G Ninja \
+          -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" \
+          -DMH_STUFF_COMPILE_LIBRARY=${{ matrix.MH_STUFF_COMPILE_LIBRARY }} \
+          ../
+
         cmake --build .
 
         ctest --version

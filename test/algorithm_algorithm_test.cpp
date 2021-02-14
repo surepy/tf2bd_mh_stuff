@@ -1,5 +1,5 @@
 #include "mh/algorithm/algorithm.hpp"
-#include "catch2/repo/single_include/catch2/catch.hpp"
+#include <catch2/catch.hpp>
 
 #include <string>
 #include <vector>
