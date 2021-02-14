@@ -38,6 +38,8 @@ jobs:
             deps: ""
 
     steps:
+    - uses: actions/checkout@v2.3.4
+
     - uses: lukka/run-vcpkg@v7
       with:
         setupOnly: true
@@ -102,6 +104,8 @@ jobs:
         MH_STUFF_COMPILE_LIBRARY: [true, false]
 
     steps:
+    - uses: actions/checkout@v2.3.4
+
     - uses: lukka/run-vcpkg@v7
       with:
         setupOnly: true
