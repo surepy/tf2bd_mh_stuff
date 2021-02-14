@@ -58,6 +58,7 @@ jobs:
     - uses: lukka/run-vcpkg@v7
       with:
         setupOnly: true
+        vcpkgGitCommitId: f79c681fc2b42f9c7c5024459b5a867d56ac6123
 
     # - name: Run tests
     #   working-directory: ./test
