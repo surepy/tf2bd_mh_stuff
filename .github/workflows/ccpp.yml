@@ -6,6 +6,9 @@ defaults:
   run:
     shell: bash
 
+env:
+  VCPKG_GIT_COMMIT_ID: f79c681fc2b42f9c7c5024459b5a867d56ac6123
+
 jobs:
   ci-linux:
     # name: ${{ matrix.compiler }}
@@ -35,9 +38,10 @@ jobs:
             deps: ""
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: lukka/run-vcpkg@v7
       with:
-        submodules: recursive
+        setupOnly: true
+        vcpkgGitCommitId: ${{ env.VCPKG_GIT_COMMIT_ID }}
 
     - name: Add repos
       run: |
@@ -54,11 +58,6 @@ jobs:
         sudo apt update
         sudo apt install ${{ matrix.compiler.exe }} ${{ matrix.compiler.deps }} ninja-build -y
         sudo pip3 install gcovr
-
-    - uses: lukka/run-vcpkg@v7
-      with:
-        setupOnly: true
-        vcpkgGitCommitId: f79c681fc2b42f9c7c5024459b5a867d56ac6123
 
     # - name: Run tests
     #   working-directory: ./test
@@ -103,9 +102,10 @@ jobs:
         MH_STUFF_COMPILE_LIBRARY: [true, false]
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: lukka/run-vcpkg@v7
       with:
-        submodules: recursive
+        setupOnly: true
+        vcpkgGitCommitId: ${{ env.VCPKG_GIT_COMMIT_ID }}
 
     - uses: seanmiddleditch/gha-setup-ninja@v3
     - name: Setup compiler paths
@@ -115,6 +115,11 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake -DMH_STUFF_COMPILE_LIBRARY=${{ matrix.MH_STUFF_COMPILE_LIBRARY }} ../ -G Ninja
+
+        cmake -G Ninja \
+          -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" \
+          -DMH_STUFF_COMPILE_LIBRARY=${{ matrix.MH_STUFF_COMPILE_LIBRARY }} \
+          ../
+
         cmake --build .
         ctest --output-on-failure
