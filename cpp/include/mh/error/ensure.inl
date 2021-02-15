@@ -8,10 +8,8 @@
 
 #ifdef MH_COMPILE_LIBRARY
 #include "mh/error/ensure.hpp"
-#endif
-
-#ifndef MH_COMPILE_LIBRARY_INLINE
-#define MH_COMPILE_LIBRARY_INLINE
+#else
+#define MH_COMPILE_LIBRARY_INLINE inline
 #endif
 
 namespace mh::detail::ensure_hpp
