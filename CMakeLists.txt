@@ -163,7 +163,7 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES Clang)
 	target_link_options(mh_stuff ${MH_PUBLIC_OR_INTERFACE} -stdlib=libc++)
 	target_link_libraries(mh_stuff ${MH_PUBLIC_OR_INTERFACE} c++abi)
 
-	if ((CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "8") AND (CMAKE_CXX_COMPILER_VERISION VERSION_LESS "9"))
+	if ((CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "8") AND (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "9"))
 		message("CMAKE_CXX_COMPILER_VERSION = ${CMAKE_CXX_COMPILER_VERSION}, linking with c++fs")
 		target_link_libraries(mh_stuff ${MH_PUBLIC_OR_INTERFACE} c++fs)
 	endif()
