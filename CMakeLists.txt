@@ -174,7 +174,7 @@ if (FCONCEPTS_FLAG)
 	target_compile_options(mh_stuff ${MH_PUBLIC_OR_INTERFACE} -fconcepts)
 endif()
 
-check_cxx_unicode_support(SUPPORTS_UNICODE)
+check_cxx_unicode_support(SUPPORTS_UNICODE mh_stuff)
 if (NOT SUPPORTS_UNICODE)
 	target_compile_definitions(mh_stuff ${MH_PUBLIC_OR_INTERFACE} "MH_BROKEN_UNICODE")
 endif()

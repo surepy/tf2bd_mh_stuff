@@ -2,21 +2,33 @@ cmake_minimum_required(VERSION 3.16.3)
 
 include(CheckCXXSourceCompiles)
 
-function(check_cxx_unicode_support IS_SUPPORTED_OUT)
+function(check_cxx_unicode_support IS_SUPPORTED_OUT target)
 
-	get_directory_property(DIRECTORY_CXX_OPTS COMPILE_OPTIONS)
-	get_directory_property(DIRECTORY_LINK_OPTS LINK_OPTIONS)
-	message("DIRECTORY_CXX_OPTS = ${DIRECTORY_CXX_OPTS}, DIRECTORY_LINK_OPTS = ${DIRECTORY_LINK_OPTS}")
+	get_target_property(TARGET_CXX_OPTS ${target} COMPILE_OPTIONS)
+
+	get_target_property(TARGET_TYPE ${target} TYPE)
+
+	if (TARGET_TYPE STREQUAL "STATIC_LIBRARY")
+		get_target_property(TARGET_LINK_OPTS ${target} STATIC_LIBRARY_OPTIONS)
+	else()
+		get_target_property(TARGET_LINK_OPTS ${target} LINK_OPTIONS)
+	endif()
+
+	if (TARGET_LINK_OPTS STREQUAL "TARGET_LINK_OPTS-NOTFOUND")
+		set(TARGET_LINK_OPTS "")
+	endif()
+
+	message("TARGET_TYPE = ${TARGET_TYPE}, TARGET_CXX_OPTS = ${TARGET_CXX_OPTS}, TARGET_LINK_OPTS = ${TARGET_LINK_OPTS}")
 
 	try_compile(IS_SUPPORTED
 		${CMAKE_CURRENT_BINARY_DIR}
 		"${PROJECT_SOURCE_DIR}/cmake/CheckUnicodeSupport.cpp"
 		CXX_STANDARD 20
-		COMPILE_DEFINITIONS ${DIRECTORY_CXX_OPTS}
-		LINK_OPTIONS ${DIRECTORY_LINK_OPTS}
+		COMPILE_DEFINITIONS "${TARGET_CXX_OPTS}"
+		LINK_OPTIONS "${TARGET_LINK_OPTS}"
 		OUTPUT_VARIABLE TRY_COMPILE_OUTPUT)
 
-	message("check_cxx_unicode_support ${IS_SUPPORTED_OUT}=${IS_SUPPORTED}")
+	message("check_cxx_unicode_support ${IS_SUPPORTED_OUT} = ${IS_SUPPORTED}")
 	if (NOT IS_SUPPORTED)
 		message("check_cxx_unicode_support output = ${TRY_COMPILE_OUTPUT}")
 	endif()
