@@ -7,12 +7,6 @@ if (MH_STUFF_BUILD_SHARED_LIBS)
 	set(BUILD_SHARED_LIBS ON)
 endif()
 
-# build with correct stdlib for complier
-if (CMAKE_CXX_COMPILER_ID MATCHES Clang)
-	add_compile_options(-stdlib=libc++)
-	add_link_options(-stdlib=libc++ -lc++abi)
-endif()
-
 include("cmake/CheckCoroutineSupport.cmake")
 include("cmake/CheckUnicodeSupport.cmake")
 include(CheckCXXCompilerFlag)
@@ -21,11 +15,13 @@ include(GenerateExportHeader)
 option(MH_STUFF_COMPILE_LIBRARY "True to compile some code into to a static library for less overhead" ON)
 if (MH_STUFF_COMPILE_LIBRARY)
 	set(MH_PUBLIC_OR_INTERFACE "PUBLIC")
+	set(MH_INTERFACE_OR_EMPTY "")
 else()
 	set(MH_PUBLIC_OR_INTERFACE "INTERFACE")
+	set(MH_INTERFACE_OR_EMPTY "INTERFACE")
 endif()
 
-set(MH_STUFF_SOURCES
+add_library(mh_stuff ${MH_INTERFACE_OR_EMPTY}
 	"cpp/include/mh/algorithm/algorithm.hpp"
 	"cpp/include/mh/algorithm/multi_compare.hpp"
 
@@ -112,8 +108,7 @@ set(MH_STUFF_SOURCES
 )
 
 if (MH_STUFF_COMPILE_LIBRARY)
-	add_library(mh_stuff
-		${MH_STUFF_SOURCES}
+	target_sources(mh_stuff PRIVATE
 		"cpp/src/io/file.cpp"
 		"cpp/src/text/case_insensitive_string.cpp"
 		"cpp/src/text/string_insertion.cpp"
@@ -145,10 +140,6 @@ if (MH_STUFF_COMPILE_LIBRARY)
 	target_precompile_headers(mh_stuff ${MH_PUBLIC_OR_INTERFACE} "${CMAKE_CURRENT_BINARY_DIR}/mh_stuff_export.h")
 
 else()
-	add_library(mh_stuff INTERFACE
-		${MH_STUFF_SOURCES}
-	)
-
 	target_compile_definitions(mh_stuff INTERFACE
 		"MH_COMPILE_LIBRARY_INLINE=inline"
 		"MH_STUFF_API="
@@ -165,6 +156,12 @@ if (MSVC)
 	# There is a bug in visual studio that prevents intellisense from realizing
 	# /std:c++latest is on the command line if you only use target_compile_features(cxx_std_20)
 	target_compile_options(mh_stuff ${MH_PUBLIC_OR_INTERFACE} "/std:c++latest")
+elseif (CMAKE_CXX_COMPILER_ID MATCHES GNU)
+	target_link_libraries(mh_stuff ${MH_PUBLIC_OR_INTERFACE} stdc++fs)
+elseif (CMAKE_CXX_COMPILER_ID MATCHES Clang)
+	target_compile_options(mh_stuff ${MH_PUBLIC_OR_INTERFACE} -stdlib=libc++)
+	target_link_options(mh_stuff ${MH_PUBLIC_OR_INTERFACE} -stdlib=libc++)
+	target_link_libraries(mh_stuff ${MH_PUBLIC_OR_INTERFACE} c++fs c++abi)
 endif()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES GNU OR CMAKE_CXX_COMPILER_ID MATCHES Clang)
