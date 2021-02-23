@@ -66,6 +66,8 @@ set(MH_STUFF_SOURCES
 	"cpp/include/mh/error/status.hpp"
 
 	"cpp/include/mh/io/file.hpp"
+	"cpp/include/mh/io/filesystem_helpers.hpp"
+	"cpp/include/mh/io/filesystem_helpers.inl"
 	"cpp/include/mh/io/getopt.hpp"
 
 	"cpp/include/mh/math/angles.hpp"
