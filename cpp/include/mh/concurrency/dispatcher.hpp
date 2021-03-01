@@ -62,7 +62,7 @@ namespace mh
 		template<typename TRep, typename TPeriod>
 		delay_task_t co_delay_for(std::chrono::duration<TRep, TPeriod> duration)
 		{
-			return co_delay_until(std::chrono::duration_cast<clock_t::duration>(duration));
+			return co_delay_until(clock_t::now() + std::chrono::duration_cast<clock_t::duration>(duration));
 		}
 
 		MH_STUFF_API size_t run();
