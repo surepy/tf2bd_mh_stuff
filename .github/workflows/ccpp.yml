@@ -49,15 +49,15 @@ jobs:
       run: |
         sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 15CF4D18AF4F7421
         sudo add-apt-repository ppa:ubuntu-toolchain-r/test
-        echo "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic main" | sudo tee /etc/apt/sources.list.d/llvm.list
-        echo "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-10 main" | sudo tee -a /etc/apt/sources.list.d/llvm.list
-        echo "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-11 main" | sudo tee -a /etc/apt/sources.list.d/llvm.list
+        echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal main" | sudo tee /etc/apt/sources.list.d/llvm.list
+        echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-11 main" | sudo tee -a /etc/apt/sources.list.d/llvm.list
+        echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-12 main" | sudo tee -a /etc/apt/sources.list.d/llvm.list
+        sudo apt update
 
     - name: Install compiler
       run: |
         # sudo rm -rf /var/lib/apt/lists/*
         # sudo apt clean
-        sudo apt update
         sudo apt install ${{ matrix.compiler.exe }} ${{ matrix.compiler.deps }} ninja-build -y
         sudo pip3 install gcovr
 
