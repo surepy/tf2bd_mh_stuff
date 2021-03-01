@@ -23,13 +23,13 @@ jobs:
           - exe: clang++-11
             deps: clang-11 libc++-11-dev libc++abi-11-dev
           - exe: clang++-10
-            deps: clang++-10 libc++-10-dev libc++abi-10-dev
+            deps: clang-10 libc++-10-dev libc++abi-10-dev
           - exe: clang++-9
-            deps: clang++-9 libc++-9-dev libc++abi-9-dev
-          - exe: clang++-8
-            deps: clang++-8 libc++-8-dev libc++abi-8-dev
+            deps: clang-9 libc++-9-dev libc++abi-9-dev
+          - exe: clang-8
+            deps: clang-8 libc++-8-dev libc++abi-8-dev
           - exe: clang++-7
-            deps: clang++-7 libc++-7-dev libc++abi-7-dev
+            deps: clang-7 libc++-7-dev libc++abi-7-dev
           - exe: g++-10
             deps: ""
           - exe: g++-9
