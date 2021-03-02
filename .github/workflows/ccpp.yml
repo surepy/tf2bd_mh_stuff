@@ -45,7 +45,7 @@ jobs:
     - uses: NuGet/setup-nuget@v1.0.5
     - name: Setup NuGet Credentials
       run: >
-        ${{ env.NUGET }} sources add
+        nuget sources add
         -source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
         -storepasswordincleartext
         -name "GitHub"
@@ -123,7 +123,7 @@ jobs:
     - uses: NuGet/setup-nuget@v1.0.5
     - name: Setup NuGet Credentials
       run: >
-        ${{ env.NUGET }} sources add
+        nuget sources add
         -source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
         -storepasswordincleartext
         -name "GitHub"
