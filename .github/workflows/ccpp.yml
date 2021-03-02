@@ -8,6 +8,8 @@ defaults:
 
 env:
   VCPKG_GIT_COMMIT_ID: f79c681fc2b42f9c7c5024459b5a867d56ac6123
+  VCPKG_BINARY_SOURCES: 'clear;nuget,GitHub,readwrite'
+  VCPKG_CACHE_VERSION: 1
 
 jobs:
   ci-linux:
@@ -40,10 +42,22 @@ jobs:
     steps:
     - uses: actions/checkout@v2.3.4
 
+    - uses: NuGet/setup-nuget@v1.0.5
+    - name: Setup NuGet Credentials
+      run: >
+        NuGet sources add
+        -source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+        -storepasswordincleartext
+        -name "GitHub"
+        -username "${{ github.repository_owner }}"
+        -password "${{ secrets.GITHUB_TOKEN }}"
+
     - uses: lukka/run-vcpkg@v7
+      id: runvcpkg
       with:
         setupOnly: true
         vcpkgGitCommitId: ${{ env.VCPKG_GIT_COMMIT_ID }}
+        appendedCacheKey: ${{ env.VCPKG_CACHE_VERSION }}
 
     - name: Add repos
       run: |
@@ -106,10 +120,21 @@ jobs:
     steps:
     - uses: actions/checkout@v2.3.4
 
+    - uses: NuGet/setup-nuget@v1.0.5
+    - name: Setup NuGet Credentials
+      run: >
+        NuGet sources add
+        -source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+        -storepasswordincleartext
+        -name "GitHub"
+        -username "${{ github.repository_owner }}"
+        -password "${{ secrets.GITHUB_TOKEN }}"
+
     - uses: lukka/run-vcpkg@v7
       with:
         setupOnly: true
         vcpkgGitCommitId: ${{ env.VCPKG_GIT_COMMIT_ID }}
+        appendedCacheKey: ${{ env.VCPKG_CACHE_VERSION }}
 
     - uses: seanmiddleditch/gha-setup-ninja@v3
     - name: Setup compiler paths
