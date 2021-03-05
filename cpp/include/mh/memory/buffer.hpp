@@ -4,37 +4,34 @@
 #include <compare>
 #endif
 #include <cstddef>
-#include <cstdlib>
-#include <memory>
 
 namespace mh
 {
 	class buffer final
 	{
 	public:
-		buffer() = default;
-		buffer(buffer&& other);
-		explicit buffer(const buffer& other);
-		explicit buffer(size_t initialSize);
-		buffer(const std::byte* ptr, size_t bytes);
+		MH_STUFF_API buffer() noexcept;
+		MH_STUFF_API buffer(buffer&& other) noexcept;
+		MH_STUFF_API explicit buffer(const buffer& other);
+		MH_STUFF_API explicit buffer(size_t initialSize);
+		MH_STUFF_API buffer(const std::byte* ptr, size_t bytes);
+		MH_STUFF_API ~buffer() noexcept;
 
-		void resize(size_t newSize);
-		bool reserve(size_t minSize);
+		MH_STUFF_API void resize(size_t newSize);
+		MH_STUFF_API bool reserve(size_t minSize);
 
 #if (__cpp_lib_three_way_comparison >= 201907) && (__cpp_impl_three_way_comparison >= 201907)
-		std::strong_ordering operator<=>(const buffer& other) const;
+		MH_STUFF_API std::strong_ordering operator<=>(const buffer& other) const;
 #endif
 
-		void clear();
+		MH_STUFF_API void clear() noexcept;
 		size_t size() const { return m_Size; }
 
-		std::byte* data() { return m_Data.get(); }
-		const std::byte* data() const { return m_Data.get(); }
+		std::byte* data() { return m_Data; }
+		const std::byte* data() const { return m_Data; }
 
 	private:
-		struct free_deleter final { void operator()(std::byte* p) { free(p); } };
-
-		std::unique_ptr<std::byte, free_deleter> m_Data;
+		std::byte* m_Data = nullptr;
 		size_t m_Size = 0;
 	};
 }

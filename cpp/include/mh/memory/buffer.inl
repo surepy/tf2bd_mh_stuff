@@ -1,15 +1,16 @@
+#include <cstdlib>
 #include <cstring>
 #include <stdexcept>
 
 #ifdef MH_COMPILE_LIBRARY
 #include "mh/memory/buffer.hpp"
-#endif
-
-#ifndef MH_COMPILE_LIBRARY_INLINE
+#else
 #define MH_COMPILE_LIBRARY_INLINE inline
 #endif
 
-MH_COMPILE_LIBRARY_INLINE mh::buffer::buffer(buffer&& other) :
+MH_COMPILE_LIBRARY_INLINE mh::buffer::buffer() noexcept = default;
+
+MH_COMPILE_LIBRARY_INLINE mh::buffer::buffer(buffer&& other) noexcept :
 	m_Data(std::move(other.m_Data)),
 	m_Size(std::exchange(other.m_Size, 0))
 {
@@ -31,14 +32,18 @@ MH_COMPILE_LIBRARY_INLINE mh::buffer::buffer(const std::byte* ptr, size_t bytes)
 	std::memcpy(data(), ptr, bytes);
 }
 
+MH_COMPILE_LIBRARY_INLINE mh::buffer::~buffer() noexcept
+{
+	clear();
+}
+
 MH_COMPILE_LIBRARY_INLINE void mh::buffer::resize(size_t newSize)
 {
-	const auto newPtr = std::realloc(m_Data.get(), newSize);
+	void* newPtr = std::realloc(m_Data, newSize);
 	if (!newPtr)
 		throw std::runtime_error("Failed to realloc");
 
-	m_Data.release();
-	m_Data.reset(static_cast<std::byte*>(newPtr));
+	m_Data = reinterpret_cast<std::byte*>(newPtr);
 	m_Size = newSize;
 }
 
@@ -69,8 +74,9 @@ MH_COMPILE_LIBRARY_INLINE std::strong_ordering mh::buffer::operator<=>(const buf
 }
 #endif
 
-MH_COMPILE_LIBRARY_INLINE void mh::buffer::clear()
+MH_COMPILE_LIBRARY_INLINE void mh::buffer::clear() noexcept
 {
-	m_Data.reset();
+	std::free(m_Data);
+	m_Data = nullptr;
 	m_Size = 0;
 }
