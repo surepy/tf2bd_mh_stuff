@@ -50,7 +50,6 @@ namespace mh
 	GET_RANDOM_DECL(uint32_t);
 	GET_RANDOM_DECL(int64_t);
 	GET_RANDOM_DECL(uint64_t);
-	template int32_t get_random(int32_t, int32_t);
 
 #undef GET_RANDOM_DECL
 #endif
