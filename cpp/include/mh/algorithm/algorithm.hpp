@@ -31,4 +31,10 @@ namespace mh
 		const auto end = std::end(container);
 		return std::find(std::begin(container), end, value) != end;
 	}
+
+	template<typename Container>
+	inline void erase(Container& container, const typename Container::value_type& value)
+	{
+		container.erase(std::remove(std::begin(container), std::end(container), value), std::end(container));
+	}
 }
