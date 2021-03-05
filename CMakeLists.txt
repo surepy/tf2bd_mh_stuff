@@ -68,6 +68,8 @@ add_library(mh_stuff ${MH_INTERFACE_OR_EMPTY}
 
 	"cpp/include/mh/math/angles.hpp"
 	"cpp/include/mh/math/interpolation.hpp"
+	"cpp/include/mh/math/random.hpp"
+	"cpp/include/mh/math/random.inl"
 	"cpp/include/mh/math/uint128.hpp"
 
 	"cpp/include/mh/memory/buffer.inl"
