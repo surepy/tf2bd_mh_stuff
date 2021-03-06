@@ -197,7 +197,16 @@ endif()
 
 add_library(mh::stuff ALIAS stuff)
 
-if ((CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR) OR BUILD_TESTING)
+if (NOT DEFINED BUILD_TESTING)
+	if (CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
+		set(BUILD_TESTING ON)
+	else()
+		set(BUILD_TESTING OFF)
+	endif()
+	message("BUILD_TESTING not defined, changing to ${BUILD_TESTING}")
+endif()
+
+if (BUILD_TESTING)
 	include(CTest)
 	add_subdirectory("test")
 endif()
