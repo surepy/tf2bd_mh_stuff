@@ -1,6 +1,10 @@
 #pragma once
 
-#if (__cpp_lib_three_way_comparison >= 201907) && (__cpp_impl_three_way_comparison >= 201907)
+#if __has_include(<version>)
+#include <version>
+#endif
+
+#if ((__cpp_lib_three_way_comparison >= 201907) || defined(_MSC_VER)) && (__cpp_impl_three_way_comparison >= 201907)
 #include <compare>
 #endif
 #include <cstddef>
@@ -20,8 +24,8 @@ namespace mh
 		MH_STUFF_API void resize(size_t newSize);
 		MH_STUFF_API bool reserve(size_t minSize);
 
-#if (__cpp_lib_three_way_comparison >= 201907) && (__cpp_impl_three_way_comparison >= 201907)
-		MH_STUFF_API std::strong_ordering operator<=>(const buffer& other) const;
+#if ((__cpp_lib_three_way_comparison >= 201907) || defined(_MSC_VER)) && (__cpp_impl_three_way_comparison >= 201907)
+		MH_STUFF_API std::strong_ordering operator<=>(const mh::buffer& other) const;
 #endif
 
 		MH_STUFF_API void clear() noexcept;
