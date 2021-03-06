@@ -1,8 +1,14 @@
 cmake_minimum_required(VERSION 3.16.3)
 
-project(mh_stuff CXX)
+project(
+	mh_stuff
+	VERSION 1.0
+	DESCRIPTION "stuff that i keep re-writing"
+	HOMEPAGE_URL "https://github.com/PazerOP/stuff"
+	LANGUAGES CXX
+)
 
-option(MH_STUFF_BUILD_SHARED_LIBS "Build mh_stuff as a shared lib" OFF)
+option(MH_STUFF_BUILD_SHARED_LIBS "Build stuff as a shared lib" OFF)
 if (MH_STUFF_BUILD_SHARED_LIBS)
 	set(BUILD_SHARED_LIBS ON)
 endif()
@@ -21,7 +27,7 @@ else()
 	set(MH_INTERFACE_OR_EMPTY "INTERFACE")
 endif()
 
-add_library(mh_stuff ${MH_INTERFACE_OR_EMPTY}
+add_library(stuff ${MH_INTERFACE_OR_EMPTY}
 	"cpp/include/mh/algorithm/algorithm.hpp"
 	"cpp/include/mh/algorithm/multi_compare.hpp"
 
@@ -110,14 +116,14 @@ add_library(mh_stuff ${MH_INTERFACE_OR_EMPTY}
 )
 
 if (MH_STUFF_COMPILE_LIBRARY)
-	target_sources(mh_stuff PRIVATE
+	target_sources(stuff PRIVATE
 		"cpp/src/io/file.cpp"
 		"cpp/src/text/case_insensitive_string.cpp"
 		"cpp/src/text/string_insertion.cpp"
 		"cpp/src/source_location.cpp"
 	)
 
-	target_compile_definitions(mh_stuff ${MH_PUBLIC_OR_INTERFACE}
+	target_compile_definitions(stuff ${MH_PUBLIC_OR_INTERFACE}
 		"MH_COMPILE_LIBRARY"
 		"MH_COMPILE_LIBRARY_INLINE="
 	)
@@ -130,64 +136,93 @@ if (MH_STUFF_COMPILE_LIBRARY)
 	foreach(X IN LISTS MH_INL_FILES)
 		file(APPEND "${CMAKE_CURRENT_BINARY_DIR}/library.cpp" "\n#include \"${X}\"")
 	endforeach()
-	target_sources(mh_stuff PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/library.cpp")
+	target_sources(stuff PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/library.cpp")
 
 	if (MSVC)
-		target_compile_options(mh_stuff PRIVATE /W3 /permissive-)
+		target_compile_options(stuff PRIVATE /W3 /permissive-)
 	endif()
 
-	generate_export_header(mh_stuff
+	generate_export_header(stuff
+		BASE_NAME mh_stuff
 		EXPORT_MACRO_NAME MH_STUFF_API
 	)
-	target_precompile_headers(mh_stuff ${MH_PUBLIC_OR_INTERFACE} "${CMAKE_CURRENT_BINARY_DIR}/mh_stuff_export.h")
+	target_precompile_headers(stuff ${MH_PUBLIC_OR_INTERFACE} "${CMAKE_CURRENT_BINARY_DIR}/mh_stuff_export.h")
 
 else()
-	target_compile_definitions(mh_stuff INTERFACE
+	target_compile_definitions(stuff INTERFACE
 		"MH_COMPILE_LIBRARY_INLINE=inline"
 		"MH_STUFF_API="
 	)
 endif()
 
 check_cxx_coroutine_support(SUPPORTS_COROUTINES COROUTINES_FLAGS)
-target_compile_options(mh_stuff ${MH_PUBLIC_OR_INTERFACE} ${COROUTINES_FLAGS})
+target_compile_options(stuff ${MH_PUBLIC_OR_INTERFACE} ${COROUTINES_FLAGS})
 
-target_include_directories(mh_stuff ${MH_PUBLIC_OR_INTERFACE} "cpp/include")
-target_compile_features(mh_stuff ${MH_PUBLIC_OR_INTERFACE} "cxx_std_20")
+target_include_directories(stuff ${MH_PUBLIC_OR_INTERFACE}
+	"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/cpp/include>"
+	"$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+)
+target_compile_features(stuff ${MH_PUBLIC_OR_INTERFACE} "cxx_std_20")
 
 if (MSVC)
 	# There is a bug in visual studio that prevents intellisense from realizing
 	# /std:c++latest is on the command line if you only use target_compile_features(cxx_std_20)
-	target_compile_options(mh_stuff ${MH_PUBLIC_OR_INTERFACE} "/std:c++latest")
+	target_compile_options(stuff ${MH_PUBLIC_OR_INTERFACE} "/std:c++latest")
 elseif (CMAKE_CXX_COMPILER_ID MATCHES GNU)
-	target_link_libraries(mh_stuff ${MH_PUBLIC_OR_INTERFACE} stdc++fs)
+	target_link_libraries(stuff ${MH_PUBLIC_OR_INTERFACE} stdc++fs)
 elseif (CMAKE_CXX_COMPILER_ID MATCHES Clang)
-	target_compile_options(mh_stuff ${MH_PUBLIC_OR_INTERFACE} -stdlib=libc++)
-	target_link_options(mh_stuff ${MH_PUBLIC_OR_INTERFACE} -stdlib=libc++)
-	target_link_libraries(mh_stuff ${MH_PUBLIC_OR_INTERFACE} c++abi)
+	target_compile_options(stuff ${MH_PUBLIC_OR_INTERFACE} -stdlib=libc++)
+	target_link_options(stuff ${MH_PUBLIC_OR_INTERFACE} -stdlib=libc++)
+	target_link_libraries(stuff ${MH_PUBLIC_OR_INTERFACE} c++abi)
 
 	if ((CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "7") AND (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "9"))
-		target_link_libraries(mh_stuff ${MH_PUBLIC_OR_INTERFACE} c++fs)
+		target_link_libraries(stuff ${MH_PUBLIC_OR_INTERFACE} c++fs)
 	endif()
 endif()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES GNU OR CMAKE_CXX_COMPILER_ID MATCHES Clang)
-	target_compile_options(mh_stuff ${MH_PUBLIC_OR_INTERFACE} -pthread)
-	target_link_options(mh_stuff ${MH_PUBLIC_OR_INTERFACE} -pthread)
+	target_compile_options(stuff ${MH_PUBLIC_OR_INTERFACE} -pthread)
+	target_link_options(stuff ${MH_PUBLIC_OR_INTERFACE} -pthread)
 endif()
 
 check_cxx_compiler_flag(-fconcepts FCONCEPTS_FLAG)
 if (FCONCEPTS_FLAG)
-	target_compile_options(mh_stuff ${MH_PUBLIC_OR_INTERFACE} -fconcepts)
+	target_compile_options(stuff ${MH_PUBLIC_OR_INTERFACE} -fconcepts)
 endif()
 
-check_cxx_unicode_support(SUPPORTS_UNICODE mh_stuff)
+check_cxx_unicode_support(SUPPORTS_UNICODE stuff)
 if (NOT SUPPORTS_UNICODE)
-	target_compile_definitions(mh_stuff ${MH_PUBLIC_OR_INTERFACE} "MH_BROKEN_UNICODE")
+	target_compile_definitions(stuff ${MH_PUBLIC_OR_INTERFACE} "MH_BROKEN_UNICODE")
 endif()
 
-add_library(mh::stuff ALIAS mh_stuff)
+add_library(mh::stuff ALIAS stuff)
 
 if ((CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR) OR BUILD_TESTING)
 	include(CTest)
 	add_subdirectory("test")
 endif()
+
+###########################################
+# "install" is intended for vcpkg support #
+###########################################
+include(CMakePackageConfigHelpers)
+
+configure_package_config_file(
+	cmake/config.cmake.in
+	"${CMAKE_CURRENT_BINARY_DIR}/mh-stuff-config.cmake"
+	INSTALL_DESTINATION "${CMAKE_INSTALL_DATADIR}/mh-stuff"
+)
+
+write_basic_package_version_file(
+	"${CMAKE_CURRENT_BINARY_DIR}/mh-stuff-config-version.cmake"
+	VERSION ${mh_stuff_VERSION}
+	COMPATIBILITY SameMajorVersion
+)
+
+install(TARGETS stuff EXPORT mh_stuff_targets)
+install(DIRECTORY cpp/include/ DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+install(
+	EXPORT mh_stuff_targets
+	NAMESPACE mh::
+	DESTINATION "${CMAKE_INSTALL_DATADIR}/mh-stuff"
+)
