@@ -14,8 +14,8 @@ if (CMAKE_CXX_COMPILER_ID MATCHES Clang)
 endif()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES Clang OR CMAKE_CXX_COMPILER_ID MATCHES GNU)
-	target_compile_options(mh_stuff ${MH_PUBLIC_OR_INTERFACE} --coverage -g)
-	target_link_options(mh_stuff ${MH_PUBLIC_OR_INTERFACE} -lgcov --coverage -g)
+	target_compile_options(stuff ${MH_PUBLIC_OR_INTERFACE} --coverage -g)
+	target_link_options(stuff ${MH_PUBLIC_OR_INTERFACE} -lgcov --coverage -g)
 endif()
 
 function(mh_test name)
