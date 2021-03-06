@@ -217,6 +217,7 @@ endif()
 # "install" is intended for vcpkg support #
 ###########################################
 include(CMakePackageConfigHelpers)
+include(GNUInstallDirs)
 
 configure_package_config_file(
 	cmake/config.cmake.in
@@ -228,6 +229,14 @@ write_basic_package_version_file(
 	"${CMAKE_CURRENT_BINARY_DIR}/mh-stuff-config-version.cmake"
 	VERSION ${mh_stuff_VERSION}
 	COMPATIBILITY SameMajorVersion
+)
+
+install(
+	FILES
+		"${CMAKE_CURRENT_BINARY_DIR}/mh-stuff-config.cmake"
+		"${CMAKE_CURRENT_BINARY_DIR}/mh-stuff-config-version.cmake"
+	DESTINATION
+		"${CMAKE_INSTALL_DATADIR}/mh-stuff"
 )
 
 install(TARGETS stuff EXPORT mh_stuff_targets)
