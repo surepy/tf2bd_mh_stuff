@@ -115,6 +115,8 @@ add_library(stuff ${MH_INTERFACE_OR_EMPTY}
 	"cpp/include/mh/variant.hpp"
 )
 
+set_target_properties(stuff PROPERTIES OUTPUT_NAME "mh_stuff")
+
 if (MH_STUFF_COMPILE_LIBRARY)
 	target_sources(stuff PRIVATE
 		"cpp/src/io/file.cpp"
