@@ -206,6 +206,8 @@ if (NOT DEFINED BUILD_TESTING)
 		set(BUILD_TESTING OFF)
 	endif()
 	message("BUILD_TESTING not defined, changing to ${BUILD_TESTING}")
+else()
+	message("BUILD_TESTING = ${BUILD_TESTING}, not modifying")
 endif()
 
 if (BUILD_TESTING)
