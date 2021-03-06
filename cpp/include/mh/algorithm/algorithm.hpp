@@ -37,4 +37,15 @@ namespace mh
 	{
 		container.erase(std::remove(std::begin(container), std::end(container), value), std::end(container));
 	}
+
+	template<typename Container>
+	inline void sort(Container& container)
+	{
+		return std::sort(std::begin(container), std::end(container));
+	}
+	template<typename Container, typename Compare>
+	inline void sort(Container& container, Compare&& compare)
+	{
+		return std::sort(std::begin(container), std::end(container), std::move(compare));
+	}
 }
