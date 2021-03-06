@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <stdexcept>
+#include <utility>
 
 #ifdef MH_COMPILE_LIBRARY
 #include "mh/memory/buffer.hpp"
@@ -11,7 +12,7 @@
 MH_COMPILE_LIBRARY_INLINE mh::buffer::buffer() noexcept = default;
 
 MH_COMPILE_LIBRARY_INLINE mh::buffer::buffer(buffer&& other) noexcept :
-	m_Data(std::move(other.m_Data)),
+	m_Data(std::exchange(other.m_Data, nullptr)),
 	m_Size(std::exchange(other.m_Size, 0))
 {
 }
