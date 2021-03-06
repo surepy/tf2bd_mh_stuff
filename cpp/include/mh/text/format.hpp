@@ -169,8 +169,9 @@ namespace mh
 	{
 		return vformat(fmtStr, args);
 	}
-	catch (const format_error& e)
+	catch (const format_error& /*e*/)
 	{
+		// Can't print error message from exception because fmt does not handle conversion from char -> wchar_t on its own unfortunately
 		return ::mh::format(MH_FMT_STRING(L"FORMATTING ERROR @ {}: Unable to construct string with fmtstr {}"),
 			L"" __FUNCSIG__, std::quoted(fmtStr));
 	}

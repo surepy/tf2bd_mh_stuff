@@ -121,7 +121,10 @@ struct mh::formatter<mh::source_location, CharT>
 				else if (*it == '}')
 					return it;
 				else
-					throw format_error(mh::format("Unexpected character '{}' in formatting string", *it));
+				{
+					// Can't print invalid character because fmt does not handle conversion between char types on its own unfortunately
+					throw format_error(mh::format("Unexpected character in formatting string"));
+				}
 			}
 
 			throw format_error("Unexpected end of format string when looking for '}'");
