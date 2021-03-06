@@ -66,11 +66,11 @@ jobs:
         echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal main" | sudo tee /etc/apt/sources.list.d/llvm.list
 
     - name: Add repos - llvm-11
-      if: matrix.compiler.exe == "clang++-11"
+      if: matrix.compiler.exe == 'clang++-11'
       run: echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-11 main" | sudo tee -a /etc/apt/sources.list.d/llvm.list
 
     - name: Add repos - llvm-11
-      if: matrix.compiler.exe == "clang++-12"
+      if: matrix.compiler.exe == 'clang++-12'
       run: echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-12 main" | sudo tee -a /etc/apt/sources.list.d/llvm.list
 
     - name: Install compiler
