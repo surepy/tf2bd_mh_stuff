@@ -55,6 +55,7 @@ add_library(stuff ${MH_INTERFACE_OR_EMPTY}
 
 	"cpp/include/mh/data/bit_float.hpp"
 	"cpp/include/mh/data/bits.hpp"
+	"cpp/include/mh/data/lazy.hpp"
 	"cpp/include/mh/data/variable_pusher.hpp"
 
 	"cpp/include/mh/error/ensure.inl"
