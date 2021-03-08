@@ -43,10 +43,13 @@ namespace mh
 		size_t vsprintf(const value_type* fmtStr, va_list args)
 		{
 			assert(m_Length <= max_size());
-			const size_t maxWriteCount = max_size() - m_Length;
+			const size_t maxWriteCount = (max_size() + 1) - m_Length; // max_size() + 1 because max_size() does not include null term
+
+			// vsnprintf writes at must maxWriteCount - 1 chars, always adds null terminator
 			const size_t writeCount = std::vsnprintf(m_String.data() + m_Length, maxWriteCount, fmtStr, args);
 
-			m_Length += std::min(maxWriteCount, writeCount);
+			assert(maxWriteCount >= 1);
+			m_Length += std::min(maxWriteCount - 1, writeCount);
 			assert(m_Length <= max_size());
 
 			return m_Length;
