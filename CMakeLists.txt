@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16.3)
 
 project(
-	mh_stuff
+	mh-stuff
 	VERSION 1.0
 	DESCRIPTION "stuff that i keep re-writing"
 	HOMEPAGE_URL "https://github.com/PazerOP/stuff"
@@ -132,7 +132,8 @@ if (MH_STUFF_COMPILE_LIBRARY)
 	)
 
 	# Create a cpp file of all .inl files and add it to the target
-	file(GLOB_RECURSE MH_INL_FILES "*.inl")
+	set(MH_CPP_INCLUDE_ROOT "${PROJECT_SOURCE_DIR}/cpp/include")
+	file(GLOB_RECURSE MH_INL_FILES "${MH_CPP_INCLUDE_ROOT}/mh/*.inl")
 	# message("MH_INL_FILES = ${MH_INL_FILES}")
 
 	file(REMOVE "${CMAKE_CURRENT_BINARY_DIR}/library.cpp")
@@ -146,10 +147,10 @@ if (MH_STUFF_COMPILE_LIBRARY)
 	endif()
 
 	generate_export_header(stuff
-		BASE_NAME mh_stuff
+		BASE_NAME ${PROJECT_NAME}
 		EXPORT_MACRO_NAME MH_STUFF_API
 	)
-	target_precompile_headers(stuff ${MH_PUBLIC_OR_INTERFACE} "${CMAKE_CURRENT_BINARY_DIR}/mh_stuff_export.h")
+	target_precompile_headers(stuff ${MH_PUBLIC_OR_INTERFACE} "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_export.h")
 
 else()
 	target_compile_definitions(stuff INTERFACE
@@ -224,28 +225,28 @@ include(GNUInstallDirs)
 
 configure_package_config_file(
 	cmake/config.cmake.in
-	"${CMAKE_CURRENT_BINARY_DIR}/mh-stuff-config.cmake"
-	INSTALL_DESTINATION "${CMAKE_INSTALL_DATADIR}/mh-stuff"
+	"${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
+	INSTALL_DESTINATION "${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}"
 )
 
 write_basic_package_version_file(
-	"${CMAKE_CURRENT_BINARY_DIR}/mh-stuff-config-version.cmake"
+	"${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
 	VERSION ${mh_stuff_VERSION}
 	COMPATIBILITY SameMajorVersion
 )
 
 install(
 	FILES
-		"${CMAKE_CURRENT_BINARY_DIR}/mh-stuff-config.cmake"
-		"${CMAKE_CURRENT_BINARY_DIR}/mh-stuff-config-version.cmake"
+		"${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
+		"${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
 	DESTINATION
-		"${CMAKE_INSTALL_DATADIR}/mh-stuff"
+		"${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}"
 )
 
-install(TARGETS stuff EXPORT mh_stuff_targets)
+install(TARGETS stuff EXPORT ${PROJECT_NAME}_targets)
 install(DIRECTORY cpp/include/ DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 install(
-	EXPORT mh_stuff_targets
+	EXPORT ${PROJECT_NAME}_targets
 	NAMESPACE mh::
 	DESTINATION "${CMAKE_INSTALL_DATADIR}/mh-stuff"
 )

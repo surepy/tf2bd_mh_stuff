@@ -59,7 +59,10 @@ endif()
 # Make sure all header files can be compiled successfully by themselves
 
 set(MH_CPP_INCLUDE_ROOT "${PROJECT_SOURCE_DIR}/cpp/include")
-file(GLOB_RECURSE MH_HPP_FILES RELATIVE ${MH_CPP_INCLUDE_ROOT} "${MH_CPP_INCLUDE_ROOT}/mh/*.hpp")
+file(GLOB_RECURSE MH_HPP_FILES
+	RELATIVE ${MH_CPP_INCLUDE_ROOT}
+	"${MH_CPP_INCLUDE_ROOT}/mh/*.hpp"
+)
 message("MH_HPP_FILES = ${MH_HPP_FILES}")
 foreach (F IN LISTS MH_HPP_FILES)
 	string(REPLACE "/" "_" SAFE_FILENAME ${F})
