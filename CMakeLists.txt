@@ -231,7 +231,7 @@ configure_package_config_file(
 
 write_basic_package_version_file(
 	"${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
-	VERSION ${mh_stuff_VERSION}
+	VERSION ${PROJECT_VERSION}
 	COMPATIBILITY SameMajorVersion
 )
 
@@ -248,5 +248,5 @@ install(DIRECTORY cpp/include/ DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 install(
 	EXPORT ${PROJECT_NAME}_targets
 	NAMESPACE mh::
-	DESTINATION "${CMAKE_INSTALL_DATADIR}/mh-stuff"
+	DESTINATION "${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}"
 )
