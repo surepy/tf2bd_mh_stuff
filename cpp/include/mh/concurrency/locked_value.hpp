@@ -36,7 +36,7 @@ namespace mh
 			return m_Value;
 		}
 		[[nodiscard]] lock_type lock() const { return lock_type(m_Mutex); }
-		const T& get_ref(const lock_type& lock) const
+		const T& get_ref([[maybe_unused]] const lock_type& lock) const
 		{
 			assert(lock.mutex() == &m_Mutex);
 			assert(lock.owns_lock());
