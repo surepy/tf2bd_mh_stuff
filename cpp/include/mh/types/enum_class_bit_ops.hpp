@@ -41,4 +41,4 @@ namespace mh
 	{ \
 		using ut = std::underlying_type_t<type>; \
 		return lhs = type(ut(lhs) | ut(rhs)); \
-	} \
+	} 
