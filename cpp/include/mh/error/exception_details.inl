@@ -59,7 +59,7 @@ MH_COMPILE_LIBRARY_INLINE void mh::exception_details::handler::release()
 	{
 		auto& handlers = detail::exception_to_string_hpp::get_handler_list();
 		std::lock_guard lock(handlers.m_Mutex);
-		const auto removedCount = handlers.m_Handlers.erase(*m_Type);
+		[[maybe_unused]] const auto removedCount = handlers.m_Handlers.erase(*m_Type);
 		assert(removedCount == 1);
 		m_Type = nullptr;
 	}
