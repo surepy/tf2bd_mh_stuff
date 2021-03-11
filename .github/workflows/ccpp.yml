@@ -87,6 +87,7 @@ jobs:
     - name: Build
       env:
         CXX: ${{ matrix.compiler.exe }}
+        CXXFLAGS: -Wall -Wpedantic -Wextra -Werror
       run: |
         mkdir build
         cd build
