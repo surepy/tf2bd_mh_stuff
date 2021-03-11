@@ -58,7 +58,7 @@ namespace mh
 					{
 						auto now = clock_t::now();
 						const task_delay_data& taskDelayData = m_DelayTasks.front();
-						if (taskDelayData.m_DelayUntilTime <= clock_t::now())
+						if (taskDelayData.m_DelayUntilTime <= now)
 						{
 							auto task = taskDelayData.m_Handle;
 							m_DelayTasks.pop();

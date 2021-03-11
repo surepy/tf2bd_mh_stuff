@@ -21,7 +21,7 @@ namespace mh
 			std::ostringstream ss;
 
 			ss << "mh::thread_sentinel expected thread id " << expectedID
-				<< ", but was triggered from thread " << std::this_thread::get_id() << " in " << location;
+				<< ", but was triggered from thread " << currentID << " in " << location;
 
 			return ss.str();
 		}
