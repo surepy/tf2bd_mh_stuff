@@ -14,7 +14,7 @@ namespace mh::detail
 }
 #endif
 
-int main(int argc, char** argv)
+int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 {
 	mh::detail::coro::coroutine_handle<> handle;
 	return 0;

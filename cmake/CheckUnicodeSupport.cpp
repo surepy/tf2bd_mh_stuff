@@ -20,7 +20,7 @@ std::basic_string<CharT, Traits, Alloc> TestFunc(const std::filesystem::path& pa
 	return retVal;
 }
 
-int main(int argc, char** argv)
+int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 {
 	TestFunc<char16_t>("hello_char16");
 	TestFunc<char32_t>("hello_char32");
