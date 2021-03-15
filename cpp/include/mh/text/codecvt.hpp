@@ -3,6 +3,10 @@
 #include <string>
 #include <string_view>
 
+#ifndef MH_STUFF_API
+#define MH_STUFF_API
+#endif
+
 #ifndef MH_HAS_UNICODE
 #define MH_HAS_UNICODE (__cpp_unicode_characters >= 200704)
 #endif

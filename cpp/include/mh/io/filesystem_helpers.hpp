@@ -2,6 +2,10 @@
 
 #include <filesystem>
 
+#ifndef MH_STUFF_API
+#define MH_STUFF_API
+#endif
+
 namespace mh
 {
 	MH_STUFF_API std::filesystem::path filename_without_extension(std::filesystem::path path);

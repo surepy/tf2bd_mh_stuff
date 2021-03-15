@@ -2,6 +2,10 @@
 
 #include <cassert>
 
+#ifndef MH_STUFF_API
+#define MH_STUFF_API
+#endif
+
 namespace mh
 {
 #ifdef _WIN32

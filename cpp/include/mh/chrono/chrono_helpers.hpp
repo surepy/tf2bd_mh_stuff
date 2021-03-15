@@ -3,6 +3,10 @@
 #include <chrono>
 #include <ctime>
 
+#ifndef MH_STUFF_API
+#define MH_STUFF_API
+#endif
+
 namespace mh::chrono
 {
 	template<typename T = double, typename TRep, typename TPeriod>

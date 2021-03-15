@@ -4,6 +4,10 @@
 #include <string>
 #include <typeinfo>
 
+#ifndef MH_STUFF_API
+#define MH_STUFF_API
+#endif
+
 namespace mh
 {
 	struct exception_details;
@@ -27,21 +31,21 @@ namespace mh
 		MH_STUFF_API const char* type_name() const noexcept;
 
 		// When this goes out of scope, the associated handler is removed.
-		struct MH_STUFF_API [[nodiscard]] handler final
+		struct [[nodiscard]] handler final
 		{
-			handler() = default;
-			~handler();
+			MH_STUFF_API handler() = default;
+			MH_STUFF_API ~handler();
 
 			handler(const handler&) = delete;
 			handler& operator=(const handler&) = delete;
 
-			handler(handler&& other) noexcept;
-			handler& operator=(handler&& other) noexcept;
+			MH_STUFF_API handler(handler&& other) noexcept;
+			MH_STUFF_API handler& operator=(handler&& other) noexcept;
 
 		private:
 			friend struct exception_details;
-			explicit handler(const std::type_info* type) noexcept;
-			void release();
+			MH_STUFF_API explicit handler(const std::type_info* type) noexcept;
+			MH_STUFF_API void release();
 
 			const std::type_info* m_Type = nullptr;
 		};
