@@ -151,7 +151,7 @@ jobs:
     - name: Setup compiler paths
       uses: ilammy/msvc-dev-cmd@v1.5.0
 
-    - name: Run tests
+    - name: Build
       run: |
         mkdir build
         cd build
@@ -162,4 +162,8 @@ jobs:
           ../
 
         cmake --build .
+
+    - name: Run tests
+      run: |
+        cd build
         ctest --output-on-failure
