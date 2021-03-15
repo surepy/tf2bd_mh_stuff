@@ -86,7 +86,15 @@ MH_COMPILE_LIBRARY_INLINE mh::exception_details::exception_details(const std::ex
 {
 	try
 	{
-		std::rethrow_exception(ep);
+		try
+		{
+			std::rethrow_exception(ep);
+		}
+		catch (const std::nested_exception& nested)
+		{
+			m_Nested = nested.nested_ptr();
+			throw;
+		}
 	}
 	catch (const std::exception& e)
 	{
