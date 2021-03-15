@@ -90,4 +90,28 @@ namespace mh
 		CharT m_IndentChar;
 		size_t m_IndentCount;
 	};
+
+	template<typename TObject, typename CharT = char>
+	struct indented
+	{
+		constexpr indented(const TObject& obj, CharT indentChar = '\t', size_t indentCount = 1, CharT newlineChar = '\n') :
+			m_Object(obj),
+			m_IndentChar(indentChar),
+			m_IndentCharCount(indentCount),
+			m_NewlineChar(newlineChar)
+		{
+		}
+
+		CharT m_IndentChar;
+		CharT m_NewlineChar;
+		size_t m_IndentCharCount;
+		const TObject& m_Object;
+	};
+
+	template<typename CharT, typename Traits, typename TObject>
+	std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& os, const indented<TObject, CharT>& obj)
+	{
+		mh::indenting_ostream<CharT, Traits> indenting_os(os, obj.m_IndentChar, obj.m_IndentCharCount, obj.m_NewlineChar);
+		return indenting_os << obj.m_Object;
+	}
 }
