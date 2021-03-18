@@ -115,7 +115,7 @@ add_library(stuff ${MH_INTERFACE_OR_EMPTY}
 	"cpp/include/mh/source_location.hpp"
 	"cpp/include/mh/utility.hpp"
 	"cpp/include/mh/variant.hpp"
-)
+ "cpp/include/mh/data/optional_ref.hpp")
 
 set_target_properties(stuff PROPERTIES OUTPUT_NAME "${PROJECT_NAME}")
 
