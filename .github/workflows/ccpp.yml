@@ -79,6 +79,8 @@ jobs:
         # sudo apt clean
         sudo apt install ${{ matrix.compiler.deps }} ninja-build -y
         sudo pip3 install gcovr
+        echo Ensuring ninja works...
+        ninja --version
 
     # - name: Run tests
     #   working-directory: ./test
