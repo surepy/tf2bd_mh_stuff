@@ -4,6 +4,10 @@
 #include <cstdint>
 #include <type_traits>
 
+#if (__cpp_consteval < 201811) && !defined(consteval)
+#define consteval constexpr
+#endif
+
 namespace mh
 {
 	// Stores all the possible compile-time representations of a character.
