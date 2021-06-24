@@ -9,6 +9,7 @@ defaults:
 env:
   VCPKG_GIT_COMMIT_ID: 2ed44b4546ecc764c81db4fd16ea19d19ea0449d
   VCPKG_BINARY_SOURCES: 'clear;nuget,GitHub,readwrite'
+  X_VCPKG_NUGET_ID_PREFIX: repo_mh_stuff
 
 jobs:
   ci-linux:
