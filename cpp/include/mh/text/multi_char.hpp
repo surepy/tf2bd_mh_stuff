@@ -45,16 +45,6 @@ namespace mh
 		}
 	};
 
-	inline constexpr auto operator<=>(const mh::multi_char& lhs, char rhs) { return lhs.narrow <=> rhs; }
-	inline constexpr auto operator<=>(const mh::multi_char& lhs, wchar_t rhs) { return lhs.wide <=> rhs; }
-	inline constexpr auto operator<=>(const mh::multi_char& lhs, char8_t rhs) { return lhs.u8 <=> rhs; }
-	inline constexpr auto operator<=>(const mh::multi_char& lhs, char16_t rhs) { return lhs.u16 <=> rhs; }
-	inline constexpr auto operator<=>(const mh::multi_char& lhs, char32_t rhs) { return lhs.u32 <=> rhs; }
-	inline constexpr auto operator<=>(char lhs, const mh::multi_char& rhs) { return lhs <=> rhs.narrow; }
-	inline constexpr auto operator<=>(wchar_t lhs, const mh::multi_char& rhs) { return lhs <=> rhs.wide; }
-	inline constexpr auto operator<=>(char8_t lhs, const mh::multi_char& rhs) { return lhs <=> rhs.u8; }
-	inline constexpr auto operator<=>(char16_t lhs, const mh::multi_char& rhs) { return lhs <=> rhs.u16; }
-	inline constexpr auto operator<=>(char32_t lhs, const mh::multi_char& rhs) { return lhs <=> rhs.u32; }
 	inline constexpr auto operator==(const mh::multi_char& lhs, char rhs) { return lhs.narrow == rhs; }
 	inline constexpr auto operator==(const mh::multi_char& lhs, wchar_t rhs) { return lhs.wide == rhs; }
 	inline constexpr auto operator==(const mh::multi_char& lhs, char8_t rhs) { return lhs.u8 == rhs; }
@@ -65,6 +55,22 @@ namespace mh
 	inline constexpr auto operator==(char8_t lhs, const mh::multi_char& rhs) { return lhs == rhs.u8; }
 	inline constexpr auto operator==(char16_t lhs, const mh::multi_char& rhs) { return lhs == rhs.u16; }
 	inline constexpr auto operator==(char32_t lhs, const mh::multi_char& rhs) { return lhs == rhs.u32; }
-
 #define mh_make_multi_char(c) ::mh::multi_char(#c, L ## #c, u8 ## #c, u ## #c, U ## #c)
 }
+
+#if __has_include(<compare>)
+#include <compare>
+namespace mh
+{
+	inline constexpr auto operator<=>(const mh::multi_char& lhs, char rhs) { return lhs.narrow <=> rhs; }
+	inline constexpr auto operator<=>(const mh::multi_char& lhs, wchar_t rhs) { return lhs.wide <=> rhs; }
+	inline constexpr auto operator<=>(const mh::multi_char& lhs, char8_t rhs) { return lhs.u8 <=> rhs; }
+	inline constexpr auto operator<=>(const mh::multi_char& lhs, char16_t rhs) { return lhs.u16 <=> rhs; }
+	inline constexpr auto operator<=>(const mh::multi_char& lhs, char32_t rhs) { return lhs.u32 <=> rhs; }
+	inline constexpr auto operator<=>(char lhs, const mh::multi_char& rhs) { return lhs <=> rhs.narrow; }
+	inline constexpr auto operator<=>(wchar_t lhs, const mh::multi_char& rhs) { return lhs <=> rhs.wide; }
+	inline constexpr auto operator<=>(char8_t lhs, const mh::multi_char& rhs) { return lhs <=> rhs.u8; }
+	inline constexpr auto operator<=>(char16_t lhs, const mh::multi_char& rhs) { return lhs <=> rhs.u16; }
+	inline constexpr auto operator<=>(char32_t lhs, const mh::multi_char& rhs) { return lhs <=> rhs.u32; }
+}
+#endif
