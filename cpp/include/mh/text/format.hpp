@@ -4,17 +4,7 @@
 #define MH_FORMATTER_FMTLIB 1
 #define MH_FORMATTER_STL 2
 
-#if __has_include(<format>)
-
-#include <format>
-#define MH_FORMATTER MH_FORMATTER_STL
-namespace mh::detail::format_hpp
-{
-#define MH_FMT_STRING(...) __VA_ARGS__
-	namespace fmtns = ::std;
-}
-
-#elif __has_include(<fmt/format.h>)
+#if __has_include(<fmt/format.h>)
 
 #include <fmt/format.h>
 #include <fmt/ostream.h>
@@ -23,6 +13,16 @@ namespace mh::detail::format_hpp
 {
 #define MH_FMT_STRING(...) FMT_STRING(__VA_ARGS__)
 	namespace fmtns = ::fmt;
+}
+
+#elif __has_include(<format>) && 0 // std::format honestly kind of awful
+
+#include <format>
+#define MH_FORMATTER MH_FORMATTER_STL
+namespace mh::detail::format_hpp
+{
+#define MH_FMT_STRING(...) __VA_ARGS__
+	namespace fmtns = ::std;
 }
 
 #else
@@ -91,11 +91,13 @@ namespace mh
 		}
 	}
 
+#if MH_FORMATTER == MH_FORMATTER_FMTLIB
 	template<typename TChar, typename T>
 	inline auto fmtarg(const TChar* argName, const T& argValue)
 	{
 		return detail::format_hpp::fmtns::arg(argName, argValue);
 	}
+#endif
 
 	using format_args = detail::format_hpp::fmtns::format_args;
 	using wformat_args = detail::format_hpp::fmtns::wformat_args;

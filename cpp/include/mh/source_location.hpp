@@ -67,13 +67,15 @@ namespace mh
 #include <mh/text/format.hpp>
 
 #if MH_FORMATTER != MH_FORMATTER_NONE
+#include <mh/text/multi_char.hpp>
+
 template<typename CharT>
 struct mh::formatter<mh::source_location, CharT>
 {
-	static constexpr CharT PRES_PATH_FULL = 'P';
-	static constexpr CharT PRES_PATH_SHORT = 'p';
-	static constexpr CharT PRES_LINE = 'l';
-	static constexpr CharT PRES_FUNCTION = 'f';
+	static constexpr mh::multi_char PRES_PATH_FULL = mh_make_multi_char(P);
+	static constexpr mh::multi_char PRES_PATH_SHORT = mh_make_multi_char(p);
+	static constexpr mh::multi_char PRES_LINE = mh_make_multi_char(l);
+	static constexpr mh::multi_char PRES_FUNCTION = mh_make_multi_char(f);
 
 	enum class PathPresentation
 	{
@@ -88,11 +90,12 @@ struct mh::formatter<mh::source_location, CharT>
 
 	constexpr auto parse(const basic_format_parse_context<CharT>& ctx)
 	{
+		constexpr mh::multi_char CLOSE_BRACE = mh_make_multi_char(});
 		auto it = ctx.begin();
 		const auto end = ctx.end();
 		if (it != end)
 		{
-			if (*it != '}')
+			if (*it != CLOSE_BRACE.get<CharT>())
 			{
 				m_Path = PathPresentation::None;
 				m_Line = false;
@@ -106,7 +109,7 @@ struct mh::formatter<mh::source_location, CharT>
 					if (m_Path != PathPresentation::None)
 					{
 						throw format_error(mh::format("Path presentation was already set: '{}' and '{}' are mutually exclusive",
-							PRES_PATH_SHORT, PRES_PATH_FULL));
+							PRES_PATH_SHORT.narrow, PRES_PATH_FULL.narrow));
 					}
 
 					if (*it == PRES_PATH_SHORT)
@@ -118,7 +121,7 @@ struct mh::formatter<mh::source_location, CharT>
 					m_Line = true;
 				else if (*it == PRES_FUNCTION)
 					m_Function = true;
-				else if (*it == '}')
+				else if (*it == CLOSE_BRACE.get<CharT>())
 					return it;
 				else
 				{

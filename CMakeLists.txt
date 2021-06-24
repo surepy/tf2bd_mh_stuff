@@ -104,6 +104,7 @@ add_library(stuff ${MH_INTERFACE_OR_EMPTY}
 	"cpp/include/mh/text/indenting_ostream.hpp"
 	"cpp/include/mh/text/insertion_conversion.hpp"
 	"cpp/include/mh/text/memstream.hpp"
+	"cpp/include/mh/text/multi_char.hpp"
 	"cpp/include/mh/text/string_insertion.hpp"
 	"cpp/include/mh/text/stringops.hpp"
 
