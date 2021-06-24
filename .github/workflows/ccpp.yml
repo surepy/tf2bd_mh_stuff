@@ -7,7 +7,7 @@ defaults:
     shell: bash
 
 env:
-  VCPKG_GIT_COMMIT_ID: f79c681fc2b42f9c7c5024459b5a867d56ac6123
+  VCPKG_GIT_COMMIT_ID: 2ed44b4546ecc764c81db4fd16ea19d19ea0449d
   VCPKG_BINARY_SOURCES: 'clear;nuget,GitHub,readwrite'
 
 jobs:
