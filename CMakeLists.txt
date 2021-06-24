@@ -57,6 +57,7 @@ add_library(stuff ${MH_INTERFACE_OR_EMPTY}
 	"cpp/include/mh/data/bit_float.hpp"
 	"cpp/include/mh/data/bits.hpp"
 	"cpp/include/mh/data/lazy.hpp"
+	"cpp/include/mh/data/optional_ref.hpp"
 	"cpp/include/mh/data/variable_pusher.hpp"
 
 	"cpp/include/mh/error/ensure.inl"
@@ -116,7 +117,7 @@ add_library(stuff ${MH_INTERFACE_OR_EMPTY}
 	"cpp/include/mh/source_location.hpp"
 	"cpp/include/mh/utility.hpp"
 	"cpp/include/mh/variant.hpp"
- "cpp/include/mh/data/optional_ref.hpp")
+)
 
 set_target_properties(stuff PROPERTIES OUTPUT_NAME "${PROJECT_NAME}")
 
