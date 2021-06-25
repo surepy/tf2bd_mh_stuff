@@ -111,7 +111,8 @@ namespace mh
 
 			task_state get_task_state() const
 			{
-				switch (m_State.index())
+				const auto state = m_State.index();
+				switch (state)
 				{
 				case IDX_INVALID:    return task_state::empty;
 				case IDX_WAITERS:    return task_state::running;
