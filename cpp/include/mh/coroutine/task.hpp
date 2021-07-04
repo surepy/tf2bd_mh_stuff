@@ -332,7 +332,7 @@ namespace mh
 
 			void return_value(T value)
 			{
-				this->set_state<super::IDX_VALUE>(std::move(value));
+				this->template set_state<super::IDX_VALUE>(std::move(value));
 			}
 
 			T& await_resume() { return const_cast<T&>(std::as_const(*this).get_value()); }
