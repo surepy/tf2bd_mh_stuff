@@ -162,6 +162,7 @@ TEST_CASE("task - exceptions in discarded tasks")
 	REQUIRE(value == 50030);
 }
 
+#if !defined(__clang_major__) || (__clang_major__ >= 10)
 TEST_CASE("task - contained object lifetime")
 {
 	struct DeletionMarker final
@@ -212,5 +213,6 @@ TEST_CASE("task - contained object lifetime")
 	std::this_thread::sleep_for(1s);
 	REQUIRE(isObjectDeleted);
 }
+#endif
 
 #endif
