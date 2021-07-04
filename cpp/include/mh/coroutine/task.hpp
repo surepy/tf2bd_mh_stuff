@@ -117,12 +117,13 @@ namespace mh
 				switch (state)
 				{
 				case IDX_INVALID:    return task_state::empty;
+				default:
+					assert(!"Invalid state in mh::detail::task_hpp::promise_base<T>::get_task_state()");
+					[[fallthrough]];
 				case IDX_WAITERS:    return task_state::running;
 				case IDX_VALUE:      return task_state::value;
 				case IDX_EXCEPTION:  return task_state::exception;
 				}
-
-				throw std::logic_error("Invalid state in mh::detail::task_hpp::promise_base<T>::get_task_state()");
 			}
 
 			void wait() const
