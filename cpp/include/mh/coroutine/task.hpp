@@ -280,14 +280,13 @@ namespace mh
 				return newVal <= 0;
 			}
 
-			auto lock() { return std::unique_lock(m_Mutex); }
 			bool final_suspend_has_run() const noexcept { return m_FinalSuspendHasRun; }
 			int32_t get_ref_count() const noexcept { return m_RefCount; }
 
 			template<typename TFreeFunc>
 			void release_promise_ref(TFreeFunc&& freeFunc)
 			{
-				auto scopeLock = lock();
+				std::unique_lock scopeLock(m_Mutex);
 
 				if (remove_ref() && final_suspend_has_run())
 				{
