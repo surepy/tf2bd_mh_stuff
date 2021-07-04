@@ -84,6 +84,8 @@ namespace mh
 			promise_base() noexcept {}
 			promise_base(const promise_base<T>&) = delete;
 			promise_base(promise_base<T>&&) = delete;
+			promise_base<T>& operator=(const promise_base<T>&) = delete;
+			promise_base<T>& operator=(promise_base<T>&&) = delete;
 
 			static constexpr size_t IDX_WAITERS = 0;
 			static constexpr size_t IDX_INVALID = 1;
