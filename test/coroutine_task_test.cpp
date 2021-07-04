@@ -85,7 +85,6 @@ struct dummy_exception : std::nested_exception
 	int m_InstanceIndex = s_InstanceCount++;
 };
 
-#if 1
 TEST_CASE("task - exceptions from other threads")
 {
 	auto index = GENERATE(range(0, 50));
@@ -142,7 +141,6 @@ TEST_CASE("task - exceptions from other threads")
 	}
 	REQUIRE(eValue == THROWN_INT);
 }
-#endif
 
 TEST_CASE("task - exceptions in discarded tasks")
 {
@@ -162,6 +160,57 @@ TEST_CASE("task - exceptions in discarded tasks")
 
 	std::this_thread::sleep_for(3s);
 	REQUIRE(value == 50030);
+}
+
+TEST_CASE("task - contained object lifetime")
+{
+	struct DeletionMarker final
+	{
+		DeletionMarker(bool& isDeleted) :
+			m_IsDeleted(&isDeleted)
+		{
+			assert(m_IsDeleted);
+			assert(!*m_IsDeleted);
+		}
+		~DeletionMarker()
+		{
+			if (m_IsDeleted)
+				*m_IsDeleted = true;
+		}
+
+		DeletionMarker(const DeletionMarker&) = delete;
+		DeletionMarker(DeletionMarker&& other) :
+			m_IsDeleted(std::exchange(other.m_IsDeleted, nullptr))
+		{
+		}
+		DeletionMarker& operator=(const DeletionMarker&) = delete;
+		DeletionMarker& operator=(DeletionMarker&& other) = delete;
+
+		bool* m_IsDeleted;
+	};
+
+	bool isObjectDeleted = false;
+
+	auto coroutine = [&isObjectDeleted]() -> mh::task<DeletionMarker>
+	{
+		DeletionMarker marker(isObjectDeleted);
+
+		co_return marker;
+	};
+
+	REQUIRE(!isObjectDeleted);
+
+	{
+		mh::task<DeletionMarker> result = coroutine();
+		REQUIRE(!isObjectDeleted);
+		result.wait();
+		REQUIRE(!isObjectDeleted);
+		std::this_thread::sleep_for(1s);
+		REQUIRE(!isObjectDeleted);
+	}
+
+	std::this_thread::sleep_for(1s);
+	REQUIRE(isObjectDeleted);
 }
 
 #endif
