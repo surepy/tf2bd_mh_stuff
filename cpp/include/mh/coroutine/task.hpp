@@ -512,7 +512,13 @@ namespace mh
 				return *promise;
 			}
 
-		private:
+			promise_type* get_promise_for_copy() { return std::as_const(*this).get_promise_for_copy(); }
+			promise_type* get_promise_for_copy() const
+			{
+				assert(!m_IsCoroutine);
+				return m_IsCoroutine ? nullptr : m_PromiseOpt;
+			}
+
 			void release()
 			{
 				if (m_IsCoroutine)
@@ -538,6 +544,7 @@ namespace mh
 				}
 			}
 
+		private:
 			union
 			{
 				coroutine_type m_HandleOpt;
@@ -548,7 +555,7 @@ namespace mh
 	}
 
 	template<typename T>
-	class task final : public detail::task_hpp::task_base<T>
+	class task : public detail::task_hpp::task_base<T>
 	{
 		using super = detail::task_hpp::task_base<T>;
 
@@ -568,7 +575,7 @@ namespace mh
 	};
 
 	template<>
-	class task<void> final : public detail::task_hpp::task_base<void>
+	class task<void> : public detail::task_hpp::task_base<void>
 	{
 		using super = detail::task_hpp::task_base<void>;
 
