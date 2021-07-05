@@ -55,8 +55,11 @@ namespace mh
 				release_promise();
 			}
 
+			task<T> get_task() const { return task<T>(m_Promise); }
+
 		protected:
 			promise_type& get_promise() { return const_cast<promise_type&>(std::as_const(*this).get_promise()); }
+			promise_type& get_promise_unsafe() const { return const_cast<promise_type&>(std::as_const(*this).get_promise()); }
 			const promise_type& get_promise() const
 			{
 				if (!m_Promise)
@@ -184,9 +187,13 @@ namespace mh
 		}
 
 		using detail::future_hpp::future_obj_base<T>::valid;
-		mh::future<T> get_future()
+		mh::future<T> get_future() const
 		{
-			return mh::future<T>(&this->get_promise());
+			return mh::future<T>(&this->get_promise_unsafe());
+		}
+		mh::task<T> get_task() const
+		{
+			return mh::task<T>(&this->get_promise_unsafe());
 		}
 
 		void set_value(T value)

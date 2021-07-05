@@ -371,41 +371,70 @@ namespace mh
 			using promise_type = promise<T>;
 			using coroutine_type = coro::coroutine_handle<promise_type>;
 
-			task_base() noexcept = default;
-			task_base(std::nullptr_t) noexcept : m_Handle(nullptr) {}
-			task_base(coroutine_type state) noexcept :
-				m_Handle(std::move(state))
+			constexpr task_base() noexcept : task_base(nullptr) {}
+			explicit constexpr task_base(std::nullptr_t) noexcept : m_HandleOpt(nullptr), m_IsCoroutine(false) {}
+			explicit task_base(coroutine_type state) noexcept :
+				m_HandleOpt(std::move(state)),
+				m_IsCoroutine(true)
 			{
-				if (m_Handle)
-					m_Handle.promise().add_ref();
+				if (promise_type* promise = try_get_promise())
+					promise->add_ref();
+			}
+			explicit task_base(promise_type* promise) noexcept :
+				m_PromiseOpt(promise),
+				m_IsCoroutine(false)
+			{
+				if (promise_type* promise = try_get_promise())
+					promise->add_ref();
 			}
 
 			task_base(const task_base& other) noexcept :
-				m_Handle(other.m_Handle)
+				m_IsCoroutine(other.m_IsCoroutine)
 			{
-				if (m_Handle)
-					m_Handle.promise().add_ref();
+				if (m_IsCoroutine)
+					m_HandleOpt = other.m_HandleOpt;
+				else
+					m_PromiseOpt = other.m_PromiseOpt;
+
+				if (promise_type* promise = try_get_promise())
+					promise->add_ref();
 			}
 			task_base& operator=(const task_base& other) noexcept
 			{
 				release();
-				m_Handle = other.m_Handle;
-				if (m_Handle)
-					m_Handle.promise().add_ref();
+
+				m_IsCoroutine = other.m_IsCoroutine;
+				if (m_IsCoroutine)
+					m_HandleOpt = other.m_HandleOpt;
+				else
+					m_PromiseOpt = other.m_PromiseOpt;
+
+				if (promise_type* promise = try_get_promise())
+					promise->add_ref();
 
 				return *this;
 			}
 
 			task_base(task_base&& other) noexcept :
-				m_Handle(std::exchange(other.m_Handle, nullptr))
+				m_IsCoroutine(other.m_IsCoroutine)
 			{
 				assert(std::addressof(other) != this);
+				if (m_IsCoroutine)
+					m_HandleOpt = std::exchange(other.m_HandleOpt, nullptr);
+				else
+					m_PromiseOpt = std::exchange(other.m_PromiseOpt, nullptr);
 			}
 			task_base& operator=(task_base&& other) noexcept
 			{
 				assert(std::addressof(other) != this);
 				release();
-				m_Handle = std::exchange(other.m_Handle, nullptr);
+
+				m_IsCoroutine = other.m_IsCoroutine;
+				if (m_IsCoroutine)
+					m_HandleOpt = std::exchange(other.m_HandleOpt, nullptr);
+				else
+					m_PromiseOpt = std::exchange(other.m_PromiseOpt, nullptr);
+
 				return *this;
 			}
 
@@ -414,12 +443,24 @@ namespace mh
 				release();
 			}
 
-			task_state state() const { return m_Handle ? m_Handle.promise().get_task_state() : task_state::empty; }
+			task_state state() const
+			{
+				const promise_type* promise = try_get_promise();
+				return promise ? promise->get_task_state() : task_state::empty;
+			}
 
 			operator bool() const { return valid(); }
-			[[nodiscard]] bool valid() const { return m_Handle && m_Handle.promise().valid(); }
-			[[nodiscard]] bool is_ready() const { return m_Handle && m_Handle.promise().is_ready(); }
-			[[nodiscard]] bool empty() const { return !m_Handle; }
+			[[nodiscard]] bool valid() const
+			{
+				const promise_type* promise = try_get_promise();
+				return promise ? promise->valid() : false;
+			}
+			[[nodiscard]] bool is_ready() const
+			{
+				const promise_type* promise = try_get_promise();
+				return promise ? promise->is_ready() : false;
+			}
+			[[nodiscard]] bool empty() const { return !try_get_promise(); }
 
 			void wait() const
 			{
@@ -436,7 +477,11 @@ namespace mh
 				return get_promise().wait_until(timeout_time);
 			}
 
-			std::exception_ptr get_exception() const { return m_Handle ? m_Handle.promise().get_exception() : nullptr; }
+			std::exception_ptr get_exception() const
+			{
+				const promise_type* promise = try_get_promise();
+				return promise ? promise->get_exception() : nullptr;
+			}
 
 #if 0       // operator co_await makes intellisense very unhappy
 			promise_type& operator co_await() { return get_promise(); }
@@ -449,30 +494,56 @@ namespace mh
 #endif
 
 		protected:
+			promise_type* try_get_promise() { return const_cast<promise_type*>(std::as_const(*this).try_get_promise()); }
+			const promise_type* try_get_promise() const
+			{
+				if (m_IsCoroutine)
+					return m_HandleOpt ? &m_HandleOpt.promise() : nullptr;
+				else
+					return m_PromiseOpt;
+			}
 			promise_type& get_promise() { return const_cast<promise_type&>(std::as_const(*this).get_promise()); }
 			const promise_type& get_promise() const
 			{
-				if (!m_Handle)
+				const promise_type* promise = try_get_promise();
+				if (!promise)
 					throw std::future_error(std::future_errc::no_state);
 
-				return m_Handle.promise();
+				return *promise;
 			}
-
-			coroutine_type m_Handle;
 
 		private:
 			void release()
 			{
-				if (m_Handle)
+				if (m_IsCoroutine)
 				{
-					get_promise().release_promise_ref([&]
+					if (m_HandleOpt)
+					{
+						m_HandleOpt.promise().release_promise_ref([&]
+							{
+								m_HandleOpt.destroy();
+							});
+
+						m_HandleOpt = nullptr;
+					}
+				}
+				else if (m_PromiseOpt)
+				{
+					m_PromiseOpt->release_promise_ref([&]
 						{
-							m_Handle.destroy();
+							delete m_PromiseOpt;
 						});
 
-					m_Handle = nullptr;
+					m_PromiseOpt = nullptr;
 				}
 			}
+
+			union
+			{
+				coroutine_type m_HandleOpt;
+				promise_type* m_PromiseOpt;
+			};
+			bool m_IsCoroutine;
 		};
 	}
 
@@ -488,7 +559,11 @@ namespace mh
 		const T& get() const { return this->get_promise().get_value(); }
 		T& get() { return this->get_promise().get_value(); }
 
-		const T* try_get() const { return this->m_Handle ? this->m_Handle.promise().try_get_value() : nullptr; }
+		const T* try_get() const
+		{
+			const auto promise = this->try_get_promise();
+			return promise ? promise->try_get_value() : nullptr;
+		}
 		T* try_get() { return const_cast<T*>(std::as_const(*this).try_get()); }
 	};
 
@@ -505,13 +580,18 @@ namespace mh
 	template<typename T>
 	inline constexpr task<T> detail::task_hpp::promise_base<T>::get_return_object()
 	{
-		return { coro::coroutine_handle<detail::promise<T>>::from_promise(*static_cast<promise<T>*>(this)) };
+		return task<T>(coro::coroutine_handle<detail::promise<T>>::from_promise(*static_cast<promise<T>*>(this)));
 	}
 
 	template<typename T, typename... TArgs>
 	inline task<T> make_ready_task(TArgs&&... args)
 	{
-		co_return T(std::forward<TArgs>(args)...);
+		detail::promise<T>* promise = new detail::promise<T>();
+		task<T> retVal(promise);
+
+		promise->set_state<detail::promise<T>::IDX_VALUE>(T(std::forward<TArgs>(args)...));
+
+		return retVal;
 	}
 }
 
