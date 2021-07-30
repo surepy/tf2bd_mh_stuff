@@ -297,10 +297,10 @@ namespace mh
 			}
 
 		protected:
-			std::atomic_int32_t m_RefCount = REFCOUNT_UNSET;
 			mutable std::condition_variable_any m_ValueReadyCV;
 			mutable mh::mutex_debug<> m_Mutex;
 			std::variant<std::vector<coro::coroutine_handle<>>, std::monostate, storage_type, std::exception_ptr> m_State;
+			std::atomic_int32_t m_RefCount = REFCOUNT_UNSET;
 			mutable bool m_FinalSuspendHasRun = false;
 		};
 	}
