@@ -249,7 +249,7 @@ install(
 )
 
 install(TARGETS stuff EXPORT ${PROJECT_NAME}_targets)
-# install(DIRECTORY cpp/include/ DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+install(DIRECTORY cpp/include/ DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 install(
 	EXPORT ${PROJECT_NAME}_targets
 	NAMESPACE mh::
