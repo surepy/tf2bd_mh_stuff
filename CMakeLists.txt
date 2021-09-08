@@ -225,33 +225,33 @@ endif()
 ###########################################
 # "install" is intended for vcpkg support #
 ###########################################
-# include(CMakePackageConfigHelpers)
-# include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+configure_package_config_file(
+	cmake/config.cmake.in
+	"${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
+	INSTALL_DESTINATION "${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}"
+)
 
-# configure_package_config_file(
-# 	cmake/config.cmake.in
-# 	"${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
-# 	INSTALL_DESTINATION "${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}"
-# )
+include(GNUInstallDirs)
 
-# write_basic_package_version_file(
-# 	"${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
-# 	VERSION ${PROJECT_VERSION}
-# 	COMPATIBILITY SameMajorVersion
-# )
+write_basic_package_version_file(
+	"${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
+	VERSION ${PROJECT_VERSION}
+	COMPATIBILITY SameMajorVersion
+)
 
-# install(
-# 	FILES
-# 		"${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
-# 		"${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
-# 	DESTINATION
-# 		"${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}"
-# )
+install(
+	FILES
+		"${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
+		"${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
+	DESTINATION
+		"${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}"
+)
 
-# install(TARGETS stuff EXPORT ${PROJECT_NAME}_targets)
+install(TARGETS stuff EXPORT ${PROJECT_NAME}_targets)
 # install(DIRECTORY cpp/include/ DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
-# install(
-# 	EXPORT ${PROJECT_NAME}_targets
-# 	NAMESPACE mh::
-# 	DESTINATION "${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}"
-# )
+install(
+	EXPORT ${PROJECT_NAME}_targets
+	NAMESPACE mh::
+	DESTINATION "${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}"
+)
