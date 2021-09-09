@@ -13,8 +13,6 @@ if (MH_STUFF_BUILD_SHARED_LIBS)
 	set(BUILD_SHARED_LIBS ON)
 endif()
 
-find_package(mh-cmake-common CONFIG REQUIRED)
-
 option(MH_STUFF_COMPILE_LIBRARY "True to compile some code into to a static library for less overhead" ON)
 if (MH_STUFF_COMPILE_LIBRARY)
 	set(MH_PUBLIC_OR_INTERFACE "PUBLIC")
@@ -116,6 +114,8 @@ add_library(${PROJECT_NAME} ${MH_INTERFACE_OR_EMPTY}
 	"cpp/include/mh/variant.hpp"
 )
 add_library(mh::stuff ALIAS ${PROJECT_NAME})
+
+find_package(mh-cmake-common CONFIG REQUIRED)
 
 if (MH_STUFF_COMPILE_LIBRARY)
 	target_sources(${PROJECT_NAME} PRIVATE
