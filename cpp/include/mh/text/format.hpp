@@ -31,6 +31,7 @@ namespace mh::detail::format_hpp
 #endif
 
 #if MH_FORMATTER != MH_FORMATTER_NONE
+#include <string>
 #include <string_view>
 #include <iomanip>
 
