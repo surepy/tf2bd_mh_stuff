@@ -137,7 +137,7 @@ namespace mh
 		typename = std::enable_if_t<detail::format_hpp::check_type<TArgs...>()>>
 		inline auto format_to_container(TContainer& container, const TFmtStr& fmtStr, const TArgs&... args)
 	{
-		return format_to(std::back_inserter(container), fmtStr, args...);
+		return ::mh::format_to(std::back_inserter(container), fmtStr, args...);
 	}
 
 	template<typename TOutputIt, typename TFmtStr, typename... TArgs,
@@ -159,7 +159,7 @@ namespace mh
 
 	inline std::string try_vformat(const std::string_view& fmtStr, const format_args& args) try
 	{
-		return vformat(fmtStr, args);
+		return ::mh::vformat(fmtStr, args);
 	}
 	catch (const format_error& e)
 	{
@@ -168,7 +168,7 @@ namespace mh
 
 	inline std::wstring try_vformat(const std::wstring_view& fmtStr, const wformat_args& args) try
 	{
-		return vformat(fmtStr, args);
+		return ::mh::vformat(fmtStr, args);
 	}
 	catch (const format_error& /*e*/)
 	{
