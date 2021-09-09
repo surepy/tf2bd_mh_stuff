@@ -24,7 +24,7 @@ else()
 	set(MH_INTERFACE_OR_EMPTY "INTERFACE")
 endif()
 
-add_library(stuff ${MH_INTERFACE_OR_EMPTY}
+add_library(${PROJECT_NAME} ${MH_INTERFACE_OR_EMPTY}
 	"cpp/include/mh/algorithm/algorithm.hpp"
 	"cpp/include/mh/algorithm/multi_compare.hpp"
 
@@ -115,19 +115,17 @@ add_library(stuff ${MH_INTERFACE_OR_EMPTY}
 	"cpp/include/mh/utility.hpp"
 	"cpp/include/mh/variant.hpp"
 )
-add_library(mh::stuff ALIAS stuff)
-
-set_target_properties(stuff PROPERTIES OUTPUT_NAME "${PROJECT_NAME}")
+add_library(mh::stuff ALIAS ${PROJECT_NAME})
 
 if (MH_STUFF_COMPILE_LIBRARY)
-	target_sources(stuff PRIVATE
+	target_sources(${PROJECT_NAME} PRIVATE
 		"cpp/src/io/file.cpp"
 		"cpp/src/text/case_insensitive_string.cpp"
 		"cpp/src/text/string_insertion.cpp"
 		"cpp/src/source_location.cpp"
 	)
 
-	target_compile_definitions(stuff ${MH_PUBLIC_OR_INTERFACE}
+	target_compile_definitions(${PROJECT_NAME} ${MH_PUBLIC_OR_INTERFACE}
 		"MH_COMPILE_LIBRARY"
 		"MH_COMPILE_LIBRARY_INLINE="
 	)
@@ -141,69 +139,67 @@ if (MH_STUFF_COMPILE_LIBRARY)
 	foreach(X IN LISTS MH_INL_FILES)
 		file(APPEND "${CMAKE_CURRENT_BINARY_DIR}/library.cpp" "\n#include \"${X}\"")
 	endforeach()
-	target_sources(stuff PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/library.cpp")
+	target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/library.cpp")
 
 	if (MSVC)
-		target_compile_options(stuff PRIVATE /W3 /permissive-)
+		target_compile_options(${PROJECT_NAME} PRIVATE /W3 /permissive-)
 	endif()
 
 	include(GenerateExportHeader)
-	generate_export_header(stuff
+	generate_export_header(${PROJECT_NAME}
 		BASE_NAME ${PROJECT_NAME}
 		EXPORT_MACRO_NAME MH_STUFF_API
 	)
-	target_precompile_headers(stuff ${MH_PUBLIC_OR_INTERFACE} "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_export.h")
+	target_precompile_headers(${PROJECT_NAME} ${MH_PUBLIC_OR_INTERFACE} "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_export.h")
 
 else()
-	target_compile_definitions(stuff INTERFACE
+	target_compile_definitions(${PROJECT_NAME} INTERFACE
 		"MH_COMPILE_LIBRARY_INLINE=inline"
 		"MH_STUFF_API="
 	)
 endif()
 
 mh_check_cxx_coroutine_support(SUPPORTS_COROUTINES COROUTINES_FLAGS)
-target_compile_options(stuff ${MH_PUBLIC_OR_INTERFACE} ${COROUTINES_FLAGS})
+target_compile_options(${PROJECT_NAME} ${MH_PUBLIC_OR_INTERFACE} ${COROUTINES_FLAGS})
 
-target_include_directories(stuff ${MH_PUBLIC_OR_INTERFACE}
+target_include_directories(${PROJECT_NAME} ${MH_PUBLIC_OR_INTERFACE}
 	"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/cpp/include>"
 	"$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
-target_compile_features(stuff ${MH_PUBLIC_OR_INTERFACE} "cxx_std_20")
+target_compile_features(${PROJECT_NAME} ${MH_PUBLIC_OR_INTERFACE} "cxx_std_20")
 
 if (MSVC)
 	# There is a bug in visual studio that prevents intellisense from realizing
 	# /std:c++latest is on the command line if you only use target_compile_features(cxx_std_20)
-	target_compile_options(stuff ${MH_PUBLIC_OR_INTERFACE} "/std:c++latest")
+	target_compile_options(${PROJECT_NAME} ${MH_PUBLIC_OR_INTERFACE} "/std:c++latest")
 elseif (CMAKE_CXX_COMPILER_ID MATCHES GNU)
-	target_link_libraries(stuff ${MH_PUBLIC_OR_INTERFACE} stdc++fs)
+	target_link_libraries(${PROJECT_NAME} ${MH_PUBLIC_OR_INTERFACE} stdc++fs)
 elseif (CMAKE_CXX_COMPILER_ID MATCHES Clang)
-	target_compile_options(stuff ${MH_PUBLIC_OR_INTERFACE} -stdlib=libc++)
-	target_link_options(stuff ${MH_PUBLIC_OR_INTERFACE} -stdlib=libc++)
-	target_link_libraries(stuff ${MH_PUBLIC_OR_INTERFACE} c++abi)
+	target_compile_options(${PROJECT_NAME} ${MH_PUBLIC_OR_INTERFACE} -stdlib=libc++)
+	target_link_options(${PROJECT_NAME} ${MH_PUBLIC_OR_INTERFACE} -stdlib=libc++)
+	target_link_libraries(${PROJECT_NAME} ${MH_PUBLIC_OR_INTERFACE} c++abi)
 
 	if ((CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "7") AND (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "9"))
-		target_link_libraries(stuff ${MH_PUBLIC_OR_INTERFACE} c++fs)
+		target_link_libraries(${PROJECT_NAME} ${MH_PUBLIC_OR_INTERFACE} c++fs)
 	endif()
 endif()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES GNU OR CMAKE_CXX_COMPILER_ID MATCHES Clang)
-	target_compile_options(stuff ${MH_PUBLIC_OR_INTERFACE} -pthread)
-	target_link_options(stuff ${MH_PUBLIC_OR_INTERFACE} -pthread)
+	target_compile_options(${PROJECT_NAME} ${MH_PUBLIC_OR_INTERFACE} -pthread)
+	target_link_options(${PROJECT_NAME} ${MH_PUBLIC_OR_INTERFACE} -pthread)
 endif()
 
 if (NOT MSVC)
 	check_cxx_compiler_flag(-fconcepts FCONCEPTS_FLAG)
 	if (FCONCEPTS_FLAG)
-		target_compile_options(stuff ${MH_PUBLIC_OR_INTERFACE} -fconcepts)
+		target_compile_options(${PROJECT_NAME} ${MH_PUBLIC_OR_INTERFACE} -fconcepts)
 	endif()
 endif()
 
-mh_check_cxx_unicode_support(SUPPORTS_UNICODE stuff)
+mh_check_cxx_unicode_support(SUPPORTS_UNICODE ${PROJECT_NAME})
 if (NOT SUPPORTS_UNICODE)
-	target_compile_definitions(stuff ${MH_PUBLIC_OR_INTERFACE} "MH_BROKEN_UNICODE")
+	target_compile_definitions(${PROJECT_NAME} ${MH_PUBLIC_OR_INTERFACE} "MH_BROKEN_UNICODE")
 endif()
-
-add_library(mh::stuff ALIAS stuff)
 
 if (NOT DEFINED BUILD_TESTING)
 	if (CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
@@ -221,9 +217,7 @@ if (BUILD_TESTING)
 	add_subdirectory("test")
 endif()
 
-mh_basic_install(
-	PROJ_NAME stuff
-)
+mh_basic_install()
 
 ###########################################
 # "install" is intended for vcpkg support #
