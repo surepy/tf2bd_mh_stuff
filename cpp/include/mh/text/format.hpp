@@ -39,10 +39,10 @@ namespace mh
 	using detail::format_hpp::fmtns::formatter;
 	using detail::format_hpp::fmtns::basic_format_parse_context;
 	using detail::format_hpp::fmtns::basic_format_context;
-	using detail::format_hpp::fmtns::format_parse_context;
-	using detail::format_hpp::fmtns::wformat_parse_context;
+	using format_parse_context = detail::format_hpp::fmtns::basic_format_parse_context<char>;
+	using wformat_parse_context = detail::format_hpp::fmtns::basic_format_parse_context<wchar_t>;
 	using detail::format_hpp::fmtns::format_context;
-	using detail::format_hpp::fmtns::wformat_context;
+	//using detail::format_hpp::fmtns::wformat_context;
 
 	namespace detail::format_hpp
 	{
