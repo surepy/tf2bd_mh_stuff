@@ -217,7 +217,9 @@ if (BUILD_TESTING)
 	add_subdirectory("test")
 endif()
 
-mh_basic_install()
+mh_basic_install(
+	PROJ_INCLUDE_DIRS "cpp/include/"
+)
 
 ###########################################
 # "install" is intended for vcpkg support #
