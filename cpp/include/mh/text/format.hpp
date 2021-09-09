@@ -118,14 +118,8 @@ namespace mh
 		return detail::format_hpp::fmtns::format(fmtStr, std::forward<TArgs>(args)...);
 	}
 
-	template<typename TFmtStr>
-	inline auto vformat(const TFmtStr& fmtStr, const format_args& args) ->
-		decltype(detail::format_hpp::fmtns::vformat(fmtStr, args))
-	{
-		return detail::format_hpp::fmtns::vformat(fmtStr, args);
-	}
-	template<typename TFmtStr>
-	inline auto vformat(const TFmtStr& fmtStr, const wformat_args& args) ->
+	template<typename TFmtStr, typename TFmtArgs>
+	inline auto vformat(const TFmtStr& fmtStr, const TFmtArgs& args) ->
 		decltype(detail::format_hpp::fmtns::vformat(fmtStr, args))
 	{
 		return detail::format_hpp::fmtns::vformat(fmtStr, args);

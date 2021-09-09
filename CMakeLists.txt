@@ -13,10 +13,7 @@ if (MH_STUFF_BUILD_SHARED_LIBS)
 	set(BUILD_SHARED_LIBS ON)
 endif()
 
-include("cmake/CheckCoroutineSupport.cmake")
-include("cmake/CheckUnicodeSupport.cmake")
-include(CheckCXXCompilerFlag)
-include(GenerateExportHeader)
+find_package(mh-cmake-common CONFIG REQUIRED)
 
 option(MH_STUFF_COMPILE_LIBRARY "True to compile some code into to a static library for less overhead" ON)
 if (MH_STUFF_COMPILE_LIBRARY)
@@ -118,6 +115,7 @@ add_library(stuff ${MH_INTERFACE_OR_EMPTY}
 	"cpp/include/mh/utility.hpp"
 	"cpp/include/mh/variant.hpp"
 )
+add_library(mh::stuff ALIAS stuff)
 
 set_target_properties(stuff PROPERTIES OUTPUT_NAME "${PROJECT_NAME}")
 
@@ -149,6 +147,7 @@ if (MH_STUFF_COMPILE_LIBRARY)
 		target_compile_options(stuff PRIVATE /W3 /permissive-)
 	endif()
 
+	include(GenerateExportHeader)
 	generate_export_header(stuff
 		BASE_NAME ${PROJECT_NAME}
 		EXPORT_MACRO_NAME MH_STUFF_API
@@ -162,7 +161,7 @@ else()
 	)
 endif()
 
-check_cxx_coroutine_support(SUPPORTS_COROUTINES COROUTINES_FLAGS)
+mh_check_cxx_coroutine_support(SUPPORTS_COROUTINES COROUTINES_FLAGS)
 target_compile_options(stuff ${MH_PUBLIC_OR_INTERFACE} ${COROUTINES_FLAGS})
 
 target_include_directories(stuff ${MH_PUBLIC_OR_INTERFACE}
@@ -199,7 +198,7 @@ if (NOT MSVC)
 	endif()
 endif()
 
-check_cxx_unicode_support(SUPPORTS_UNICODE stuff)
+mh_check_cxx_unicode_support(SUPPORTS_UNICODE stuff)
 if (NOT SUPPORTS_UNICODE)
 	target_compile_definitions(stuff ${MH_PUBLIC_OR_INTERFACE} "MH_BROKEN_UNICODE")
 endif()
@@ -222,36 +221,40 @@ if (BUILD_TESTING)
 	add_subdirectory("test")
 endif()
 
+mh_basic_install(
+	PROJ_NAME stuff
+)
+
 ###########################################
 # "install" is intended for vcpkg support #
 ###########################################
-include(CMakePackageConfigHelpers)
-configure_package_config_file(
-	cmake/config.cmake.in
-	"${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
-	INSTALL_DESTINATION "${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}"
-)
+# include(CMakePackageConfigHelpers)
+# configure_package_config_file(
+# 	cmake/config.cmake.in
+# 	"${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
+# 	INSTALL_DESTINATION "${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}"
+# )
 
-include(GNUInstallDirs)
+# include(GNUInstallDirs)
 
-write_basic_package_version_file(
-	"${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
-	VERSION ${PROJECT_VERSION}
-	COMPATIBILITY SameMajorVersion
-)
+# write_basic_package_version_file(
+# 	"${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
+# 	VERSION ${PROJECT_VERSION}
+# 	COMPATIBILITY SameMajorVersion
+# )
 
-install(
-	FILES
-		"${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
-		"${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
-	DESTINATION
-		"${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}"
-)
+# install(
+# 	FILES
+# 		"${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
+# 		"${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
+# 	DESTINATION
+# 		"${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}"
+# )
 
-install(TARGETS stuff EXPORT ${PROJECT_NAME}_targets)
-install(DIRECTORY cpp/include/ DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
-install(
-	EXPORT ${PROJECT_NAME}_targets
-	NAMESPACE mh::
-	DESTINATION "${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}"
-)
+# install(TARGETS stuff EXPORT ${PROJECT_NAME}_targets)
+# install(DIRECTORY cpp/include/ DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+# install(
+# 	EXPORT ${PROJECT_NAME}_targets
+# 	NAMESPACE mh::
+# 	DESTINATION "${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}"
+# )
