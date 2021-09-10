@@ -165,7 +165,7 @@ namespace mh
 	}
 	catch (const format_error& e)
 	{
-		using char_type_t = std::decay_t<decltype(*fmtStr)>;
+		using char_type_t = std::decay_t<decltype(fmtStr[0])>;
 		if constexpr (std::is_same_v<char_type_t, char>)
 		{
 			return ::mh::format(MH_FMT_STRING("FORMATTING ERROR: Unable to construct string with fmtstr {}: {}"), std::quoted(fmtStr), e.what());
