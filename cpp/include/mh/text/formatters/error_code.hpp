@@ -57,15 +57,15 @@ struct mh::formatter<T, CharT, std::enable_if_t<std::is_same_v<T, std::error_cod
 		auto it = ctx.out();
 
 		if (m_CategoryName)
-			it = format_to(it, "{}", ec.category().name());
+			it = ::mh::format_to(it, "{}", ec.category().name());
 		if (m_Value)
-			it = format_to(it, "({})", ec.value());
+			it = ::mh::format_to(it, "({})", ec.value());
 		if (m_Message)
 		{
 			if (m_Value)
-				it = format_to(it, ": ");
+				it = ::mh::format_to(it, ": ");
 
-			it = format_to(it, "{}", ec.message());
+			it = ::mh::format_to(it, "{}", ec.message());
 		}
 
 		return it;
