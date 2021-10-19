@@ -7,8 +7,13 @@
 #if __has_include(<fmt/format.h>)
 
 #include <fmt/format.h>
-#include <fmt/xchar.h>
-#include <fmt/ostream.h>
+
+#if __has_include(<fmt/xchar.h>)
+	#include <fmt/xchar.h>
+#endif
+#if __has_include(<fmt/ostream.h>)
+	#include <fmt/ostream.h>
+#endif
 #define MH_FORMATTER MH_FORMATTER_FMTLIB
 namespace mh::detail::format_hpp
 {
