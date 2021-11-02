@@ -10,10 +10,10 @@ env:
   VCPKG_GIT_COMMIT_ID: 3a3a222be369b556e4635714c8d6acc990e1f13b
   VCPKG_GIT_URL: https://github.com/PazerOP/vcpkg.git
   VCPKG_BINARY_SOURCES: 'clear;nuget,GitHub,readwrite'
-  X_VCPKG_NUGET_ID_PREFIX: repo_mh_stuff
+  X_VCPKG_NUGET_ID_PREFIX: mh-stuff
 
 jobs:
-  ci-linux:
+  build-linux:
     # name: ${{ matrix.compiler }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -122,7 +122,7 @@ jobs:
 
 
 
-  ci-windows:
+  build-windows:
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -159,3 +159,13 @@ jobs:
       run: |
         cd build
         ctest --output-on-failure
+
+
+  registry-update:
+    needs: [build-linux, build-windows]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: PazerOP/vcpkg-registry-update@HEAD
+      with:
+        port-name: mh-stuff
+        workflow-pat: ${{ secrets.WORKFLOW_PAT }}
