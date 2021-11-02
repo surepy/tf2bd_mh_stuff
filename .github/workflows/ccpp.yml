@@ -42,15 +42,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2.3.4
-
-    - name: Setup NuGet Credentials
-      run: >
-        nuget sources add
-        -source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
-        -storepasswordincleartext
-        -name "GitHub"
-        -username "${{ github.repository_owner }}"
-        -password "${{ secrets.GITHUB_TOKEN }}"
+    - uses: PazerOP/gha-setup-nuget@HEAD
 
     - uses: lukka/run-vcpkg@v7
       id: runvcpkg
@@ -139,16 +131,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2.3.4
-
-    # - uses: NuGet/setup-nuget@v1.0.5
-    - name: Setup NuGet Credentials
-      run: >
-        nuget sources add
-        -source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
-        -storepasswordincleartext
-        -name "GitHub"
-        -username "${{ github.repository_owner }}"
-        -password "${{ secrets.GITHUB_TOKEN }}"
+    - uses: PazerOP/gha-setup-nuget@HEAD
 
     - uses: lukka/run-vcpkg@v7
       with:
