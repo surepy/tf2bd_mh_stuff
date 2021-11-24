@@ -30,8 +30,13 @@ namespace mh
 		CharT get_indent_char() const { return m_IndentChar; }
 
 	protected:
-		std::streamsize xsputn(const CharT* s, std::streamsize count) override
+		std::streamsize xsputn(const CharT* s, std::streamsize countSigned) override
 		{
+			if (countSigned < 0)
+				throw std::invalid_argument("count cannot be less than zero");
+
+			size_t count = static_cast<size_t>(countSigned);
+
 			// Just for debugging
 			[[maybe_unused]] const auto originalS = s;
 			const auto originalCount = count;
