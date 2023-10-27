@@ -17,7 +17,7 @@
 #define MH_FORMATTER MH_FORMATTER_FMTLIB
 namespace mh::detail::format_hpp
 {
-#define MH_FMT_STRING(...) FMT_STRING(__VA_ARGS__)
+	#define MH_FMT_STRING(...) FMT_STRING(__VA_ARGS__)
 	namespace fmtns = ::fmt;
 }
 
@@ -116,14 +116,25 @@ namespace mh
 		return detail::format_hpp::fmtns::make_format_args(args...);
 	}
 
-	template<typename TFmtStr, typename... TArgs,
-		typename = std::enable_if_t<detail::format_hpp::check_type<TArgs...>()>>
-		inline auto format(const TFmtStr& fmtStr, TArgs&&... args) ->
-		decltype(detail::format_hpp::fmtns::format(fmtStr, std::forward<TArgs>(args)...))
+	// Migrate OK!
+	template<typename... TFmtStr, typename = std::enable_if_t<detail::format_hpp::check_type<TFmtStr...>()>>
+	constexpr inline auto format(detail::format_hpp::fmtns::format_string<TFmtStr...> fmtStr, TFmtStr&&... args) ->
+		decltype(detail::format_hpp::fmtns::format(fmtStr, std::forward<TFmtStr>(args)...))
 	{
-		return detail::format_hpp::fmtns::format(fmtStr, std::forward<TArgs>(args)...);
+		return detail::format_hpp::fmtns::format(fmtStr, std::forward<TFmtStr>(args)...);
 	}
 
+	template<typename S>
+	inline auto runtime(const S& s) {
+#if MH_FORMATTER == MH_FORMATTER_FMTLIB
+		return detail::format_hpp::fmtns::runtime(s);
+#else
+
+		return s;
+#endif
+	}
+
+	// only used in try_vformat
 	template<typename TFmtStr, typename TFmtArgs>
 	inline auto vformat(const TFmtStr& fmtStr, const TFmtArgs& args) ->
 		decltype(detail::format_hpp::fmtns::vformat(fmtStr, args))
@@ -131,36 +142,39 @@ namespace mh
 		return detail::format_hpp::fmtns::vformat(fmtStr, args);
 	}
 
-	template<typename TOutputIt, typename TFmtStr, typename... TArgs,
-		typename = std::enable_if_t<detail::format_hpp::check_type<TArgs...>()>>
-		inline auto format_to(TOutputIt&& outputIt, const TFmtStr& fmtStr, const TArgs&... args) ->
-		decltype(detail::format_hpp::fmtns::format_to(std::forward<TOutputIt>(outputIt), fmtStr, args...))
+	// Migrate OK!
+	template<typename TOutputIt, typename... TFmtStr, typename = std::enable_if_t<detail::format_hpp::check_type<TFmtStr...>()>>
+	constexpr inline auto format_to(TOutputIt&& outputIt, detail::format_hpp::fmtns::format_string<TFmtStr...> fmtStr, TFmtStr&&... args) ->
+		decltype(detail::format_hpp::fmtns::format_to(outputIt, fmtStr, std::forward<TFmtStr>(args)...))
 	{
-		return detail::format_hpp::fmtns::format_to(std::forward<TOutputIt>(outputIt), fmtStr, args...);
+		return detail::format_hpp::fmtns::format_to(outputIt, fmtStr, std::forward<TFmtStr>(args)...);
 	}
 
-	template<typename TContainer, typename TFmtStr, typename... TArgs,
-		typename = std::enable_if_t<detail::format_hpp::check_type<TArgs...>()>>
-		inline auto format_to_container(TContainer& container, const TFmtStr& fmtStr, const TArgs&... args)
+	template<typename TContainer, typename... TFmtStr, typename = std::enable_if_t<detail::format_hpp::check_type<TFmtStr...>()>>
+	inline auto format_to_container(TContainer& container, detail::format_hpp::fmtns::format_string<TFmtStr...> fmtStr, TFmtStr&&... args)
 	{
 		return ::mh::format_to(std::back_inserter(container), fmtStr, args...);
 	}
 
-	template<typename TOutputIt, typename TFmtStr, typename... TArgs,
-		typename = std::enable_if_t<detail::format_hpp::check_type<TArgs...>()>>
-		inline auto format_to_n(TOutputIt&& outputIt, size_t n, const TFmtStr& fmtStr, const TArgs&... args)
+	// Migrate OK!
+	template<typename TOutputIt, typename... TFmtStr, typename = std::enable_if_t<detail::format_hpp::check_type<TFmtStr...>()>>
+	constexpr inline auto format_to_n(TOutputIt&& outputIt, size_t n, detail::format_hpp::fmtns::format_string<TFmtStr...> fmtStr, TFmtStr&&... args) ->
+		decltype(detail::format_hpp::fmtns::format_to_n(outputIt, n, fmtStr, std::forward<TFmtStr>(args)...))
 	{
-		return detail::format_hpp::fmtns::format_to_n(std::forward<TOutputIt>(outputIt), n, fmtStr, args...);
+		return detail::format_hpp::fmtns::format_to_n(outputIt, n, fmtStr, std::forward<TFmtStr>(args)...);
 	}
 
-	template<typename TFmtStr, typename... TArgs>
-	inline auto try_format(const TFmtStr& fmtStr, const TArgs&... args) -> decltype(format(fmtStr, args...)) try
+	// Migrate OK!
+	template<typename... TFmtStr>
+	constexpr inline auto try_format(fmt::format_string<TFmtStr...> fmtStr, TFmtStr&&... args)
+		-> decltype(::mh::format(fmtStr, args...)) try
 	{
 		return ::mh::format(fmtStr, args...);
 	}
 	catch (const format_error& e)
 	{
-		return ::mh::format(MH_FMT_STRING("FORMATTING ERROR: Unable to construct string with fmtstr {}: {}"), std::quoted(fmtStr), e.what());
+		// std::quoted can't be evaluated constexpr-ly, so we're just removing std::quoted
+		return ::mh::format(MH_FMT_STRING("FORMATTING ERROR: Unable to construct string with fmtstr \"{}\": {}"), fmtStr, e.what());
 	}
 
 	template<typename TFmtStr, typename TFmtArgs>

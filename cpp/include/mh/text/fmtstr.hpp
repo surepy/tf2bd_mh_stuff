@@ -88,7 +88,7 @@ namespace mh
 		auto fmt(const view_type& fmtStr, const TArgs&... args) ->
 			decltype(mh::format_to_n((CharT*)nullptr, max_size(), fmtStr, args...), *this)
 		{
-			const auto result = mh::format_to_n(m_String.data() + m_Length, max_size() - m_Length, fmtStr, args...);
+			const auto result = mh::format_to_n(m_String.data() + m_Length, max_size() - m_Length, mh::runtime(fmtStr), args...);
 			m_Length = result.out - m_String.data();
 			assert(m_Length <= max_size());
 			m_String[m_Length] = value_type(0);

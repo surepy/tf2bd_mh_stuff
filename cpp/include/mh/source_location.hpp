@@ -197,7 +197,11 @@ struct mh::formatter<mh::source_location, CharT>
 
 		fmtStrBuf[fmtStrPos] = '\0';
 
+#if MH_FORMATTER == MH_FORMATTER_FMTLIB
+		return mh::format_to(ctx.out(), mh::runtime(fmtStrBuf), path, loc.line(), loc.function_name());
+#else
 		return mh::format_to(ctx.out(), fmtStrBuf, path, loc.line(), loc.function_name());
+#endif
 	}
 };
 
