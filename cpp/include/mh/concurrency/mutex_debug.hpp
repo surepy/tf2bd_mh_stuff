@@ -39,9 +39,11 @@ namespace mh
 			m_Mutex.unlock();
 		}
 
+#if _MSC_VER < 1938
 		// TODO: this is optional
 		using native_handle_type = typename TMutex::native_handle_type;
 		native_handle_type native_handle() { return m_Mutex.native_handle(); }
+#endif
 
 	private:
 		void lock_acquired()
