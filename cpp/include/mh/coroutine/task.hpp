@@ -261,7 +261,7 @@ namespace mh
 					assert(m_RefCount > 0 || !final_suspend_has_run());
 				}
 			}
-
+			
 			const storage_type* try_get_value() const { return std::get_if<IDX_VALUE>(&m_State); }
 			storage_type* try_get_value() { return std::get_if<IDX_VALUE>(&m_State); }
 
@@ -561,6 +561,7 @@ namespace mh
 
 	public:
 		using super::super;
+		
 		~task() {}
 
 		const T& get() const { return this->get_promise().get_value(); }
@@ -596,7 +597,7 @@ namespace mh
 		detail::promise<T>* promise = new detail::promise<T>();
 		task<T> retVal(promise);
 
-		promise->set_state<detail::promise<T>::IDX_VALUE>(T(std::forward<TArgs>(args)...));
+		promise->template set_state<detail::promise<T>::IDX_VALUE>(T(std::forward<TArgs>(args)...));
 
 		return retVal;
 	}

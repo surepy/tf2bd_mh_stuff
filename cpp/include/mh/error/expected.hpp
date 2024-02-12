@@ -155,6 +155,7 @@ namespace mh
 			return *this;
 		}
 
+#ifndef __linux__ // FIXME: this... works for now? but properly fix it probably.
 #if (__cpp_lib_three_way_comparison >= 201907) || (_MSC_VER >= 1928)
 		template<typename TRet = std::common_comparison_category_t<std::compare_three_way_result_t<bool>, std::compare_three_way_result_t<value_type>>>
 		friend constexpr TRet operator<=>(const this_type& lhs, const value_type& rhs)
@@ -188,6 +189,7 @@ namespace mh
 
 			return lhs <=> rhs.error();
 		}
+#endif
 #endif
 
 		friend constexpr bool operator==(const this_type& lhs, const value_type& rhs) { return lhs.has_value() && lhs.value() == rhs; }
