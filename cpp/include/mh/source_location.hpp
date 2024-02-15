@@ -205,7 +205,13 @@ struct mh::formatter<mh::source_location, CharT>
 	}
 };
 
+#if __linux__
+// probably properly fix it later.
+template struct mh::formatter<mh::source_location, char>;
+template struct mh::formatter<mh::source_location, wchar_t>;
+#else
 extern template struct mh::formatter<mh::source_location, char>;
 extern template struct mh::formatter<mh::source_location, wchar_t>;
+#endif
 #endif
 #endif
