@@ -83,9 +83,9 @@ namespace std
 
 	template<typename T, typename CharT = char, typename Traits = std::char_traits<CharT>, typename Alloc = std::allocator<CharT>>
 	inline auto operator<<(std::basic_string<CharT, Traits, Alloc>&& str, const T& value)
-		-> decltype(std::declval<std::basic_ostream<CharT, Traits>>() << value, str)
+		-> decltype(std::declval<std::basic_ostream<CharT, Traits>>() << value, std::move(str))
 	{
 		mh::detail::string_insertion_hpp::insertion_op_impl<T, CharT, Traits, Alloc>(str, value);
-		return str;
+		return std::move(str);
 	}
 }
