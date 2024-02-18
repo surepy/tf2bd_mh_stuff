@@ -125,11 +125,6 @@ if (MH_STUFF_COMPILE_LIBRARY)
 		"cpp/src/source_location.cpp"
 	)
 
-	target_compile_definitions(${PROJECT_NAME} ${MH_PUBLIC_OR_INTERFACE}
-		"MH_COMPILE_LIBRARY"
-		"MH_COMPILE_LIBRARY_INLINE="
-	)
-
 	# Create a cpp file of all .inl files and add it to the target
 	set(MH_CPP_INCLUDE_ROOT "${PROJECT_SOURCE_DIR}/cpp/include")
 	file(GLOB_RECURSE MH_INL_FILES "${MH_CPP_INCLUDE_ROOT}/mh/*.inl")
@@ -140,6 +135,11 @@ if (MH_STUFF_COMPILE_LIBRARY)
 		file(APPEND "${CMAKE_CURRENT_BINARY_DIR}/library.cpp" "\n#include \"${X}\"")
 	endforeach()
 	target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/library.cpp")
+
+	target_compile_definitions(${PROJECT_NAME} ${MH_PUBLIC_OR_INTERFACE}
+		"MH_COMPILE_LIBRARY"
+		"MH_COMPILE_LIBRARY_INLINE="
+	)
 
 	if (MSVC)
 		target_compile_options(${PROJECT_NAME} PRIVATE /W3 /permissive-)
