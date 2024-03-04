@@ -14,21 +14,15 @@
 #if __has_include(<fmt/ostream.h>)
 	#include <fmt/ostream.h>
 #endif
+#if __has_include(<fmt/chrono.h>)
+	#include <fmt/chrono.h>
+#endif
 #define MH_FORMATTER MH_FORMATTER_FMTLIB
+
 namespace mh::detail::format_hpp
 {
 	#define MH_FMT_STRING(...) FMT_STRING(__VA_ARGS__)
 	namespace fmtns = ::fmt;
-}
-
-#elif __has_include(<format>) && 0 // std::format honestly kind of awful
-
-#include <format>
-#define MH_FORMATTER MH_FORMATTER_STL
-namespace mh::detail::format_hpp
-{
-#define MH_FMT_STRING(...) __VA_ARGS__
-	namespace fmtns = ::std;
 }
 
 #else
