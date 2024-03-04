@@ -148,10 +148,10 @@ namespace mh
 
 		template<typename T>
 		constexpr this_type& operator=(T&& error)
-			noexcept(noexcept(emplace(unexpect, std::forward<T>(error))))
+			noexcept(noexcept(this->emplace(unexpect, std::forward<T>(error))))
 			requires std::is_constructible_v<TError, T>
 		{
-			emplace(unexpect, error);
+			this->emplace(unexpect, error);
 			return *this;
 		}
 
