@@ -1,8 +1,10 @@
 #pragma once
 
 #include <mh/source_location.hpp>
-
 #include <ostream>
+#ifdef __unix__
+#include <signal.h>
+#endif
 
 namespace mh
 {
@@ -26,6 +28,9 @@ namespace mh
 #ifdef _MSC_VER
 #define MH_ERROR_ENSURE_HPP_DEBUGBREAK()  __debugbreak()
 #else
+#ifndef SIGTRAP
+#define SIGTRAP SIGABRT
+#endif
 #define MH_ERROR_ENSURE_HPP_DEBUGBREAK()  raise(SIGTRAP)
 #endif
 #endif
