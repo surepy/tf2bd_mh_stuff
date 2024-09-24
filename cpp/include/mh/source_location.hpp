@@ -67,6 +67,9 @@ namespace mh
 #include <mh/text/format.hpp>
 
 #if MH_FORMATTER != MH_FORMATTER_NONE
+// for fmt 9.0+
+#if MH_FORMATTER == MH_FORMATTER_FMTLIB && FMT_VERSION >= 90000
+#else 
 #include <mh/text/multi_char.hpp>
 
 template<typename CharT>
@@ -212,6 +215,7 @@ template struct mh::formatter<mh::source_location, wchar_t>;
 #else
 extern template struct mh::formatter<mh::source_location, char>;
 extern template struct mh::formatter<mh::source_location, wchar_t>;
+#endif
 #endif
 #endif
 #endif

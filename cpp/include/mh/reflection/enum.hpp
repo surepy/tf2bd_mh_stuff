@@ -206,6 +206,13 @@ namespace mh
 #undef min
 
 #if MH_FORMATTER != MH_FORMATTER_NONE
+// for fmt 9.0+
+#if MH_FORMATTER == MH_FORMATTER_FMTLIB && FMT_VERSION >= 90000
+// TODO: implement a real formatter
+#include <fmt/ostream.h>
+template <> struct fmt::formatter<tf2_bot_detector::SteamID> : ostream_formatter {};
+// old pazer code
+#else
 template<typename T, typename CharT>
 struct mh::formatter<::mh::enum_fmt_t<T>, CharT>
 {
@@ -319,24 +326,24 @@ struct mh::formatter<::mh::enum_fmt_t<T>, CharT>
 		else
 		{
 			const auto convert_string = [](const std::string_view& input)
-			{
-				struct design_by_committee : std::codecvt<CharT, char, std::mbstate_t> {} cvt;
-				std::basic_string<CharT> converted;
-				std::mbstate_t state{};
+				{
+					struct design_by_committee : std::codecvt<CharT, char, std::mbstate_t> {} cvt;
+					std::basic_string<CharT> converted;
+					std::mbstate_t state{};
 
-				converted.resize(cvt.length(state, input.data(), input.data() + input.size(),
-					std::numeric_limits<size_t>::max()));
+					converted.resize(cvt.length(state, input.data(), input.data() + input.size(),
+						std::numeric_limits<size_t>::max()));
 
-				state = {};
+					state = {};
 
-				const char* fromNext;
-				CharT* toNext;
-				cvt.in(state,
-					input.data(), input.data() + input.size(), fromNext,
-					converted.data(), converted.data() + converted.size(), toNext);
+					const char* fromNext;
+					CharT* toNext;
+					cvt.in(state,
+						input.data(), input.data() + input.size(), fromNext,
+						converted.data(), converted.data() + converted.size(), toNext);
 
-				return converted;
-			};
+					return converted;
+				};
 
 			return mh::format_to(ctx.out(), fmtStr,
 				convert_string(::mh::enum_type<T>::type_name()), convert_string(::mh::enum_type<T>::type_name_full()),
@@ -344,6 +351,6 @@ struct mh::formatter<::mh::enum_fmt_t<T>, CharT>
 		}
 	}
 };
-
+#endif
 #endif
 #endif

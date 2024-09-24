@@ -1,4 +1,5 @@
 #pragma once
+// NOTICE: do not use this file! it's largely broken and I recommend you use fmt::format directly instead!
 
 #define MH_FORMATTER_NONE 0
 #define MH_FORMATTER_FMTLIB 1
